@@ -37,7 +37,7 @@ $('#formViagem').onsubmit=salvarDespesa;$('#vInterpretar').onclick=preencherComT
 $('#pExcluir').onclick=e=>excluirPedido(e.currentTarget);$('#pCancelar').onclick=()=>{sairEdicaoPedido();toast('Edição cancelada')};
 document.addEventListener('click',e=>{
   if(colocando&&e.target.closest('#mapa')){colocar(e);return}
-  const t=e.target.closest('[data-cancela-coloca],[data-crumb],[data-cid],[data-area],[data-colocar],[data-tab],[data-pt],[data-uf],[data-l],[data-c],[data-close],[data-pay],[data-st],[data-novo],[data-p],[data-m],[data-retry],[data-nova-uf],[data-remover],[data-desarquivar],[data-ver-lojas],[data-limpar],[data-edit-ped],[data-editar-loja],[data-ajustes],[data-aj],[data-edit-marca],[data-marca-cancel],[data-del-marca],[data-sugerir],[data-copiar-sug],[data-backup],[data-backup-copiar],[data-restaurar],[data-restaurar-nao],[data-colar-backup],[data-zerar],[data-exemplo],[data-sair-exemplo],[data-ir-loja],[data-div-f],[data-add-div],[data-del-div],[data-edit-desp],[data-salvar-nome],[data-copiar-instr],[data-conferir-imp],[data-lancar-imp],[data-forcar-imp],[data-cad-marcas-imp],[data-b-loja],[data-b-cid],[data-b-marca],[data-b-div],[data-b-ped],[data-b-desp],[data-filtros],[data-tirar-f],[data-f-tipo],[data-limpar-f],[data-exemplo-dev]');if(!t)return;
+  const t=e.target.closest('[data-cancela-coloca],[data-crumb],[data-cid],[data-area],[data-colocar],[data-tab],[data-pt],[data-uf],[data-l],[data-c],[data-close],[data-pay],[data-st],[data-novo],[data-p],[data-m],[data-retry],[data-nova-uf],[data-remover],[data-desarquivar],[data-ver-lojas],[data-limpar],[data-edit-ped],[data-editar-loja],[data-ajustes],[data-aj],[data-edit-marca],[data-marca-cancel],[data-del-marca],[data-sugerir],[data-copiar-sug],[data-backup],[data-backup-copiar],[data-restaurar],[data-restaurar-nao],[data-colar-backup],[data-zerar],[data-exemplo],[data-sair-exemplo],[data-ir-loja],[data-div-f],[data-add-div],[data-del-div],[data-edit-desp],[data-salvar-nome],[data-copiar-instr],[data-conferir-imp],[data-lancar-imp],[data-forcar-imp],[data-cad-marcas-imp],[data-b-loja],[data-b-cid],[data-b-marca],[data-b-div],[data-b-ped],[data-b-desp],[data-filtros],[data-tirar-f],[data-f-tipo],[data-limpar-f],[data-exemplo-dev],[data-conta-entrar],[data-conta-criar],[data-conta-sair],[data-conta-sync]');if(!t)return;
   const ds=t.dataset;
   if('cancelaColoca' in ds)pararColocacao();
   else if(ds.crumb){if(ds.crumb==='brasil')verBrasil();else if(ds.crumb==='uf')selecionarUF(estadoSel,true)}
@@ -83,6 +83,10 @@ document.addEventListener('click',e=>{
   else if('copiarInstr' in ds)copiar(instrucoesImport(),'Instruções copiadas. Cole na outra IA.');
   else if('conferirImp' in ds)conferirImport();
   else if('lancarImp' in ds)lancarImport();
+  else if('contaEntrar' in ds)contaAcao('entrar');
+  else if('contaCriar' in ds)contaAcao('criar');
+  else if('contaSair' in ds)contaSair();
+  else if('contaSync' in ds)enviarConta().then(sincronizarAoEntrar);
   else if('cadMarcasImp' in ds)cadastrarMarcasImport();
   else if('filtros' in ds)abrirFiltros();
   else if(ds.tirarF){filtro[ds.tirarF]='todas';cidadeSel=null;renderTudo()}

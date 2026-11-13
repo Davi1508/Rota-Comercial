@@ -28,7 +28,8 @@ function salvar(){
   atualizado=Date.now();let ok=true;
   try{localStorage.setItem(CHAVE,JSON.stringify(serializar()))}catch(e){ok=false}
   if(!ok)toast('Não foi possível salvar neste aparelho. Faça uma cópia de segurança em Ajustes.');
-  if(nuvem){marcarStatus('salvando');clearTimeout(salvarT);salvarT=setTimeout(enviarNuvem,800)}
+  if(typeof agendarConta==='function'&&agendarConta()){}
+  else if(nuvem){marcarStatus('salvando');clearTimeout(salvarT);salvarT=setTimeout(enviarNuvem,800)}
   else marcarStatus(ok?'local':'erro');
 }
 // Na conta: um documento com marcas e lojas, e um por ano com os pedidos (cada documento tem limite de tamanho)
@@ -65,4 +66,4 @@ async function conectarNuvem(){
 }
 const STATUS={local:['ok','Salvo no celular'],nuvem:['ok','Salvo na sua conta'],salvando:['','Salvando…'],erro:['bad','Não foi possível salvar'],cheio:['warn','Espaço da conta cheio: salvo só no celular'],exemplo:['warn','Exemplo: nada é salvo'],vazio:['','Seus dados ficam salvos neste celular']};
 function marcarStatus(k){const [c,t]=STATUS[k];const el=$('#sync');el.className='sync '+c;el.textContent=t}
-const textoOndeSalva=()=>nuvem?'Na sua conta do Claude e neste celular. Se abrir este link em outro aparelho com a mesma conta, os dados aparecem lá também.':'Neste celular, no navegador. Se você limpar os dados do navegador ou trocar de aparelho, use a cópia de segurança para recuperar tudo.';
+const textoOndeSalva=()=>(typeof conta!=='undefined'&&conta)?'Na sua conta e neste celular. Entrando com o mesmo e-mail em outro aparelho, os dados aparecem lá também.':nuvem?'Na sua conta do Claude e neste celular. Se abrir este link em outro aparelho com a mesma conta, os dados aparecem lá também.':'Neste celular, no navegador. Se você limpar os dados do navegador ou trocar de aparelho, use a cópia de segurança para recuperar tudo.';
