@@ -24,6 +24,7 @@ function aplicar(d){
 function lerLocal(){try{const s=localStorage.getItem(CHAVE);return s?JSON.parse(s):null}catch(e){return null}}
 function salvar(){
   ultCache=null;
+  if(!exemplo&&typeof bloquearSeLeitura==='function'&&bloquearSeLeitura())return;
   if(exemplo){marcarStatus('exemplo');return}
   atualizado=Date.now();let ok=true;
   try{localStorage.setItem(CHAVE,JSON.stringify(serializar()))}catch(e){ok=false}
