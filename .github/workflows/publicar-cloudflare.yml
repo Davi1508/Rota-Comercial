@@ -1,0 +1,38 @@
+# Publica o app no Cloudflare Pages a cada mudança no ramo main.
+# Precisa de dois segredos no GitHub (Settings > Secrets and variables > Actions):
+#   CLOUDFLARE_API_TOKEN  - token com permissão "Cloudflare Pages: Edit"
+#   CLOUDFLARE_ACCOUNT_ID - id da conta Cloudflare
+name: Publicar no Cloudflare Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publicar-cloudflare
+  cancel-in-progress: true
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # Só os arquivos do site vão para o ar (README, banco de dados e configurações ficam de fora)
+      - name: Separar os arquivos do site
+        run: |
+          mkdir site
+          cp -r index.html manifest.webmanifest sw.js css js icons site/
+
+      - name: Criar o projeto no Cloudflare (só na primeira vez)
+        run: npx --yes wrangler@3 pages project create rotacomercial --production-branch=main || echo "Projeto já existe"
+
+      - name: Publicar
+        run: npx --yes wrangler@3 pages deploy site --project-name=rotacomercial --branch=main --commit-dirty=true
