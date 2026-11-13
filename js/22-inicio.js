@@ -11,7 +11,7 @@ function renderTudo(){
   renderFbar();
   renderBoas();estadoPedido();renderHero();atualizarMapa();renderLojasUF();renderCidadeBox();renderPainel();renderLojas();
 }
-function irAba(t){document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));document.querySelectorAll('.tab').forEach(s=>s.classList.toggle('on',s.id==='t-'+t));window.scrollTo(0,0);if(t==='mapa')renderPontos(view)}
+function irAba(t){if(t==='pedido'&&typeof somenteLeitura==='function'&&somenteLeitura()){abrirAssinatura();return}document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));document.querySelectorAll('.tab').forEach(s=>s.classList.toggle('on',s.id==='t-'+t));window.scrollTo(0,0);if(t==='mapa')renderPontos(view)}
 
 function virarDia(){const n=new Date();n.setHours(12,0,0,0);if(+n===+HOJE)return;const era=isoD(HOJE);HOJE.setTime(+n);
   ['#pData','#vData'].forEach(id=>{const el=$(id);el.max=isoD(HOJE);if(el.value===era)el.value=isoD(HOJE)});ultCache=null;renderTudo()}
@@ -37,7 +37,7 @@ $('#formViagem').onsubmit=salvarDespesa;$('#vInterpretar').onclick=preencherComT
 $('#pExcluir').onclick=e=>excluirPedido(e.currentTarget);$('#pCancelar').onclick=()=>{sairEdicaoPedido();toast('Edição cancelada')};
 document.addEventListener('click',e=>{
   if(colocando&&e.target.closest('#mapa')){colocar(e);return}
-  const t=e.target.closest('[data-cancela-coloca],[data-crumb],[data-cid],[data-area],[data-colocar],[data-tab],[data-pt],[data-uf],[data-l],[data-c],[data-close],[data-pay],[data-st],[data-novo],[data-p],[data-m],[data-retry],[data-nova-uf],[data-remover],[data-desarquivar],[data-ver-lojas],[data-limpar],[data-edit-ped],[data-editar-loja],[data-ajustes],[data-aj],[data-edit-marca],[data-marca-cancel],[data-del-marca],[data-sugerir],[data-copiar-sug],[data-backup],[data-backup-copiar],[data-restaurar],[data-restaurar-nao],[data-colar-backup],[data-zerar],[data-exemplo],[data-sair-exemplo],[data-ir-loja],[data-div-f],[data-add-div],[data-del-div],[data-edit-desp],[data-salvar-nome],[data-copiar-instr],[data-conferir-imp],[data-lancar-imp],[data-forcar-imp],[data-cad-marcas-imp],[data-b-loja],[data-b-cid],[data-b-marca],[data-b-div],[data-b-ped],[data-b-desp],[data-filtros],[data-tirar-f],[data-f-tipo],[data-limpar-f],[data-exemplo-dev],[data-conta-abrir],[data-conta-sair],[data-conta-sync],[data-en-modo],[data-en-olho],[data-en-reenviar],[data-en-pular]');if(!t)return;
+  const t=e.target.closest('[data-cancela-coloca],[data-crumb],[data-cid],[data-area],[data-colocar],[data-tab],[data-pt],[data-uf],[data-l],[data-c],[data-close],[data-pay],[data-st],[data-novo],[data-p],[data-m],[data-retry],[data-nova-uf],[data-remover],[data-desarquivar],[data-ver-lojas],[data-limpar],[data-edit-ped],[data-editar-loja],[data-ajustes],[data-aj],[data-edit-marca],[data-marca-cancel],[data-del-marca],[data-sugerir],[data-copiar-sug],[data-backup],[data-backup-copiar],[data-restaurar],[data-restaurar-nao],[data-colar-backup],[data-zerar],[data-exemplo],[data-sair-exemplo],[data-ir-loja],[data-div-f],[data-add-div],[data-del-div],[data-edit-desp],[data-salvar-nome],[data-copiar-instr],[data-conferir-imp],[data-lancar-imp],[data-forcar-imp],[data-cad-marcas-imp],[data-b-loja],[data-b-cid],[data-b-marca],[data-b-div],[data-b-ped],[data-b-desp],[data-filtros],[data-tirar-f],[data-f-tipo],[data-limpar-f],[data-exemplo-dev],[data-conta-abrir],[data-conta-sair],[data-conta-sync],[data-en-modo],[data-en-olho],[data-en-reenviar],[data-en-pular],[data-assinar],[data-instalar]');if(!t)return;
   const ds=t.dataset;
   if('cancelaColoca' in ds)pararColocacao();
   else if(ds.crumb){if(ds.crumb==='brasil')verBrasil();else if(ds.crumb==='uf')selecionarUF(estadoSel,true)}
@@ -88,6 +88,8 @@ document.addEventListener('click',e=>{
   else if('enOlho' in ds){const i=$('#cSenha');const v=i.type==='password';i.type=v?'text':'password';t.setAttribute('aria-label',v?'Esconder senha':'Mostrar senha');t.classList.toggle('on',v)}
   else if('enReenviar' in ds)reenviarConfirmacao();
   else if('enPular' in ds)pularEntrada();
+  else if('assinar' in ds){fecharLoja();abrirAssinatura()}
+  else if('instalar' in ds)instalarApp();
   else if('contaSair' in ds)contaSair();
   else if('contaSync' in ds)enviarConta().then(sincronizarAoEntrar);
   else if('cadMarcasImp' in ds)cadastrarMarcasImport();

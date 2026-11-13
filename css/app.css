@@ -376,3 +376,14 @@ body.com-entrada{overflow:hidden}
 .en-aviso h2{margin:0;font-size:20px;line-height:28px}
 .en-aviso p{margin:var(--s2) 0 0;color:var(--muted);font-size:16px;line-height:24px}
 .en-ok{margin-top:var(--s3);padding:var(--s2) var(--s3);border-radius:var(--r2);background:var(--ok-soft);color:var(--ok);font-size:14px;line-height:20px;font-weight:600}
+
+/* ---------- assinatura ---------- */
+.exbanner.plano{background:var(--warn-soft)}
+.exbanner.plano.bloq{background:var(--bad-soft)}
+.plano-card{border:2px solid var(--primary);border-radius:var(--r3);padding:var(--s4);background:var(--surface)}
+.plano-nome{font-size:14px;line-height:20px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.04em}
+.plano-preco{font-size:32px;line-height:40px;font-weight:900;margin-top:var(--s1)}
+.plano-card ul{margin:var(--s3) 0 0;padding:0;list-style:none;display:grid;gap:var(--s2)}
+.plano-card li{position:relative;padding-left:var(--s4);font-size:16px;line-height:24px}
+.plano-card li::before{content:'';position:absolute;left:0;top:var(--s2);width:var(--s2);height:var(--s2);border-radius:var(--pill);background:var(--ok)}
+a.btn{display:grid;place-items:center;text-decoration:none;margin-top:var(--s3)}
