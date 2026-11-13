@@ -34,7 +34,10 @@ O app não precisa de etapa de montagem: o navegador carrega os arquivos direto.
 | `20-busca-geral.js` | Lupa do topo |
 | `21-tema.js` | Tema claro e escuro |
 | `22-inicio.js` | Liga os botões e abre o app |
+| `23-conta.js` | Conta, login e sincronização com o Supabase |
+| `24-app.js` | App instalável e fim do teste grátis |
+| `25-metas.js` | Metas por marca e coleção |
 
 ## Publicação
 
-Cada commit no ramo `main` publica sozinho no Netlify.
+Cada commit no ramo `main` publica sozinho no Cloudflare Pages (pelo GitHub Actions).

@@ -11,6 +11,7 @@ const REGIOES_PADRAO=['Extremo Sul','Baixo Sul','Oeste'],COLECOES_PADRAO=['Outon
 let REGIOES=[],COLECOES=[...COLECOES_PADRAO];
 // Despesas de viagem (separadas das comissões) e nome de quem usa o app
 let DESPESAS=[],NOME='',desEdit=null;
+let METAS=[];
 // Cada pedido guarda a taxa da marca no dia em que foi registrado
 // Id de pedido que não colide entre aparelhos (necessário com a conta sincronizada)
 // sempre crescente neste aparelho (nunca repete) e com parte aleatória (não colide com outro aparelho)

@@ -1,6 +1,6 @@
 // ---------- formulários: pedido ----------
 // aceita 1.500,50 / 1500,5 / 1500.5
-const num=x=>{let t=String(x).replace(/[^\d,.-]/g,'');if(t.includes(','))t=t.replace(/\./g,'').replace(',','.');return parseFloat(t)};
+const num=x=>{let t=String(x).replace(/[^\d,.-]/g,'');if(t.includes(','))t=t.replace(/\./g,'').replace(',','.');else if(/^-?\d{1,3}(\.\d{3})+$/.test(t))t=t.replace(/\./g,'');return parseFloat(t)};
 const isoD=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const deIso=s=>{const [y,m,d]=String(s).split('-').map(Number);return new Date(y,m-1,d,12)};
 let pedEdit=null,avisoPed='',avisoLoja='',lojaEdit=null;

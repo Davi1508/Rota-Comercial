@@ -18,7 +18,7 @@ function linhas(){
     despesas:DESPESAS.map(x=>({id:String(x.id),data:isoD(x.data),valor:x.valor,categoria:x.categoria||'',descricao:x.descricao||''}))
   };
 }
-const perfilLocal=()=>({nome:NOME,regioes:REGIOES,colecoes:COLECOES,extras:{sugestoes}});
+const perfilLocal=()=>({nome:NOME,regioes:REGIOES,colecoes:COLECOES,extras:{sugestoes,metas:METAS}});
 const espelhar=()=>{const l=linhas(),e={perfil:JSON.stringify(perfilLocal())};TABELAS.forEach(t=>e[t]=new Map(l[t].map(r=>[r.id,JSON.stringify(r)])));return e};
 const vazioEspelho=()=>{const e={perfil:''};TABELAS.forEach(t=>e[t]=new Map());return e};
 
@@ -61,7 +61,7 @@ async function buscarTudo(t){
 async function lerConta(){
   const{data:p,error}=await sb.from('profiles').select('*').eq('id',conta.id).single();if(error)throw error;perfil=p;
   const [ma,lo,pe,de]=await Promise.all(TABELAS.map(buscarTudo));
-  return{vazio:!ma.length&&!lo.length&&!pe.length&&!de.length,dados:{v:1,atualizado:Date.now(),nome:p.nome,regioes:p.regioes,colecoes:p.colecoes,sugestoes:(p.extras||{}).sugestoes||[],
+  return{vazio:!ma.length&&!lo.length&&!pe.length&&!de.length,dados:{v:1,atualizado:Date.now(),nome:p.nome,regioes:p.regioes,colecoes:p.colecoes,sugestoes:(p.extras||{}).sugestoes||[],metas:(p.extras||{}).metas||[],
     marcas:ma.map(m=>({id:m.id,nome:m.nome,taxa:+m.taxa,cor:m.cor})),
     lojas:lo.map(l=>({id:l.id,nome:l.nome,cidade:l.cidade,uf:l.uf,regiao:l.regiao,marcas:l.marcas||[],coord:l.lng!=null&&l.lat!=null?[l.lng,l.lat]:null,arquivada:l.arquivada})),
     pedidos:pe.map(o=>({id:/^\d+$/.test(o.id)?+o.id:o.id,loja:o.loja,marca:o.marca,data:o.data,valor:+o.valor,previsto:o.previsto!=null?+o.previsto:0,pendente:o.pendente,pago:o.pago,taxa:+o.taxa,colecao:o.colecao})),
