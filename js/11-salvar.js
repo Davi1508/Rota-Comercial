@@ -1,7 +1,7 @@
 // ---------- salvar no celular (e na conta, quando o link permite) ----------
 const CHAVE='rc-dados-v1';
 let nuvem=null,salvarT=null,fila=Promise.resolve(),enviados={};
-function serializar(){return{v:1,atualizado,marcas:MARCAS,lojas,sugestoes,regioes:REGIOES,colecoes:COLECOES,nome:NOME,despesas:DESPESAS.map(x=>({...x,data:isoD(x.data)})),pedidos:pedidos.map(o=>({...o,data:isoD(o.data)}))}}
+function serializar(){return{v:1,atualizado,marcas:MARCAS,lojas,sugestoes,regioes:REGIOES,colecoes:COLECOES,metas:METAS,nome:NOME,despesas:DESPESAS.map(x=>({...x,data:isoD(x.data)})),pedidos:pedidos.map(o=>({...o,data:isoD(o.data)}))}}
 const idOk=x=>x!=null&&/^[\w-]{1,40}$/.test(String(x)),dataOk=x=>/^\d{4}-\d{2}-\d{2}$/.test(x)&&!isNaN(deIso(x));
 function limpar(d){
   d=d&&typeof d==='object'?d:{};
@@ -13,11 +13,12 @@ function limpar(d){
   const pedidos=arr(d.pedidos).filter(o=>o&&lids.has(String(o.loja))&&mids.has(o.marca)&&dataOk(o.data)).map((o,i)=>{const v=Math.max(0,+o.valor||0),pv=Math.max(0,+o.previsto||0),r={id:idOk(o.id)?o.id:'r'+i,loja:String(o.loja),marca:o.marca,valor:v,data:o.data,pago:!!o.pago&&v>0,taxa:o.taxa!=null&&Number.isFinite(+o.taxa)?+o.taxa:marcas.find(m=>m.id===o.marca).taxa,colecao:txt(o.colecao)};
     if(pv)r.previsto=pv;if(!v&&pv)r.pendente=true;return r}).filter(o=>o.valor>0||o.pendente);
   const despesas=arr(d.despesas).filter(x=>x&&dataOk(x.data)&&+x.valor>0).map((x,i)=>({id:idOk(x.id)?String(x.id):'d'+i,data:x.data,valor:+x.valor,categoria:txt(x.categoria),descricao:txt(x.descricao,120)}));
+  const metas=arr(d.metas).filter(m=>m&&idOk(m.id)&&mids.has(m.marca)&&+m.valor>0).map(m=>({id:String(m.id),marca:m.marca,colecao:txt(m.colecao),valor:Math.round(+m.valor*100)/100,desde:dataOk(m.desde)?m.desde:''}));
   const lista=x=>Array.isArray(x)?[...new Set(x.map(y=>txt(y)).filter(Boolean))]:undefined;
-  return{...d,marcas,lojas,pedidos,despesas,regioes:lista(d.regioes),colecoes:lista(d.colecoes),nome:d.nome!==undefined?txt(d.nome,40):undefined,sugestoes:arr(d.sugestoes)};
+  return{...d,marcas,lojas,pedidos,despesas,metas,regioes:lista(d.regioes),colecoes:lista(d.colecoes),nome:d.nome!==undefined?txt(d.nome,40):undefined,sugestoes:arr(d.sugestoes)};
 }
 function aplicar(d){
-  d=limpar(d);ultCache=null;MARCAS=d.marcas||[];lojas=d.lojas||[];sugestoes=d.sugestoes||[];REGIOES=Array.isArray(d.regioes)?d.regioes:[];COLECOES=Array.isArray(d.colecoes)?d.colecoes:[...COLECOES_PADRAO];DESPESAS=(d.despesas||[]).map(x=>({...x,data:deIso(x.data)}));NOME=d.nome||'';
+  d=limpar(d);ultCache=null;MARCAS=d.marcas||[];lojas=d.lojas||[];sugestoes=d.sugestoes||[];REGIOES=Array.isArray(d.regioes)?d.regioes:[];COLECOES=Array.isArray(d.colecoes)?d.colecoes:[...COLECOES_PADRAO];DESPESAS=(d.despesas||[]).map(x=>({...x,data:deIso(x.data)}));NOME=d.nome||'';METAS=d.metas||[];
   pedidos=(d.pedidos||[]).map(o=>({...o,data:deIso(o.data)}));pid=pedidos.reduce((a,o)=>Math.max(a,+o.id||0),0)+1;
   exemplo=!!d.exemplo;atualizado=d.atualizado||0;filtro.marca='todas';filtro.regiao='todas';filtro.colecao='todas';estadoSel=null;cidadeSel=null;
 }
@@ -40,7 +41,7 @@ function enviarNuvem(){
   d.pedidos.forEach(o=>{const y=o.data.slice(0,4);(anos[y]=anos[y]||[]).push(o)});
   Object.keys(enviados).forEach(k=>{if(k.startsWith('ped-')&&!anos[k.slice(4)])anos[k.slice(4)]=[]});
   const docs=Object.entries(anos).map(([y,l])=>['ped-'+y,{lista:l}]);
-  docs.push(['base',{v:1,atualizado:d.atualizado,marcas:d.marcas,lojas:d.lojas,sugestoes:d.sugestoes,regioes:d.regioes,colecoes:d.colecoes,nome:d.nome,despesas:d.despesas,anos:Object.keys(anos).filter(y=>anos[y].length)}]);
+  docs.push(['base',{v:1,atualizado:d.atualizado,marcas:d.marcas,lojas:d.lojas,sugestoes:d.sugestoes,regioes:d.regioes,colecoes:d.colecoes,metas:d.metas,nome:d.nome,despesas:d.despesas,anos:Object.keys(anos).filter(y=>anos[y].length)}]);
   fila=fila.then(async()=>{
     try{for(const [k,b] of docs){const s=JSON.stringify(b);if(enviados[k]===s)continue;await nuvem.doc(k).set(b);enviados[k]=s}marcarStatus('nuvem')}
     catch(e){console.warn('Não salvou na conta',e);if(e&&['invalid_argument','revoked','not_granted','capability_disabled'].includes(e.code))nuvem=null;marcarStatus(e&&e.code==='quota_exceeded'?'cheio':'local')}

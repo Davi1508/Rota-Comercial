@@ -1,6 +1,6 @@
 // Service worker do Rota Comercial: guarda o app no aparelho para abrir sem internet.
 // Estratégia: tenta a rede primeiro (para sempre pegar a versão nova) e usa a cópia guardada se estiver sem conexão.
-const VERSAO = 'rc-v1';
+const VERSAO = 'rc-v2';
 // Bibliotecas e fontes de fora que também ficam guardadas (mapa, conta, fonte)
 const DE_FORA = ['cdn.jsdelivr.net', 'fonts.googleapis.com', 'fonts.gstatic.com'];
 

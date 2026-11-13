@@ -34,5 +34,6 @@ function gerarExemplo(){
   let sx=11;const rx=()=>{sx=(sx*16807)%2147483647;return sx/2147483647};
   pedidos.forEach(o=>{if((HOJE-o.data)/DAY<240&&rx()<.5)o.previsto=Math.round(o.valor*(.75+rx()*.5)/50)*50||o.valor});
   lojas.slice(0,3).forEach((l,i)=>{const o=addPedido(l.id,l.marcas[0],0,new Date(HOJE-(i*3+1)*DAY),false);o.pendente=true;o.previsto=[4500,2800,6200][i];o.colecao='Verão'});
+  METAS=MARCAS.slice(0,2).map((m,i)=>({id:'mt'+i,marca:m.id,colecao:'',valor:[60000,40000][i],desde:isoD(new Date(HOJE.getFullYear(),HOJE.getMonth()-2,1))}));
   sugestoes=[];exemplo=true;atualizado=0;
 }
