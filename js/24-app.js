@@ -2,7 +2,7 @@
 
 // Preencha quando definir: o preço aparece na tela de assinatura e o WhatsApp vira o botão de assinar.
 // Exemplo: PLANO={preco:'R$ 29,90 por mês',whatsapp:'5571999999999'}
-const PLANO={preco:'',whatsapp:''};
+const PLANO={preco:'R$ 29,90 por mês',whatsapp:'5575988189659'};
 
 // Guarda o app no aparelho (abre sem internet). Só no site publicado (https), nunca dentro do artefato do Claude.
 if('serviceWorker' in navigator&&!window.claude&&(location.protocol==='https:'||/[?&]sw=1/.test(location.search))){
