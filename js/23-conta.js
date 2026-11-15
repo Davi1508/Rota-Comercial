@@ -101,7 +101,9 @@ async function iniciarConta(){
     if(ev==='PASSWORD_RECOVERY'){mostrarEntrada('nova');return}
     if(u){if($('#entrada')&&!$('#entrada').hidden&&entradaModo!=='nova')esconderEntrada();if(!conta||conta.id!==u.id){conta=u;sincronizarAoEntrar()}}
     else{if(conta){conta=null;perfil=null;espelho=null;marcarStatus('local')}
-      if(ev==='INITIAL_SESSION'&&lsGet(SEM_CONTA)!=='1')mostrarEntrada('entrar')}
+      const criar=/[?&]criar=1/.test(location.search);
+      if(criar)history.replaceState(null,'',location.pathname+location.hash);
+      if(ev==='INITIAL_SESSION'&&(criar||lsGet(SEM_CONTA)!=='1'))mostrarEntrada(criar?'criar':'entrar')}
   });
   addEventListener('online',()=>{if(conta&&espelho)enviarConta()});
 }
