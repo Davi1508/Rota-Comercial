@@ -42,7 +42,7 @@ function abrirAssinatura(){
   $('#sheet').innerHTML=`<div class="sh-top"><div class="grab"></div><div class="sh-h"><div><h3>${bloq?'Seu teste grátis acabou':'Assinar o Rota Comercial'}</h3><div class="s">${bloq?'Seus dados continuam guardados: lojas, pedidos, comissões e despesas.':'Continue com tudo depois do teste grátis.'}</div></div><button class="x" data-close aria-label="Fechar">×</button></div></div>
     <div class="sh-body"><div class="plano-card"><div class="plano-nome">Plano Representante</div><div class="plano-preco">${PLANO.preco?esc(PLANO.preco):'Preço em breve'}</div>
       <ul>${itens.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></div>
-      ${zap?`<a class="btn acc" href="https://wa.me/${zap}?text=${msg}" target="_blank" rel="noopener">Assinar pelo WhatsApp</a><p class="ufmsg" style="text-align:center">WhatsApp: +${zap}</p>`
+      ${zap?`<a class="btn acc" href="https://wa.me/${zap}?text=${msg}" target="_blank" rel="noopener">Assinar pelo WhatsApp</a><p class="ufmsg" style="text-align:center">WhatsApp: ${zap.replace(/^55(\d{2})(\d{4,5})(\d{4})$/,'($1) $2-$3')}</p>`
         :'<p class="ufmsg">A assinatura pelo app chega em breve. Enquanto isso, fale com quem te passou o Rota Comercial para liberar sua conta.</p>'}
       ${bloq?'<p class="ufmsg">Você continua vendo tudo. Só não dá para lançar ou alterar até assinar.</p>':''}</div>`;
   $('#veu').style.display='block';requestAnimationFrame(()=>$('#sheet').classList.add('on'));
