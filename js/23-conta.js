@@ -151,7 +151,7 @@ function renderEntrada(){
       ${entradaMsg?`<div class="erro">${esc(entradaMsg)}</div>`:''}
       <button class="btn"${car?' disabled':''}>${car?(criar?'Criando conta…':'Entrando…'):(criar?'Começar 7 dias grátis':'Entrar')}</button>
       </form>
-      ${criar?'<p class="en-nota">Sem cartão de crédito. Seus dados deste aparelho vão junto para a conta.</p>':'<button type="button" class="en-link" data-en-modo="esqueci">Esqueci minha senha</button>'}`;
+      ${criar?'<p class="en-nota">Sem cartão de crédito. Seus dados deste aparelho vão junto para a conta.</p><p class="en-nota">Ao criar a conta, você concorda com os <a href="termos.html" target="_blank" rel="noopener">Termos de uso</a> e a <a href="privacidade.html" target="_blank" rel="noopener">Política de privacidade</a>.</p>':'<button type="button" class="en-link" data-en-modo="esqueci">Esqueci minha senha</button>'}`;
   }
   el.innerHTML=`<div class="en-wrap"><header class="en-hero"><div class="en-logo">${PIN_SVG}</div><h1>Rota Comercial</h1><p>Comissões, lojas e viagens do representante, num lugar só.</p>${ROTA_SVG}</header>
     <section class="en-card">${corpo}${m==='nova'?'':`<button type="button" class="en-pular" data-en-pular>Continuar sem conta<span>Os dados ficam só neste aparelho</span></button>`}</section></div>`;
@@ -187,7 +187,8 @@ function blocoConta(){
     const ativa=contaAtiva(),d=diasTrial();
     const sit=!perfil?'':perfil.plano==='ativo'?'Assinatura ativa':ativa?`Teste grátis: ${d===1?'falta 1 dia':`faltam ${d} dias`}`:'Teste encerrado: você pode ver tudo, mas novos lançamentos não vão para a conta';
     return `<h2>Sua conta</h2><div class="list" style="padding:var(--s3)"><div class="t">${esc(conta.email||'')}</div><p class="s" style="margin:var(--s1) 0 0${perfil&&!ativa?';color:var(--bad)':''}">${esc(sit)}</p></div>
-      <div style="display:flex;gap:var(--s2);margin-top:var(--s2)"><button class="btn ghost" data-conta-sync style="margin:0">Sincronizar agora</button><button class="btn ghost" data-conta-sair style="margin:0">Sair da conta</button></div>`;
+      <div style="display:flex;gap:var(--s2);margin-top:var(--s2)"><button class="btn ghost" data-conta-sync style="margin:0">Sincronizar agora</button><button class="btn ghost" data-conta-sair style="margin:0">Sair da conta</button></div>
+      <button class="btn ghost perigo" data-excluir-conta>Excluir minha conta</button>`;
   }
   return `<h2>Sua conta</h2><p class="ufmsg" style="margin-top:0">Com uma conta, seus dados ficam guardados no servidor e aparecem em qualquer aparelho.</p><button class="btn" data-conta-abrir>Entrar ou criar conta</button>`;
 }
