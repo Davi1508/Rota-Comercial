@@ -11,7 +11,7 @@ function abrirCadastro(uf,id){
 function dicaCidade(){const c=$('#lCidade').value.trim(),uf=$('#lUF').value,h=$('#lHint');
   if(!c){h.textContent='';h.className='hint';return}
   if(coordCidade(c,uf)){h.textContent=`${nomeCidade(c,uf)} encontrada: a loja vai direto para o lugar certo do mapa.`;h.className='hint ok'}
-  else{h.textContent=`${c} não está na lista do mapa. Depois de salvar, você toca no mapa para marcar o lugar.`;h.className='hint warn'}}
+  else{h.textContent=typeof CIDADES_TODAS!=='undefined'&&CIDADES_TODAS?`Não achamos ${c}/${uf}. Confira o nome e o estado, ou salve e toque no mapa para marcar o lugar.`:`${c} não está na lista do mapa. Depois de salvar, você toca no mapa para marcar o lugar.`;h.className='hint warn'}}
 function fecharCadastro(){lojaEdit=null;avisoLoja='';$('#lHint').textContent='';$('#formLoja').reset();$('#lUF').value='BA';$('#lErro').hidden=true;$('#formLoja').hidden=true;$('#abrirNova').hidden=false}
 function erroLoja(t){const e=$('#lErro');e.textContent=t;e.hidden=false}
 function salvarLoja(e){
