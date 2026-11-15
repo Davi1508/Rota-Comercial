@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Rota Comercial · o app do representante de moda</title>
+<meta name="description" content="Pedidos, comissões, metas por marca e despesas de viagem num lugar só. Teste grátis por 7 dias, sem cartão.">
+<meta property="og:title" content="Rota Comercial · o app do representante de moda">
+<meta property="og:description" content="Pedidos, comissões, metas por marca e despesas de viagem num lugar só. 7 dias grátis, sem cartão.">
+<meta property="og:image" content="https://rotacomercial.app.br/conheca/img/compartilhar.jpg">
+<meta property="og:url" content="https://rotacomercial.app.br/conheca/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#3346D3">
+<link rel="icon" type="image/png" sizes="32x32" href="../icons/favicon-32.png">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--azul:#3346D3;--azul2:#1E2A96;--ink:#141833;--muted:#646A8A;--line:#E2E4EE;--bg:#F2F3F7;--soft:#DDE2FF;--amarelo:#F2B705;--amarelo-ink:#2E2400;--ok:#1A9E5C;
+  --s1:4px;--s2:8px;--s3:16px;--s4:24px;--s5:32px;--s6:40px;--s7:48px;--s8:64px;--r1:8px;--r2:16px;--r3:24px;--pill:999px}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:'Schibsted Grotesk',system-ui,-apple-system,sans-serif;font-size:16px;line-height:24px;color:var(--ink);background:var(--bg)}
+a{color:inherit}
+.wrap{max-width:1104px;margin:0 auto;padding:0 var(--s3)}
+/* topo */
+.topo{position:sticky;top:0;z-index:10;background:rgba(51,70,211,.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fff}
+.topo .wrap{display:flex;align-items:center;justify-content:space-between;min-height:64px}
+.marca{display:flex;align-items:center;gap:var(--s2);font-weight:900;font-size:20px;line-height:28px;text-decoration:none}
+.marca img{width:32px;height:32px;border-radius:var(--r1)}
+.entrar{display:inline-flex;align-items:center;min-height:48px;padding:0 var(--s3);border-radius:var(--pill);font-weight:700;text-decoration:none;border:1px solid rgba(255,255,255,.4)}
+/* hero */
+.hero{background:linear-gradient(180deg,var(--azul),var(--azul2));color:#fff;overflow:hidden}
+.hero .wrap{display:grid;gap:var(--s5);padding-top:var(--s7);padding-bottom:0}
+.selo{display:inline-block;background:rgba(255,255,255,.14);border-radius:var(--pill);padding:var(--s1) var(--s3);font-size:14px;line-height:20px;font-weight:700;margin:0 0 var(--s3)}
+h1{font-size:40px;line-height:48px;font-weight:900;margin:0 0 var(--s3);letter-spacing:-.5px}
+.hero p.lead{font-size:20px;line-height:28px;color:var(--soft);margin:0 0 var(--s4);max-width:560px}
+.ctas{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:56px;padding:0 var(--s4);border-radius:var(--pill);font-weight:800;font-size:18px;line-height:24px;text-decoration:none;border:0;cursor:pointer}
+.btn.amarelo{background:var(--amarelo);color:var(--amarelo-ink)}
+.btn.vazado{color:#fff;border:1px solid rgba(255,255,255,.5)}
+.btn.azul{background:var(--azul);color:#fff}
+.miuda{font-size:14px;line-height:20px;color:var(--soft);margin:var(--s2) 0 0}
+.celular{justify-self:center;width:280px;background:#0C0F21;border-radius:48px 48px 0 0;padding:16px 16px 0;box-shadow:0 24px 64px rgba(0,0,30,.4)}
+.celular{height:480px;overflow:hidden}
+.celular img{display:block;width:100%;height:auto;border-radius:32px 32px 0 0}
+img{max-width:100%;height:auto}
+@media (min-width:880px){
+  .hero .wrap{grid-template-columns:1fr 360px;align-items:end;padding-top:var(--s7)}
+  .hero .texto{align-self:center;padding-bottom:var(--s5)}
+  h1{font-size:56px;line-height:64px}
+  .celular{width:360px;height:560px}
+}
+/* faixa */
+.faixa{background:#fff;border-bottom:1px solid var(--line)}
+.faixa ul{list-style:none;margin:0;padding:var(--s3) 0;display:flex;flex-wrap:wrap;gap:var(--s2) var(--s4);justify-content:center;font-weight:700;font-size:14px;line-height:20px;color:var(--muted)}
+.faixa li::before{content:"✓ ";color:var(--ok)}
+/* seções */
+section{padding:var(--s8) 0}
+h2{font-size:32px;line-height:40px;font-weight:900;margin:0 0 var(--s2);letter-spacing:-.3px}
+.sub{color:var(--muted);font-size:18px;line-height:28px;margin:0 0 var(--s5);max-width:640px}
+.dor{display:grid;gap:var(--s2);grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin-top:var(--s4)}
+.dor div{background:#fff;border:1px solid var(--line);border-radius:var(--r2);padding:var(--s3);font-weight:600}
+.dor s{color:var(--muted)}
+.recurso{display:grid;gap:var(--s4);align-items:center;margin-top:var(--s7)}
+.recurso .foto{justify-self:center;width:240px;border-radius:32px;border:8px solid #0C0F21;overflow:hidden;box-shadow:0 16px 40px rgba(20,24,51,.18);height:400px}
+.recurso .foto img{display:block;width:100%;height:auto}
+.recurso h3{font-size:24px;line-height:32px;font-weight:900;margin:0 0 var(--s2)}
+.recurso p{margin:0 0 var(--s2);color:var(--muted);font-size:18px;line-height:28px}
+.recurso ul{margin:0;padding-left:var(--s4);color:var(--ink)}
+.recurso li{margin-bottom:var(--s1)}
+@media (min-width:880px){
+  .recurso{grid-template-columns:280px 1fr;gap:var(--s7)}
+  .recurso.inv{grid-template-columns:1fr 280px}.recurso.inv .foto{order:2}
+  .recurso .foto{width:280px;height:464px}
+}
+.mais{display:grid;gap:var(--s2);grid-template-columns:repeat(auto-fit,minmax(240px,1fr));margin-top:var(--s7)}
+.mais div{background:#fff;border:1px solid var(--line);border-radius:var(--r2);padding:var(--s3)}
+.mais b{display:block;margin-bottom:var(--s1)}
+.mais span{color:var(--muted);font-size:14px;line-height:20px}
+/* preço */
+.preco{background:linear-gradient(180deg,var(--azul),var(--azul2));color:#fff;text-align:center}
+.preco .sub{color:var(--soft);margin-left:auto;margin-right:auto}
+.cartao{background:#fff;color:var(--ink);max-width:464px;margin:0 auto;border-radius:var(--r3);padding:var(--s5) var(--s4);text-align:left}
+.valor{font-size:48px;line-height:56px;font-weight:900}
+.valor small{font-size:18px;line-height:24px;font-weight:600;color:var(--muted)}
+.cartao ul{list-style:none;padding:0;margin:var(--s3) 0 var(--s4)}
+.cartao li{padding:var(--s1) 0}
+.cartao li::before{content:"✓  ";color:var(--ok);font-weight:900}
+.cartao .btn{width:100%}
+/* faq */
+details{background:#fff;border:1px solid var(--line);border-radius:var(--r2);margin-bottom:var(--s2)}
+summary{cursor:pointer;min-height:56px;display:flex;align-items:center;padding:var(--s2) var(--s3);font-weight:700;list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";margin-left:auto;font-size:24px;color:var(--azul);padding-left:var(--s2)}
+details[open] summary::after{content:"–"}
+details p{margin:0;padding:0 var(--s3) var(--s3);color:var(--muted)}
+/* final */
+.final{text-align:center}
+.final .sub{margin-left:auto;margin-right:auto}
+footer{border-top:1px solid var(--line);padding:var(--s4) 0 var(--s7);color:var(--muted);font-size:14px;line-height:20px}
+footer .wrap{display:flex;flex-wrap:wrap;gap:var(--s2) var(--s3);justify-content:space-between;align-items:center}
+footer nav{display:flex;flex-wrap:wrap;gap:0 var(--s2)}
+footer nav a{display:inline-flex;align-items:center;min-height:48px;padding:0 var(--s1)}
+</style>
+</head>
+<body>
+<header class="topo"><div class="wrap">
+  <a class="marca" href="./"><img src="../icons/icon-192.png" alt="">Rota Comercial</a>
+  <a class="entrar" href="../">Entrar</a>
+</div></header>
+
+<main>
+<div class="hero"><div class="wrap">
+  <div class="texto">
+    <p class="selo">Feito por quem conhece a estrada</p>
+    <h1>O app do representante de moda</h1>
+    <p class="lead">Pedidos, comissões, metas por marca e despesas de viagem num lugar só. Funciona no celular, até sem internet.</p>
+    <div class="ctas">
+      <a class="btn amarelo" href="../?criar=1">Testar 7 dias grátis</a>
+      <a class="btn vazado" href="#como-funciona">Ver como funciona</a>
+    </div>
+    <p class="miuda">Sem cartão de crédito. Depois, R$ 29,90 por mês.</p>
+  </div>
+  <div class="celular"><img src="img/mapa.jpg" width="600" height="1154" alt="Tela inicial do app com a comissão a receber e o mapa das lojas"></div>
+</div></div>
+
+<div class="faixa"><div class="wrap"><ul>
+  <li>7 dias grátis, sem cartão</li><li>Funciona sem internet</li><li>Dados guardados no Brasil</li><li>Cancele quando quiser</li>
+</ul></div></div>
+
+<section><div class="wrap">
+  <h2>Chega de caderno, planilha e print de WhatsApp</h2>
+  <p class="sub">Representante vive com a informação espalhada. Na hora de cobrar a comissão ou fechar a coleção, ninguém sabe ao certo quanto vendeu.</p>
+  <div class="dor">
+    <div><s>Pedido anotado no caderno</s><br>Pedido lançado em segundos</div>
+    <div><s>Comissão na calculadora</s><br>Comissão calculada sozinha</div>
+    <div><s>Meta da marca "de cabeça"</s><br>Quanto falta, todo dia</div>
+    <div><s>Nota de gasolina perdida</s><br>Despesa anotada na hora</div>
+  </div>
+</div></section>
+
+<section id="como-funciona" style="padding-top:0"><div class="wrap">
+  <h2>Como funciona</h2>
+  <p class="sub">Tudo pensado para o dia a dia de quem atende lojista: marca, coleção, região e viagem.</p>
+
+  <div class="recurso">
+    <div class="foto"><img src="img/pedido.jpg" width="600" height="1000" alt="Tela de novo pedido com previsão e valor real" loading="lazy"></div>
+    <div><h3>Pedido lançado em segundos</h3>
+      <p>Escolha a loja, a marca e a coleção. Coloque quanto a loja deve comprar e, quando fechar, o valor real.</p>
+      <ul><li>Previsto x real por marca e por coleção</li><li>A comissão de cada marca é calculada sozinha</li><li>Marque o que já foi pago e veja o que falta receber</li></ul></div>
+  </div>
+
+  <div class="recurso inv">
+    <div class="foto"><img src="img/metas.jpg" width="600" height="1154" alt="Painel com metas por marca e porcentagem atingida" loading="lazy"></div>
+    <div><h3>Metas por marca e coleção</h3>
+      <p>Recebeu a meta da marca? Cadastre e acompanhe quanto já vendeu e quanto falta.</p>
+      <ul><li>Barra de progresso de cada meta</li><li>Mostra quanto chega se as previsões fecharem</li><li>Filtre por marca, coleção, região ou período</li></ul></div>
+  </div>
+
+  <div class="recurso">
+    <div class="foto"><img src="img/mapa-bahia.jpg" width="600" height="1154" alt="Mapa da Bahia com as lojas por cidade" loading="lazy"></div>
+    <div><h3>Sua carteira no mapa</h3>
+      <p>Veja onde estão suas lojas e quem está na hora de comprar de novo, pelo ritmo de cada cliente.</p>
+      <ul><li>Lojas comprando, esfriando e paradas</li><li>Total vendido por cidade e região</li><li>Regiões do seu jeito: Extremo Sul, Oeste…</li></ul></div>
+  </div>
+
+  <div class="recurso inv">
+    <div class="foto"><img src="img/despesa.jpg" width="600" height="1000" alt="Tela de despesas de viagem preenchida a partir de um texto" loading="lazy"></div>
+    <div><h3>Despesas de viagem sem planilha</h3>
+      <p>Escreva do seu jeito, como "gasolina 180 hoje em Vitória da Conquista", e o app preenche valor, data e categoria.</p>
+      <ul><li>Separado por viagem e categoria</li><li>Total gasto no período, lado a lado com a comissão</li></ul></div>
+  </div>
+
+  <div class="mais">
+    <div><b>Funciona sem internet</b><span>Lance na estrada; sincroniza quando o sinal voltar.</span></div>
+    <div><b>Celular e computador</b><span>Entre com o mesmo e-mail ou com o Google em qualquer aparelho.</span></div>
+    <div><b>Importa seus pedidos</b><span>Traga relatórios em texto, JSON ou HTML; lojas e marcas são criadas sozinhas.</span></div>
+    <div><b>Busca em tudo</b><span>Ache loja, marca ou pedido digitando poucas letras.</span></div>
+  </div>
+</div></section>
+
+<section class="preco" id="preco"><div class="wrap">
+  <h2>Um plano, tudo liberado</h2>
+  <p class="sub">Sem limite de marcas, lojas ou pedidos. Histórico completo.</p>
+  <div class="cartao">
+    <div class="valor">R$ 29,90 <small>por mês</small></div>
+    <ul><li>7 dias grátis, sem cartão</li><li>Marcas, lojas e pedidos ilimitados</li><li>Metas, comissões e despesas de viagem</li><li>Funciona no celular e no computador</li><li>Cancele quando quiser, sem multa</li></ul>
+    <a class="btn azul" href="../?criar=1">Começar meus 7 dias grátis</a>
+  </div>
+</div></section>
+
+<section><div class="wrap" style="max-width:720px">
+  <h2>Perguntas frequentes</h2>
+  <p class="sub">Ficou alguma dúvida? Escreva para <a href="mailto:contato@rotacomercial.app.br">contato@rotacomercial.app.br</a>.</p>
+  <details><summary>Preciso cadastrar cartão para testar?</summary><p>Não. Você usa tudo por 7 dias sem cartão. Se gostar, assina depois por PIX.</p></details>
+  <details><summary>O que acontece quando o teste acaba?</summary><p>Você continua vendo e baixando todos os seus dados. Só não consegue lançar coisas novas até assinar. Nada é apagado.</p></details>
+  <details><summary>Funciona sem internet?</summary><p>Sim. O app guarda tudo no celular e envia para a sua conta quando a internet voltar.</p></details>
+  <details><summary>Preciso baixar na loja de aplicativos?</summary><p>Não. Abra rotacomercial.app.br no celular e toque em "Adicionar à tela de início". Ele fica com ícone e abre como um app.</p></details>
+  <details><summary>Meus dados ficam seguros?</summary><p>Ficam guardados em servidores no Brasil, só você vê, e você pode baixar ou excluir tudo quando quiser. Veja a <a href="../privacidade.html">política de privacidade</a>.</p></details>
+  <details><summary>Já tenho meus pedidos numa planilha. Dá para trazer?</summary><p>Dá. O app importa relatórios em texto, JSON ou HTML e cria as lojas e marcas sozinho.</p></details>
+  <details><summary>Serve para outros ramos além de moda?</summary><p>Serve para qualquer representante que trabalhe com marcas e lojas. Coleções e regiões você mesmo define.</p></details>
+  <details><summary>Como cancelo?</summary><p>É só não renovar ou nos avisar. Não tem multa nem fidelidade.</p></details>
+</div></section>
+
+<section class="final" style="padding-top:0"><div class="wrap">
+  <h2>Comece hoje, de graça</h2>
+  <p class="sub">Em 2 minutos você cadastra suas marcas e lança o primeiro pedido.</p>
+  <a class="btn amarelo" href="../?criar=1">Testar 7 dias grátis</a>
+</div></section>
+</main>
+
+<footer><div class="wrap">
+  <span>© 2026 Rota Comercial</span>
+  <nav><a href="../termos.html">Termos de uso</a><a href="../privacidade.html">Privacidade</a><a href="mailto:contato@rotacomercial.app.br">Contato</a></nav>
+</div></footer>
+</body>
+</html>
