@@ -1,7 +1,7 @@
 // ---------- mapa nacional ----------
-// Contornos: pacote aberto @svg-maps/brazil (MapSVG, CC BY 4.0), carregado da CDN jsDelivr.
+// Contornos: pacote aberto @svg-maps/brazil (MapSVG, CC BY 4.0), guardado em mapa/brasil.js (a CDN fica de reserva).
 // Cores, bolhas e pinos vêm dos arrays "lojas" e "pedidos": nada é fixo.
-const MAPA_FONTES=['https://cdn.jsdelivr.net/npm/@svg-maps/brazil/+esm','https://cdn.jsdelivr.net/npm/@svg-country-maps/brazil/+esm'];
+const MAPA_FONTES=[new URL('mapa/brasil.js',location.href).href,'https://cdn.jsdelivr.net/npm/@svg-maps/brazil/+esm','https://cdn.jsdelivr.net/npm/@svg-country-maps/brazil/+esm'];
 const norm=s=>String(s).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();
 const UF_POR_NOME=Object.fromEntries(Object.entries(UFS).map(([k,v])=>[norm(v),k]));
 // Coordenadas de referência (longitude, latitude): capitais, cidades grandes e cidades baianas.

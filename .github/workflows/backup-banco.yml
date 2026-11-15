@@ -1,0 +1,46 @@
+# Backup semanal do banco (Supabase), criptografado.
+# Segredos necessários (Settings > Secrets and variables > Actions):
+#   SUPABASE_DB_URL  - texto de conexão "Session pooler" do Supabase (Connect > Session pooler), com a senha do banco
+#   BACKUP_SENHA     - uma senha longa só sua, usada para trancar o arquivo do backup
+# O repositório é público: o arquivo sai sempre criptografado e fica 90 dias em Actions > Backup do banco > Artifacts.
+# Para abrir: gpg --decrypt backup-AAAA-MM-DD.sql.gz.gpg > backup.sql.gz  (pede a BACKUP_SENHA)
+name: Backup do banco
+on:
+  schedule:
+    - cron: '17 6 * * 1'   # toda segunda, 03:17 na Bahia
+  workflow_dispatch: {}
+permissions:
+  contents: read
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Instalar cliente do Postgres 17
+        run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+          sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client-17
+      - name: Copiar o banco
+        env:
+          DB: ${{ secrets.SUPABASE_DB_URL }}
+          SENHA: ${{ secrets.BACKUP_SENHA }}
+        run: |
+          set -euo pipefail
+          test -n "$DB" && test -n "$SENHA" || { echo "Faltam os segredos SUPABASE_DB_URL e BACKUP_SENHA"; exit 1; }
+          D=$(date -u +%F)
+          /usr/lib/postgresql/17/bin/pg_dump "$DB" --no-owner --no-privileges \
+            --schema=public --schema=auth \
+            --exclude-table-data='auth.audit_log_entries' --exclude-table-data='auth.refresh_tokens' --exclude-table-data='auth.sessions' \
+            | gzip -9 > backup.sql.gz
+          echo "Tamanho: $(du -h backup.sql.gz | cut -f1)"
+          gpg --batch --yes --pinentry-mode loopback --passphrase "$SENHA" --symmetric --cipher-algo AES256 -o "backup-$D.sql.gz.gpg" backup.sql.gz
+          rm backup.sql.gz
+          echo "ARQ=backup-$D.sql.gz.gpg" >> "$GITHUB_ENV"
+      - name: Guardar (90 dias)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARQ }}
+          path: ${{ env.ARQ }}
+          retention-days: 90

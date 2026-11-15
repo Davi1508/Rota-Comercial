@@ -4,7 +4,7 @@ function blocoLegal(){
     <a class="row" href="privacidade.html" target="_blank" rel="noopener"><div class="grow"><div class="t">Política de privacidade</div><div class="s">O que guardamos e por quê</div></div><span aria-hidden="true">›</span></a>
     <a class="row" href="termos.html" target="_blank" rel="noopener"><div class="grow"><div class="t">Termos de uso</div><div class="s">Teste grátis, assinatura e seus direitos</div></div><span aria-hidden="true">›</span></a>
     <a class="row" href="mailto:contato@rotacomercial.app.br"><div class="grow"><div class="t">Falar sobre seus dados</div><div class="s">contato@rotacomercial.app.br</div></div><span aria-hidden="true">›</span></a>
-  </div>`;
+  </div><p class="ufmsg creditos">Mapa do Brasil: <a href="https://mapsvg.com/maps/brazil" target="_blank" rel="noopener">MapSVG</a>, por Victor Cazanave, licença <a href="https://creativecommons.org/licenses/by/4.0/deed.pt-br" target="_blank" rel="noopener">CC BY 4.0</a>.</p>`;
 }
 
 const PALAVRA_EXCLUIR='EXCLUIR';
