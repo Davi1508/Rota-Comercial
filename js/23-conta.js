@@ -3,7 +3,7 @@
 const SB_URL='https://ulafdnjjdiscowijqwdg.supabase.co',SB_CHAVE='sb_publishable_-1c4r5XV26WUFY82X6Rwtw_9KmLDXj4';
 const SB_LIB='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js';
 const TABELAS=['marcas','lojas','pedidos','despesas'];
-const BACKUP_ANTES='rc-dados-antes-da-conta',PENDENTE='rc-conta-pendente';
+const BACKUP_ANTES='rc-dados-antes-da-conta',PENDENTE='rc-conta-pendente',DONO='rc-dono-dos-dados',OUTRA_CONTA='rc-dados-de-outra-conta';
 const lsSet=(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}},lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 let sb=null,conta=null,perfil=null,espelho=null,contaT=null,contaFila=Promise.resolve(),contaMsg='',contaEmail='';
 
@@ -75,17 +75,26 @@ async function sincronizarAoEntrar(){
   try{
     let r=await lerConta();
     if(exemplo)sairExemplo();
+    const dono=lsGet(DONO);
     if(r.vazio){
       espelho=vazioEspelho();
-      if(temDadosLocais()){await enviarConta();toast('Seus dados do celular foram enviados para a sua conta')}
+      if(temDadosLocais()&&dono&&dono!==conta.id){
+        // Dados deste aparelho são de OUTRA conta: não vão para a conta nova
+        lsSet(OUTRA_CONTA,JSON.stringify(serializar()));
+        aplicar(limpar({}));try{localStorage.setItem(CHAVE,JSON.stringify(serializar()))}catch(e){}
+        sairEdicoes();preencherForm();espelho.perfil='';await enviarConta();
+        toast('Conta nova começando do zero. Os dados da conta anterior não foram copiados.');
+      }
+      else if(temDadosLocais()){await enviarConta();toast('Seus dados do celular foram enviados para a sua conta')}
       else{espelho.perfil='';enviarConta()}
+      lsSet(DONO,conta.id);
       renderTudo();
     }else{
       if(temDadosLocais()){lsSet(BACKUP_ANTES,JSON.stringify(serializar()));
         // Mudanças feitas sem internet: sobem primeiro, depois tudo é lido de novo do servidor
         if(lsGet(PENDENTE)===conta.id){const meu=serializar();aplicar(r.dados);espelho=espelhar();aplicar(meu);await enviarConta(true);r=await lerConta()}}
       aplicar(r.dados);try{localStorage.setItem(CHAVE,JSON.stringify(serializar()))}catch(e){}
-      espelho=espelhar();sairEdicoes();preencherForm();renderTudo();marcarStatus('conta');toast('Dados da sua conta carregados');
+      espelho=espelhar();lsSet(DONO,conta.id);sairEdicoes();preencherForm();renderTudo();marcarStatus('conta');toast('Dados da sua conta carregados');
     }
   }catch(e){console.warn('Conta indisponível',e);espelho=null;marcarStatus('pendente');toast('Não foi possível falar com o servidor agora. Seus dados continuam no celular.')}
   if($('#cEmail')||$('[data-conta-sair]'))renderAjustes();
