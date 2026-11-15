@@ -132,6 +132,12 @@ async function iniciarConta(){
   addEventListener('online',()=>{if(conta&&espelho)enviarConta()});
 }
 
+// Outra aba trocou de conta, excluiu a conta ou apagou os dados: esta aba recarrega para não misturar dados
+addEventListener('storage',e=>{
+  if(e.key===DONO&&e.oldValue!==e.newValue||e.key===CHAVE&&e.newValue===null){
+    if(window.__recarregando)return;window.__recarregando=true;setTimeout(()=>location.reload(),200)}
+});
+
 // ---------- tela de entrada (abre no começo do app) ----------
 const SEM_CONTA='rc-sem-conta';
 let entradaModo='entrar',entradaMsg='',entradaOk='',entradaCarregando=false,contaNome='';
