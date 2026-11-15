@@ -402,3 +402,8 @@ a.btn{display:grid;place-items:center;text-decoration:none;margin-top:var(--s3)}
 .legal-links a.row>span{color:var(--muted);font-size:24px;line-height:24px;padding:0 var(--s2)}
 .btn.ghost.perigo{color:var(--bad);margin-top:var(--s2)}
 .en-nota a{color:var(--primary)}
+/* Google */
+.en-google{background:var(--surface);color:var(--ink);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;gap:var(--s2);margin-top:var(--s3)}
+.en-g{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:var(--pill);background:var(--primary-soft);color:var(--primary);font-weight:900;font-size:14px;line-height:24px}
+.en-ou{display:flex;align-items:center;gap:var(--s2);margin:var(--s3) 0 0;color:var(--muted);font-size:14px;line-height:20px}
+.en-ou::before,.en-ou::after{content:"";flex:1;height:1px;background:var(--line)}

@@ -145,6 +145,8 @@ function renderEntrada(){
   }else{
     const criar=m==='criar';
     corpo=`<div class="en-seg" role="tablist"><button type="button" role="tab" aria-selected="${!criar}" class="${criar?'':'on'}" data-en-modo="entrar">Entrar</button><button type="button" role="tab" aria-selected="${criar}" class="${criar?'on':''}" data-en-modo="criar">Criar conta</button></div>
+      <button type="button" class="btn en-google" data-en-google${car?' disabled':''}><span class="en-g" aria-hidden="true">G</span>Continuar com Google</button>
+      <div class="en-ou" aria-hidden="true"><span>ou com e-mail</span></div>
       <form novalidate data-en-form>
       ${criar?`<label class="f" for="cNome">Seu nome</label><input id="cNome" type="text" autocomplete="given-name" value="${esc(contaNome||NOME)}" placeholder="Como quer ser chamado">`:''}
       ${campoEmail(!criar)}${campoSenha(criar)}
