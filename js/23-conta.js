@@ -91,11 +91,26 @@ async function sincronizarAoEntrar(){
   if($('#cEmail')||$('[data-conta-sair]'))renderAjustes();
 }
 
+// Reserva: se a volta do Google trouxe o login no endereço e a biblioteca não leu em 4s, entra direto com ele
+function resgatarLoginDaUrl(){
+  const h=new URLSearchParams(location.hash.slice(1)),at=h.get('access_token'),rt=h.get('refresh_token');
+  if(!at||!rt)return;
+  setTimeout(async()=>{
+    if(conta)return;
+    try{const {data,error}=await sb.auth.setSession({access_token:at,refresh_token:rt});
+      if(error)throw error;
+      if(location.hash.includes('access_token'))history.replaceState(null,'',location.pathname+location.search);
+      if(typeof registrarErro==='function')registrarErro('diag-login: precisou do resgate e deu certo','resgate');
+    }catch(e){if(typeof registrarErro==='function')registrarErro('diag-login: resgate falhou: '+(e&&e.message||e),'resgate')}
+  },4000);
+}
 function carregarLib(){return new Promise((ok,falha)=>{if(window.supabase&&window.supabase.createClient)return ok();const s=document.createElement('script');s.src=SB_LIB;s.onload=ok;s.onerror=falha;document.head.appendChild(s)})}
 async function iniciarConta(){
   if(window.claude)return; // dentro do artefato do Claude a conexão com servidores de fora é bloqueada
   try{await carregarLib()}catch(e){console.warn('Biblioteca da conta não carregou',e);return}
-  sb=window.supabase.createClient(SB_URL,SB_CHAVE,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+  // lock simples: a trava do navegador (navigator.locks) às vezes fica presa no Safari e o login nunca termina
+  sb=window.supabase.createClient(SB_URL,SB_CHAVE,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,lock:async(_n,_t,fn)=>await fn()}});
+  resgatarLoginDaUrl();
   sb.auth.onAuthStateChange((ev,sess)=>{
     const u=sess&&sess.user;
     if(ev==='PASSWORD_RECOVERY'){mostrarEntrada('nova');return}
