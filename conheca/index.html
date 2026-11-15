@@ -65,7 +65,7 @@ h2{font-size:32px;line-height:40px;font-weight:900;margin:0 0 var(--s2);letter-s
 .dor s{color:var(--muted)}
 .recurso{display:grid;gap:var(--s4);align-items:center;margin-top:var(--s7)}
 .recurso .foto{justify-self:center;width:240px;border-radius:32px;border:8px solid #0C0F21;overflow:hidden;box-shadow:0 16px 40px rgba(20,24,51,.18);height:400px}
-.recurso .foto img{display:block;width:100%;height:auto}
+.recurso .foto img,.recurso .foto video{display:block;width:100%;height:auto}
 .recurso h3{font-size:24px;line-height:32px;font-weight:900;margin:0 0 var(--s2)}
 .recurso p{margin:0 0 var(--s2);color:var(--muted);font-size:18px;line-height:28px}
 .recurso ul{margin:0;padding-left:var(--s4);color:var(--ink)}
@@ -146,28 +146,28 @@ footer nav a{display:inline-flex;align-items:center;min-height:48px;padding:0 va
   <p class="sub">Tudo pensado para o dia a dia de quem atende lojista: marca, coleção, região e viagem.</p>
 
   <div class="recurso">
-    <div class="foto"><img src="img/pedido.jpg" width="600" height="1000" alt="Tela de novo pedido com previsão e valor real" loading="lazy"></div>
+    <div class="foto"><video src="video/pedido.mp4" poster="img/pedido.jpg" autoplay muted loop playsinline preload="metadata" aria-label="Lançando um pedido com previsão e valor real"></video></div>
     <div><h3>Pedido lançado em segundos</h3>
       <p>Escolha a loja, a marca e a coleção. Coloque quanto a loja deve comprar e, quando fechar, o valor real.</p>
       <ul><li>Previsto x real por marca e por coleção</li><li>A comissão de cada marca é calculada sozinha</li><li>Marque o que já foi pago e veja o que falta receber</li></ul></div>
   </div>
 
   <div class="recurso inv">
-    <div class="foto"><img src="img/metas.jpg" width="600" height="1154" alt="Painel com metas por marca e porcentagem atingida" loading="lazy"></div>
+    <div class="foto"><video src="video/metas.mp4" poster="img/metas.jpg" autoplay muted loop playsinline preload="metadata" aria-label="Barra da meta da marca enchendo até 100%"></video></div>
     <div><h3>Metas por marca e coleção</h3>
       <p>Recebeu a meta da marca? Cadastre e acompanhe quanto já vendeu e quanto falta.</p>
       <ul><li>Barra de progresso de cada meta</li><li>Mostra quanto chega se as previsões fecharem</li><li>Filtre por marca, coleção, região ou período</li></ul></div>
   </div>
 
   <div class="recurso">
-    <div class="foto"><img src="img/mapa-bahia.jpg" width="600" height="1154" alt="Mapa da Bahia com as lojas por cidade" loading="lazy"></div>
+    <div class="foto"><video src="video/mapa-bahia.mp4" poster="img/mapa-bahia.jpg" autoplay muted loop playsinline preload="metadata" aria-label="Tocando na Bahia para ver as lojas no mapa"></video></div>
     <div><h3>Sua carteira no mapa</h3>
       <p>Veja onde estão suas lojas e quem está na hora de comprar de novo, pelo ritmo de cada cliente.</p>
       <ul><li>Lojas comprando, esfriando e paradas</li><li>Total vendido por cidade e região</li><li>Regiões do seu jeito: Extremo Sul, Oeste…</li></ul></div>
   </div>
 
   <div class="recurso inv">
-    <div class="foto"><img src="img/despesa.jpg" width="600" height="1000" alt="Tela de despesas de viagem preenchida a partir de um texto" loading="lazy"></div>
+    <div class="foto"><video src="video/despesa.mp4" poster="img/despesa.jpg" autoplay muted loop playsinline preload="metadata" aria-label="Escrevendo uma despesa e o app preenchendo sozinho"></video></div>
     <div><h3>Despesas de viagem sem planilha</h3>
       <p>Escreva do seu jeito, como "gasolina 180 hoje em Vitória da Conquista", e o app preenche valor, data e categoria.</p>
       <ul><li>Separado por viagem e categoria</li><li>Total gasto no período, lado a lado com a comissão</li></ul></div>
@@ -215,5 +215,9 @@ footer nav a{display:inline-flex;align-items:center;min-height:48px;padding:0 va
   <span>© 2026 Rota Comercial</span>
   <nav><a href="../termos.html">Termos de uso</a><a href="../privacidade.html">Privacidade</a><a href="mailto:contato@rotacomercial.app.br">Contato</a></nav>
 </div></footer>
+<script>
+// Quem pediu menos movimento no aparelho vê a imagem parada
+if(matchMedia('(prefers-reduced-motion: reduce)').matches)document.querySelectorAll('video').forEach(v=>{v.removeAttribute('autoplay');v.pause()});
+</script>
 </body>
 </html>
