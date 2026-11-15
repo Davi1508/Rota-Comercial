@@ -37,7 +37,12 @@ O app não precisa de etapa de montagem: o navegador carrega os arquivos direto.
 | `23-conta.js` | Conta, login e sincronização com o Supabase |
 | `24-app.js` | App instalável e fim do teste grátis |
 | `25-metas.js` | Metas por marca e coleção |
+| `26-lgpd.js` | Privacidade e excluir conta |
+| `27-google.js` | Entrar com Google |
+| `00-erros.js` | Registro de erros do app |
 
 ## Publicação
 
 Cada commit no ramo `main` publica sozinho no Cloudflare Pages (pelo GitHub Actions).
+
+Consultas prontas para o dono (ativar pagante, ver usuários, ver erros): `docs/consultas-do-dono.md`.
