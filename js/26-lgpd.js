@@ -34,7 +34,10 @@ async function excluirConta(){
   const {error}=await sb.rpc('excluir_conta');
   if(error){b.disabled=false;b.textContent='Excluir para sempre';return erro('Não foi possível excluir agora. Tente de novo ou escreva para contato@rotacomercial.app.br.')}
   // conta apagada no servidor: limpa este aparelho e sai
-  [CHAVE,BACKUP_ANTES,PENDENTE,SEM_CONTA,DONO,OUTRA_CONTA].forEach(k=>{try{localStorage.removeItem(k)}catch(e){}});
+  const uidExcluido=conta&&conta.id;
+  [CHAVE,BACKUP_ANTES,PENDENTE,SEM_CONTA,OUTRA_CONTA].forEach(k=>{try{localStorage.removeItem(k)}catch(e){}});
+  // marca que os dados que ainda estiverem em outra aba são da conta excluída: nunca sobem para outra conta
+  lsSet(DONO,'excluida:'+uidExcluido);
   try{await sb.auth.signOut({scope:'local'})}catch(e){}
   conta=null;perfil=null;espelho=null;
   try{aplicar(limpar({}))}catch(e){}
