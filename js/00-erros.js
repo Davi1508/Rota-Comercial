@@ -9,13 +9,14 @@ function registrarErro(msg,onde,pilha){
     if(ERROS.vistos.has(chave)||ERROS.enviados+ERROS.fila.length>=ERROS.MAX)return;
     ERROS.vistos.add(chave);
     ERROS.fila.push({mensagem:msg,onde:String(onde||'').slice(0,300),pilha:String(pilha||'').slice(0,2000),
-      tela:(location.pathname+location.hash).slice(0,200),navegador:navigator.userAgent.slice(0,300),versao:ERROS.VERSAO});
+      tela:location.pathname.slice(0,200),navegador:navigator.userAgent.slice(0,300),versao:ERROS.VERSAO});
     setTimeout(enviarErros,1500);
   }catch(e){}
 }
 async function enviarErros(){
   try{
-    if(!ERROS.fila.length||typeof sb==='undefined'||!sb||!navigator.onLine)return;
+    if(!ERROS.fila.length)return;
+    if(typeof sb==='undefined'||!sb||!navigator.onLine){if((ERROS.tent=(ERROS.tent||0)+1)<10)setTimeout(enviarErros,3000);return}
     if(/^(localhost|127\.)/.test(location.hostname)&&!/[?&]erros=1/.test(location.search))return; // não registra testes locais
     const lote=ERROS.fila.splice(0);ERROS.enviados+=lote.length;
     const uid=typeof conta!=='undefined'&&conta?conta.id:null;
