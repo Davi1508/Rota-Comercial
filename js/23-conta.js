@@ -78,7 +78,7 @@ async function sincronizarAoEntrar(){
     const dono=lsGet(DONO);
     if(r.vazio){
       espelho=vazioEspelho();
-      const nomeServidor=(r.dados.nome||'').trim();
+      const meta=conta.user_metadata||{},nomeServidor=(r.dados.nome||'').trim()||String(meta.nome||meta.full_name||meta.name||'').trim().split(/\s+/)[0].slice(0,40);
       if(temDadosLocais()&&dono&&dono!==conta.id){
         // Dados deste aparelho são de OUTRA conta: não vão para a conta nova
         lsSet(OUTRA_CONTA,JSON.stringify(serializar()));
