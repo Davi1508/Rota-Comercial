@@ -6,7 +6,7 @@ function renderLojasUF(anim){
   box.hidden=false;
   const todas=lojasVis().filter(l=>l.uf===estadoSel);
   if(!todas.length){
-    const extra=filtro.marca!=='todas'?` que trabalhem com a ${marca(filtro.marca).nome}`:'';
+    const extra=filtro.marca!=='todas'?` que trabalhem com a ${esc(marca(filtro.marca).nome)}`:'';
     box.innerHTML=`<div class="lhead"><h2>Lojas ${emUF(estadoSel)}</h2><span class="lcount">0 lojas</span></div>
       <div class="list" style="padding:8px 16px 16px"><p class="empty">Ainda não existem lojas cadastradas ${emUF(estadoSel)}${extra}.</p><button class="btn" data-nova-uf="${estadoSel}" style="margin-top:0">Cadastrar loja ${emUF(estadoSel)}</button></div>`;
     return;
