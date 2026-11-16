@@ -54,7 +54,7 @@ function agendarConta(){if(!conta)return false;lsSet(PENDENTE,conta.id);marcarSt
 
 async function buscarTudo(t){
   const todas=[];
-  for(let i=0;;i+=1000){const{data,error}=await sb.from(t).select('*').range(i,i+999);if(error)throw error;todas.push(...data);if(data.length<1000)break}
+  for(let i=0;;i+=1000){const{data,error}=await sb.from(t).select('*').order('id').range(i,i+999);if(error)throw error;todas.push(...data);if(data.length<1000)break}
   return todas;
 }
 // Banco → dados do app
@@ -78,15 +78,16 @@ async function sincronizarAoEntrar(){
     const dono=lsGet(DONO);
     if(r.vazio){
       espelho=vazioEspelho();
+      const nomeServidor=(r.dados.nome||'').trim();
       if(temDadosLocais()&&dono&&dono!==conta.id){
         // Dados deste aparelho são de OUTRA conta: não vão para a conta nova
         lsSet(OUTRA_CONTA,JSON.stringify(serializar()));
-        aplicar(limpar({}));try{localStorage.setItem(CHAVE,JSON.stringify(serializar()))}catch(e){}
+        aplicar(limpar({}));if(nomeServidor)NOME=nomeServidor;try{localStorage.setItem(CHAVE,JSON.stringify(serializar()))}catch(e){}
         sairEdicoes();preencherForm();espelho.perfil='';await enviarConta();
         toast('Conta nova começando do zero. Os dados da conta anterior não foram copiados.');
       }
-      else if(temDadosLocais()){await enviarConta();toast('Seus dados do celular foram enviados para a sua conta')}
-      else{espelho.perfil='';enviarConta()}
+      else if(temDadosLocais()){if(!NOME&&nomeServidor)NOME=nomeServidor;await enviarConta();toast('Seus dados do celular foram enviados para a sua conta')}
+      else{if(!NOME&&nomeServidor)NOME=nomeServidor;espelho.perfil='';enviarConta()}
       lsSet(DONO,conta.id);
       renderTudo();
     }else{
@@ -94,12 +95,22 @@ async function sincronizarAoEntrar(){
         // Mudanças feitas sem internet: sobem primeiro, depois tudo é lido de novo do servidor
         if(lsGet(PENDENTE)===conta.id){const meu=serializar();aplicar(r.dados);espelho=espelhar();aplicar(meu);await enviarConta(true);r=await lerConta()}}
       aplicar(r.dados);try{localStorage.setItem(CHAVE,JSON.stringify(serializar()))}catch(e){}
-      espelho=espelhar();lsSet(DONO,conta.id);sairEdicoes();preencherForm();renderTudo();marcarStatus('conta');toast('Dados da sua conta carregados');
+      espelho=espelhar();
+      if(!NOME){const m=conta.user_metadata||{},n=String(m.nome||m.full_name||m.name||'').trim().split(/\s+/)[0];if(n){NOME=n.slice(0,40);try{localStorage.setItem(CHAVE,JSON.stringify(serializar()))}catch(e){}agendarConta()}}lsSet(DONO,conta.id);sairEdicoes();preencherForm();renderTudo();marcarStatus('conta');toast('Dados da sua conta carregados');
     }
   }catch(e){console.warn('Conta indisponível',e);espelho=null;marcarStatus('pendente');toast('Não foi possível falar com o servidor agora. Seus dados continuam no celular.')}
   if($('#cEmail')||$('[data-conta-sair]'))renderAjustes();
 }
 
+// Relê só o plano e a data do teste (barato): libera na hora quem acabou de assinar
+async function atualizarPlano(){
+  if(!sb||!conta||!perfil)return;
+  try{const{data,error}=await sb.from('profiles').select('plano,trial_ate').eq('id',conta.id).single();if(error||!data)return;
+    const antes=contaAtiva();perfil={...perfil,...data};
+    if(antes!==contaAtiva()){if(contaAtiva()){toast('Assinatura ativa. Obrigado!');fecharLoja();enviarConta()}renderTudo()}
+    else if(typeof atualizarAvisoPlano==='function')atualizarAvisoPlano();
+  }catch(e){}
+}
 // Reserva: se a volta do Google trouxe o login no endereço e a biblioteca não leu em 4s, entra direto com ele
 function resgatarLoginDaUrl(){
   const h=new URLSearchParams(location.hash.slice(1)),at=h.get('access_token'),rt=h.get('refresh_token');
@@ -130,6 +141,8 @@ async function iniciarConta(){
       if(ev==='INITIAL_SESSION'&&(criar||lsGet(SEM_CONTA)!=='1'))mostrarEntrada(criar?'criar':'entrar')}
   });
   addEventListener('online',()=>{if(conta&&espelho)enviarConta()});
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')atualizarPlano()});
+  setInterval(()=>{if(document.visibilityState==='visible')atualizarPlano()},10*60e3);
 }
 
 // Outra aba trocou de conta, excluiu a conta ou apagou os dados: esta aba recarrega para não misturar dados
@@ -233,6 +246,6 @@ const traduzErro=e=>{const m=String(e&&e.message||e||'');
   if(/Password should be|weak/i.test(m))return'Escolha uma senha mais forte, com pelo menos 8 caracteres.';
   if(/rate limit|too many/i.test(m))return'Muitas tentativas. Espere alguns minutos e tente de novo.';
   return'Não foi possível agora. Verifique a internet e tente de novo.'};
-async function contaSair(){try{await sb.auth.signOut()}catch(e){}conta=null;perfil=null;espelho=null;marcarStatus('local');fecharLoja();toast('Você saiu da conta. Os dados continuam neste celular.');mostrarEntrada('entrar')}
+async function contaSair(){try{await sb.auth.signOut({scope:'local'})}catch(e){}conta=null;perfil=null;espelho=null;marcarStatus('local');fecharLoja();toast('Você saiu da conta. Os dados continuam neste celular.');mostrarEntrada('entrar')}
 
 iniciarConta();
