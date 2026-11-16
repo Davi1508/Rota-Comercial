@@ -156,6 +156,7 @@ function dataPlan(v){
   if(/^\d{5}(\.\d+)?$/.test(s))return dataPlan(+s);
   return s;
 }
+const dataBR=v=>{const s=dataPlan(v),m=String(s).match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?`${m[3]}/${m[2]}/${m[1]}`:String(s||'')};
 const linhaDeTotal=l=>l.some(c=>/^(sub)?total( geral)?:?$/i.test(String(c).trim()));
 const CANCELADO=/cancel|excluid|recusad|devolvid|orcament|rascunho|perdid/i;
 
@@ -216,12 +217,12 @@ function cancelarPlanilha(){plan=null;impItens=null;impMarcasNovas=new Map();ren
 function blocoPlanilha(){
   if(!plan)return'';
   const a=plan.abas[plan.aba],usados=USADOS_POR_TIPO[plan.tipo],ob=OBRIG[plan.tipo];
-  const ex=k=>{const i=plan.mapa[k];if(i==null)return'';const v=plan.dados.map(l=>l[i]).find(x=>x!==''&&x!=null);return v==null?'':String(k==='data'?dataPlan(v):v).slice(0,24)};
+  const ex=k=>{const i=plan.mapa[k];if(i==null)return'';const v=plan.dados.map(l=>l[i]).find(x=>x!==''&&x!=null);return v==null?'':String(k==='data'?dataBR(v):v).slice(0,24)};
   const opcoes=k=>`<option value="">— não tem —</option>`+plan.colunas.map((c,i)=>`<option value="${i}"${plan.mapa[k]===i?' selected':''}>${esc(c)}</option>`).join('');
   const campos=usados.map(k=>{const f=CAMPOS_PLAN.find(x=>x.k===k);return `<div class="plan-campo"><label class="f" for="pc-${k}">${esc(f.t)}${ob.includes(k)?' *':''}</label><select id="pc-${k}" data-plan-col="${k}" data-sem-combo>${opcoes(k)}</select>${ex(k)?`<div class="s">ex.: ${esc(ex(k))}</div>`:''}</div>`}).join('');
   const semMarca=plan.tipo!=='despesa'&&plan.mapa.marca==null,semCidade=plan.tipo!=='despesa'&&plan.mapa.cidade==null;
-  const prev=(()=>{if(plan.tipo==='despesa')return plan.dados.slice(0,3).map(l=>`${dataPlan(celula(l,'data'))} · ${fmt2.format(valorPlan(celula(l,'valor'))||0)} · ${celula(l,'categoria')||celula(l,'descricao')||''}`);
-    return plan.dados.filter(l=>!linhaDeTotal(l)).slice(0,3).map(l=>{const v=valorPlan(celula(l,'valor'));return [celula(l,'loja')||'?',(celula(l,'cidade')||plan.cidadePadrao||'?')+'/'+(celula(l,'uf')||plan.ufPadrao),celula(l,'marca')||plan.marcaPadrao||'',plan.tipo==='pedido'?dataPlan(celula(l,'data')):'',plan.tipo==='pedido'?fmt2.format(v>0?v:0):''].filter(Boolean).join(' · ')})})();
+  const prev=(()=>{if(plan.tipo==='despesa')return plan.dados.slice(0,3).map(l=>`${dataBR(celula(l,'data'))} · ${fmt2.format(valorPlan(celula(l,'valor'))||0)} · ${celula(l,'categoria')||celula(l,'descricao')||''}`);
+    return plan.dados.filter(l=>!linhaDeTotal(l)).slice(0,3).map(l=>{const v=valorPlan(celula(l,'valor'));return [celula(l,'loja')||'?',(celula(l,'cidade')||plan.cidadePadrao||'?')+'/'+(celula(l,'uf')||plan.ufPadrao),celula(l,'marca')||plan.marcaPadrao||'',plan.tipo==='pedido'?dataBR(celula(l,'data')):'',plan.tipo==='pedido'?fmt2.format(v>0?v:0):''].filter(Boolean).join(' · ')})})();
   return `<div id="planBox" class="aviso plan">
     <div class="plan-top"><div class="grow"><b>${esc(plan.nomeArq)}</b><div class="s">${plan.dados.length} ${plan.dados.length===1?'linha':'linhas'}${plan.abas.length>1?` · aba "${esc(a.nome)}"`:''}</div></div><button class="chipbtn" data-plan-cancelar>Cancelar</button></div>
     ${plan.abas.length>1?`<label class="f" for="planAba">Aba da planilha</label><select id="planAba" data-sem-combo>${plan.abas.map((x,i)=>`<option value="${i}"${i===plan.aba?' selected':''}>${esc(x.nome)} (${x.linhas.length} linhas)</option>`).join('')}</select>`:''}
