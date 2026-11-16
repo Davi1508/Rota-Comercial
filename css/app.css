@@ -408,3 +408,17 @@ a.btn{display:grid;place-items:center;text-decoration:none;margin-top:var(--s3)}
 .en-ou{display:flex;align-items:center;gap:var(--s2);margin:var(--s3) 0 0;color:var(--muted);font-size:14px;line-height:20px}
 .en-ou::before,.en-ou::after{content:"";flex:1;height:1px;background:var(--line)}
 .creditos{font-size:12px;line-height:16px;margin-top:var(--s2)}.creditos a{color:inherit}
+/* importar planilha */
+.plan{margin-top:var(--s3)}
+.plan-top{display:flex;align-items:flex-start;gap:var(--s2)}.plan-top .grow{flex:1;min-width:0;overflow-wrap:anywhere}
+.plan-tipos{display:flex;flex-wrap:wrap;gap:var(--s2);margin-top:var(--s1)}
+.plan-tipos .chip{min-height:40px;padding:0 var(--s3);border-radius:var(--pill);border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-size:14px;line-height:20px;font-weight:700;cursor:pointer}
+.plan-tipos .chip.on{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.plan-campos{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:0 var(--s3)}
+.plan-campo{margin-bottom:var(--s2)}
+.plan-campo .s{margin-top:var(--s1);overflow-wrap:anywhere}
+.plan-prev{background:var(--surface);border:1px solid var(--line);border-radius:var(--r1);padding:var(--s2) var(--s3);font-size:14px;line-height:20px}
+.plan-prev div{padding:var(--s1) 0;overflow-wrap:anywhere}
+.imp-resumo{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s2);margin-top:var(--s3)}
+.imp-resumo div{background:var(--surface);border:1px solid var(--line);border-radius:var(--r2);padding:var(--s2) var(--s3);text-align:center}
+.imp-resumo b{display:block;font-size:24px;line-height:32px}.imp-resumo span{font-size:12px;line-height:16px;color:var(--muted)}

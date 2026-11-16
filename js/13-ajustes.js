@@ -40,7 +40,7 @@ function renderAjustes(){
     <div class="seg" style="margin-top:16px;max-width:none">${[['marcas','Marcas'],['divisoes','Divisões'],['sugestoes','Sugestões'],['dados','Seus dados']].map(([k,t])=>`<button data-aj="${k}" class="${k===ajusteAba?'on':''}">${t}</button>`).join('')}</div></div>
     <div class="sh-body" style="padding-top:16px">${corpo}</div>`;
   const fm=$('#formMarca');if(fm){fm.onsubmit=salvarMarca;if(marcaEdit==='nova')$('#mNome').focus()}
-  const ai=$('#impArq');if(ai)ai.onchange=e=>{const f=e.target.files[0];e.target.value='';if(!f)return;const r=new FileReader();r.onload=()=>processarRelatorio(r.result);r.readAsText(f)};
+  const ai=$('#impArq');if(ai)ai.onchange=e=>{const f=e.target.files[0];e.target.value='';if(!f)return;lerArquivoImport(f)};
   const ab=$('#arqBackup');if(ab)ab.onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>lerBackup(r.result);r.readAsText(f)};
 }
 function salvarMarca(e){
