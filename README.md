@@ -40,6 +40,8 @@ O app não precisa de etapa de montagem: o navegador carrega os arquivos direto.
 | `26-lgpd.js` | Privacidade e excluir conta |
 | `27-google.js` | Entrar com Google |
 | `00-erros.js` | Registro de erros do app |
+| `28-cidades.js` | Todas as cidades do Brasil |
+| `29-planilha.js` | Importar planilhas (.xlsx, .csv, tabela colada) |
 
 ## Publicação
 

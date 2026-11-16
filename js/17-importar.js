@@ -85,7 +85,7 @@ function analisarItem(x,vistos,novas){
     const res=resolverLoja(x,novas);if(res.erro)return(r.msg=res.erro,r);
     const lk=res.l?res.l.id:'novo:'+res.nova.k,k=['p',lk,m.id,isoD(ds),val].join('|');
     if(vistos.has(k)||(res.l&&pedidos.some(o=>o.loja===res.l.id&&o.marca===m.id&&o.valor===val&&isoD(o.data)===isoD(ds))))return(r.msg='Já existe igual: não será lançado de novo',r);
-    vistos.add(k);r.dados={tipo:'pedido',data:ds,valor:val,loja:res.l?res.l.id:null,novaKey:res.nova?res.nova.k:null,marca:m.id,pago:simNao(x.pago),colecao:col||''};
+    vistos.add(k);const pv=Math.round((typeof x.previsto==='number'?x.previsto:num(x.previsto||0))*100)/100;r.dados={tipo:'pedido',data:ds,valor:val,previsto:pv>0?pv:0,loja:res.l?res.l.id:null,novaKey:res.nova?res.nova.k:null,marca:m.id,pago:simNao(x.pago),colecao:col||''};
     if(res.nova&&res.parecida){marcarParecida(r,res);return r}
     r.ok=true;r.msg=res.nova?msgNova(res.nova,res.regAviso):'Pronto para lançar';return r;
   }
@@ -107,20 +107,32 @@ function extrairLista(txt){
   }
   return null;
 }
-let impNovas=new Map(),impMarcasNovas=new Map(),impUltimo='';
+let impNovas=new Map(),impMarcasNovas=new Map(),impUltimo='',impTaxasSug={},impOrigem='';
 const pedirMarca=n=>{const k=norm(n);if(!impMarcasNovas.has(k))impMarcasNovas.set(k,n.trim());return `Marca nova: ${n.trim()}. Informe a comissão dela no quadro acima.`};
 function processarRelatorio(txt){
-  impErro='';impItens=null;impNovas=new Map();impMarcasNovas=new Map();impUltimo=txt;
+  impErro='';impItens=null;impUltimo=txt;
+  // tabela colada do Excel / Google Planilhas, ou .csv colado
+  if(typeof pareceTabelaTexto==='function'&&pareceTabelaTexto(txt)){abrirPlanilha([{nome:'Tabela colada',linhas:lerCsv(String(txt).trim())}],'Tabela colada');return}
   const arr=extrairLista(txt);
-  if(!arr||!arr.length){impErro='Não achei a lista de lançamentos. Aceito texto com a lista JSON, um arquivo .json ou um .html com a lista ou uma tabela.';renderAjustes();return}
-  const vistos=new Set();impItens=arr.map((x,i)=>{if(x&&typeof x.tipo==='string')x.tipo=x.tipo.trim().toLowerCase();const r=analisarItem(x,vistos,impNovas);if(!r.resumo)r.resumo=`Item ${i+1}`;return r});renderAjustes();
+  if(!arr||!arr.length){
+    const tabs=/^\s*</.test(String(txt||''))&&typeof tabelasDoHtml==='function'?tabelasDoHtml(txt):[];
+    if(tabs.length){abrirPlanilha(tabs,'Página HTML');return}
+    impErro='Não achei lançamentos aí. Aceito planilha (.xlsx ou .csv), tabela copiada do Excel, a lista JSON da outra IA ou um .html com tabela.';renderAjustes();return}
+  if(typeof plan!=='undefined')plan=null;
+  processarLista(arr,'Relatório');
 }
+function processarLista(arr,origem){
+  impErro='';impNovas=new Map();impMarcasNovas=new Map();impOrigem=origem||'';
+  const vistos=new Set();impItens=arr.map((x,i)=>{if(x&&typeof x.tipo==='string')x.tipo=x.tipo.trim().toLowerCase();const r=analisarItem(x,vistos,impNovas);if(!r.resumo)r.resumo=`Item ${i+1}`;return r});renderAjustes();
+  requestAnimationFrame(()=>{const el=$('#impResultado');if(el)el.scrollIntoView({block:'start',behavior:'smooth'})});
+}
+const reconferirImport=()=>{if(typeof plan!=='undefined'&&plan&&plan.conferida)conferirPlanilha();else processarRelatorio(impUltimo)};
 function conferirImport(){impTxt=$('#impTexto').value;processarRelatorio(impTxt)}
 function cadastrarMarcasImport(){
   const ins=[...document.querySelectorAll('[data-taxa-nova]')],novas=[];
   for(const el of ins){const t=num(el.value);if(!(t>0&&t<=50)){toast(`Informe a comissão de ${el.dataset.taxaNova} (entre 0,1% e 50%)`);el.focus();return}novas.push([el.dataset.taxaNova,t])}
   novas.forEach(([nome,t])=>{if(!MARCAS.some(m=>norm(m.nome)===norm(nome)))MARCAS.push({id:'m'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),nome,taxa:+(t/100).toFixed(4),cor:PALETA[MARCAS.length%PALETA.length]})});
-  salvar();preencherMarcas();syncMarcaLoja();renderTudo();processarRelatorio(impUltimo);
+  salvar();preencherMarcas();syncMarcaLoja();renderTudo();reconferirImport();
   toast(`${novas.length} ${novas.length===1?'marca cadastrada':'marcas cadastradas'}. Confira e lance.`);
 }
 function forcarImport(i){
@@ -136,20 +148,26 @@ function lancarImport(){
   ok.forEach(({dados:d})=>{
     if(d.tipo==='despesa')DESPESAS.push({id:'d'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),data:d.data,valor:d.valor,categoria:d.categoria,descricao:d.descricao});
     else if(d.tipo==='loja'){const l=lojaDe(d);d.marcas.forEach(m=>{if(!l.marcas.includes(m))l.marcas.push(m)})}
-    else{const l=lojaDe(d);const o=addPedido(l.id,d.marca,d.valor,d.data,d.pago);o.colecao=d.colecao;if(!l.marcas.includes(d.marca))l.marcas.push(d.marca)}
+    else{const l=lojaDe(d);const o=addPedido(l.id,d.marca,d.valor,d.data,d.pago);o.colecao=d.colecao;if(d.previsto)o.previsto=d.previsto;if(!l.marcas.includes(d.marca))l.marcas.push(d.marca)}
   });
   const n=ok.length,nl=criadas.size,sem=[...criadas.values()].filter(l=>!l.coord).length;
-  impItens=null;impTxt='';impNovas=new Map();salvar();preencherLojas();syncMarcaLoja();renderTudo();renderAjustes();
+  impItens=null;impTxt='';impNovas=new Map();if(typeof plan!=='undefined')plan=null;salvar();preencherLojas();syncMarcaLoja();renderTudo();renderAjustes();
   toast(`${n} ${n===1?'item lançado':'itens lançados'}${nl?`, ${nl} ${nl===1?'loja cadastrada':'lojas cadastradas'}`:''}${sem?`. ${sem} sem lugar no mapa: abra a loja e toque em Marcar no mapa`:''}`);
 }
 function blocoImportar(){
-  const pv=impItens?`<div class="list" style="margin-top:var(--s2)">${impItens.map((x,i)=>`<div class="row"><div class="grow"><div class="t">${esc(x.resumo||'Item')}</div><div class="s"${x.ok?'':` style="color:var(--${x.forcavel?'warn':'bad'})"`}>${esc(x.msg)}</div>${x.forcavel?`<button class="chipbtn" data-forcar-imp="${i}" style="margin-top:var(--s2)">Criar como nova</button>`:''}</div></div>`).join('')}</div>`
-    +(()=>{const n=impItens.filter(x=>x.ok).length;return `<button class="btn acc" data-lancar-imp ${n?'':'disabled'}>Lançar ${n} ${n===1?'item':'itens'}</button>`})():'';
-  return `<h2>Importar relatório de outra IA</h2>
-    <p class="ufmsg" style="margin-top:0">Peça à outra IA o relatório no formato abaixo, cole aqui, confira e lance tudo de uma vez.</p>
-    <button class="btn ghost" data-copiar-instr>Copiar instruções para a outra IA</button>
-    <textarea id="impTexto" rows="5" placeholder="Cole aqui a lista JSON" style="margin-top:var(--s2)">${esc(impTxt)}</textarea>
-    <button class="btn" data-conferir-imp>Conferir texto colado</button>
-    <label class="btn ghost" style="text-align:center;cursor:pointer">Escolher arquivo (.json ou .html)<input type="file" id="impArq" accept=".json,.html,.htm,application/json,text/html,text/plain" hidden></label>
-    ${impErro?`<div class="erro">${esc(impErro)}</div>`:''}${impMarcasNovas.size?`<div class="aviso" style="margin-top:var(--s2)"><b>${impMarcasNovas.size===1?'Marca nova no relatório':'Marcas novas no relatório'}</b><p class="s" style="margin:var(--s1) 0 var(--s2)">Informe a comissão de cada uma para lançar os itens dela.</p>${[...impMarcasNovas.values()].map(n=>`<label class="f" style="margin-top:var(--s2)">${esc(n)} · comissão (%)</label><input type="text" inputmode="decimal" placeholder="Ex.: 10 ou 8,5" data-taxa-nova="${esc(n)}" autocomplete="off">`).join('')}<button class="btn" data-cad-marcas-imp>Cadastrar ${impMarcasNovas.size===1?'marca':'marcas'} e conferir de novo</button></div>`:''}${pv}`;
+  const linha=(x,i)=>`<div class="row"><div class="grow"><div class="t">${esc(x.resumo||'Item')}</div><div class="s"${x.ok?'':` style="color:var(--${x.forcavel?'warn':/Já existe/.test(x.msg)?'muted':'bad'})"`}>${esc(x.msg)}</div>${x.forcavel?`<button class="chipbtn" data-forcar-imp="${i}" style="margin-top:var(--s2)">Criar como nova</button>`:''}</div></div>`;
+  const pv=impItens?(()=>{const comI=impItens.map((x,i)=>[x,i]),ok=comI.filter(([x])=>x.ok),rep=comI.filter(([x])=>!x.ok&&/Já existe/.test(x.msg)),prob=comI.filter(([x])=>!x.ok&&!/Já existe/.test(x.msg));
+    const LIM=40,mostra=[...prob,...ok].slice(0,LIM);
+    return `<div id="impResultado" class="imp-resumo"><div><b>${ok.length}</b><span>prontos</span></div><div><b>${prob.length}</b><span>com problema</span></div><div><b>${rep.length}</b><span>já existiam</span></div></div>
+      <div class="list" style="margin-top:var(--s2)">${mostra.map(([x,i])=>linha(x,i)).join('')}</div>
+      ${prob.length+ok.length>LIM?`<p class="s" style="margin:var(--s2) 0 0">Mostrando ${LIM} de ${prob.length+ok.length}. Os problemas aparecem primeiro.</p>`:''}
+      <button class="btn acc" data-lancar-imp ${ok.length?'':'disabled'}>Lançar ${ok.length} ${ok.length===1?'item':'itens'}</button>`})():'';
+  return `<h2>Importar de outro app ou planilha</h2>
+    <p class="ufmsg" style="margin-top:0">Traga seus pedidos, clientes ou despesas de uma planilha do Excel, do Google Planilhas ou do app que você usava (Mercos e outros). Exporte em .xlsx ou .csv, escolha o arquivo e confira antes de lançar.</p>
+    <label class="btn" style="text-align:center;cursor:pointer">Escolher planilha ou arquivo<input type="file" id="impArq" accept=".xlsx,.xlsm,.csv,.tsv,.txt,.json,.html,.htm,.xls,text/csv,application/json,text/html,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden></label>
+    <textarea id="impTexto" rows="4" placeholder="Ou cole aqui: uma tabela copiada do Excel ou a lista da outra IA" style="margin-top:var(--s2)">${esc(impTxt)}</textarea>
+    <button class="btn ghost" data-conferir-imp>Conferir o que colei</button>
+    <button class="btn ghost" data-copiar-instr>Copiar instruções para outra IA ler um relatório</button>
+    ${typeof blocoPlanilha==='function'?blocoPlanilha():''}
+    ${impErro?`<div class="erro">${esc(impErro)}</div>`:''}${impMarcasNovas.size?`<div class="aviso" style="margin-top:var(--s2)"><b>${impMarcasNovas.size===1?'Marca nova no relatório':'Marcas novas no relatório'}</b><p class="s" style="margin:var(--s1) 0 var(--s2)">Informe a comissão de cada uma para lançar os itens dela.</p>${[...impMarcasNovas.values()].map(n=>`<label class="f" style="margin-top:var(--s2)">${esc(n)} · comissão (%)</label><input type="text" inputmode="decimal" placeholder="Ex.: 10 ou 8,5" data-taxa-nova="${esc(n)}" value="${impTaxasSug[norm(n)]!=null?String(impTaxasSug[norm(n)]).replace('.',','):''}" autocomplete="off">`).join('')}<button class="btn" data-cad-marcas-imp>Cadastrar ${impMarcasNovas.size===1?'marca':'marcas'} e conferir de novo</button></div>`:''}${pv}`;
 }
