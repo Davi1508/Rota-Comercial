@@ -52,7 +52,27 @@ async function lerXlsx(buf){
     const st=new Blob([dados]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
     return await new Response(st).text();
   };
-  const xml=s=>new DOMParser().parseFromString(s,'application/xml'),tags=(d,n)=>[...d.getElementsByTagNameNS('*',n)];
+  // imagens guardadas no .xlsx (fotos dos produtos)
+  const abrirBin=async nome=>{
+    const e=arq[nome];if(!e)return null;
+    const ini=e.off+30+dv.getUint16(e.off+26,true)+dv.getUint16(e.off+28,true),dados=u8.subarray(ini,ini+e.tam),ext=(nome.split('.').pop()||'').toLowerCase();
+    const tipo={png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',gif:'image/gif',webp:'image/webp',bmp:'image/bmp'}[ext]||'';
+    if(e.metodo===0)return new Blob([dados],{type:tipo});
+    const b=await new Response(new Blob([dados]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).blob();return new Blob([b],{type:tipo});
+  };
+  const resolver=(dir,alvo)=>{if(!alvo)return'';if(alvo.startsWith('/'))return alvo.slice(1);const o=[];for(const s of (dir+alvo).split('/')){if(s==='..')o.pop();else if(s&&s!=='.')o.push(s)}return o.join('/')};
+  const relsDe=async cam=>{const dir=cam.replace(/[^/]+$/,''),t=await abrir(dir+'_rels/'+cam.slice(dir.length)+'.rels'),m={};if(t)tags(xml(t),'Relationship').forEach(r=>m[r.getAttribute('Id')]=resolver(dir,r.getAttribute('Target')));return m};
+  const RNS='http://schemas.openxmlformats.org/officeDocument/2006/relationships',relId=(el,n)=>el&&(el.getAttribute('r:'+n)||el.getAttributeNS(RNS,n));
+  const imagemOk=c=>/\.(png|jpe?g|gif|webp|bmp)$/i.test(c||'');
+  let rich=null;
+  const fotoNaCelula=async vm=>{ // imagem colocada dentro da célula (Excel 365)
+    if(!rich){rich={rv:[],rel:[],rels:{},vm:[],fut:[]};const rv=await abrir('xl/richData/rdrichvalue.xml');if(rv){rich.rv=tags(xml(rv),'rv');
+      const rl=await abrir('xl/richData/richValueRel.xml');if(rl)rich.rel=tags(xml(rl),'rel').map(r=>relId(r,'id'));rich.rels=await relsDe('xl/richData/richValueRel.xml');
+      const md=await abrir('xl/metadata.xml');if(md){const d=xml(md),vmb=tags(d,'valueMetadata')[0],fb=tags(d,'futureMetadata')[0];rich.vm=vmb?tags(vmb,'bk'):[];rich.fut=fb?tags(fb,'bk'):[]}}}
+    let i=vm-1;try{const rc=tags(rich.vm[vm-1],'rc')[0],f=rich.fut[+rc.getAttribute('v')],rvb=f&&tags(f,'rvb')[0];if(rvb)i=+rvb.getAttribute('i')}catch(e){}
+    const r=rich.rv[i],v=r&&tags(r,'v')[0];if(!v)return'';const cam=rich.rels[rich.rel[+v.textContent]];return imagemOk(cam)?cam:'';
+  };
+  const xml=s=>new DOMParser().parseFromString(s,'application/xml'),tags=(d,n)=>d?[...d.getElementsByTagNameNS('*',n)]:[];
   const wb=await abrir('xl/workbook.xml');if(!wb)throw new Error('O arquivo não parece ser um Excel .xlsx válido');
   const rels=xml(await abrir('xl/_rels/workbook.xml.rels')||'<r/>'),alvo={};
   tags(rels,'Relationship').forEach(r=>alvo[r.getAttribute('Id')]=r.getAttribute('Target'));
@@ -63,11 +83,12 @@ async function lerXlsx(buf){
     const rid=sh.getAttribute('r:id')||sh.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships','id');
     let caminho=alvo[rid]||'';caminho=caminho.replace(/^\/?xl\//,'').replace(/^\//,'');if(!caminho)continue;
     const txt=await abrir('xl/'+caminho);if(!txt)continue;
-    const linhas=[];
-    for(const row of tags(xml(txt),'row')){
+    const linhas=[],dsh=xml(txt),fotos={},vms={};
+    for(const row of tags(dsh,'row')){
       const lin=[];
       for(const c of tags(row,'c')){
         const ref=c.getAttribute('r'),i=ref?col(ref):lin.length,t=c.getAttribute('t'),v=tags(c,'v')[0];
+        if(c.getAttribute('vm')&&!vms[+(row.getAttribute('r'))-1])vms[+(row.getAttribute('r'))-1]=+c.getAttribute('vm');
         let val='';
         if(t==='s')val=comp[+(v&&v.textContent)]??'';
         else if(t==='inlineStr')val=tags(c,'t').map(x=>x.textContent).join('');
@@ -79,7 +100,15 @@ async function lerXlsx(buf){
       const r=+(row.getAttribute('r'))-1;
       if(lin.some(x=>x!==''&&x!=null))linhas[Number.isFinite(r)&&r>=0?r:linhas.length]=lin;
     }
-    abas.push({nome:sh.getAttribute('name')||'Planilha',linhas:linhas.filter(Boolean).map(l=>l.map(x=>typeof x==='string'?x.trim():x))});
+    // fotos sobre as células (desenho da aba): a foto vale para a linha onde começa
+    try{const dr=tags(dsh,'drawing')[0];if(dr){const sr=await relsDe('xl/'+caminho),dcam=sr[relId(dr,'id')],dt=dcam&&await abrir(dcam);
+      if(dt){const drr=await relsDe(dcam),dd=xml(dt);
+        for(const a of [...tags(dd,'twoCellAnchor'),...tags(dd,'oneCellAnchor')]){const fr=tags(a,'from')[0],bl=tags(a,'blip')[0];if(!fr||!bl)continue;
+          const r=+tags(fr,'row')[0].textContent,c=+tags(fr,'col')[0].textContent,cam=drr[relId(bl,'embed')];
+          if(imagemOk(cam)&&(!fotos[r]||c<fotos[r].c))fotos[r]={c,cam}}}}}catch(e){console.warn('Fotos da planilha',e)}
+    for(const [r,vm] of Object.entries(vms))if(!fotos[r]){try{const cam=await fotoNaCelula(vm);if(cam)fotos[r]={c:0,cam}}catch(e){}}
+    let nFotos=0;for(const [r,f] of Object.entries(fotos))if(linhas[r]){linhas[r]._foto=()=>abrirBin(f.cam);nFotos++}
+    abas.push({nome:sh.getAttribute('name')||'Planilha',nFotos,linhas:linhas.filter(Boolean).map(l=>{const n=l.map(x=>typeof x==='string'?x.trim():x);if(l._foto)n._foto=l._foto;return n})});
   }
   if(!abas.length)throw new Error('Não achei nenhuma aba com dados nessa planilha');
   return abas;
@@ -171,7 +200,10 @@ let plan=null;
 function abrirPlanilha(abas,nomeArq){
   const ia=abas.reduce((b,a,i)=>a.linhas.length>abas[b].linhas.length?i:b,0);
   plan={abas,nomeArq,aba:ia,marcaPadrao:'',cidadePadrao:'',ufPadrao:'BA'};
-  prepararAba();impItens=null;impErro='';renderAjustes();
+  prepararAba();impItens=null;impErro='';
+  // planilha de produtos: vai para a ferramenta própria do catálogo (lê as fotos de dentro do Excel)
+  if(plan.tipo==='produto'&&typeof prepararPlanProd==='function'){plan=null;prepararPlanProd(abas,nomeArq);return}
+  renderAjustes();
   requestAnimationFrame(()=>{const el=$('#planBox');if(el)el.scrollIntoView({block:'start',behavior:'smooth'})});
 }
 function prepararAba(){

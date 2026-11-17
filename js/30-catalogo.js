@@ -2,7 +2,7 @@
 // Produto: {id, marca, ref, nome, preco, foto}. Foto = link (da conta ou da internet) ou, sem conta, imagem pequena no celular.
 // Item do pedido: cópia do produto no dia (p, ref, nome, preco, qtd, foto) para o histórico não mudar se o catálogo mudar.
 let catMarca='todas',catBusca='',catEdit=null,catLimite=60,catFoto=null,catSalvando=false,escBusca='',escLimite=60,copiaPronta=null;
-let seqProd=0;
+let seqProd=0,catOrigem='sheet';
 const produto=id=>PRODUTOS.find(x=>x.id===id);
 const prodDaMarca=mid=>PRODUTOS.filter(x=>x.marca===mid);
 const novoIdProd=()=>'p'+Date.now().toString(36)+(++seqProd).toString(36)+Math.random().toString(36).slice(2,5);
@@ -66,7 +66,7 @@ async function subirFotosLocais(){
 }
 
 // ---------- catálogo (tela) ----------
-function abrirCatalogo(mid){if(mid)catMarca=mid;if(catMarca!=='todas'&&!marca(catMarca))catMarca='todas';catEdit=null;catBusca='';catLimite=60;catFoto=null;lojaAberta=null;renderCatalogo();mostrarSheet()}
+function abrirCatalogo(mid){catOrigem='sheet';if(mid)catMarca=mid;if(catMarca!=='todas'&&!marca(catMarca))catMarca='todas';catEdit=null;catBusca='';catLimite=60;catFoto=null;lojaAberta=null;renderCatalogo();mostrarSheet()}
 function topoSheet(t,s,extra){return `<div class="sh-top"><div class="grab"></div><div class="sh-h"><div><h3>${t}</h3><div class="s">${s}</div></div><button class="x" data-close aria-label="Fechar">×</button></div>${extra||''}</div>`}
 function renderCatalogo(){
   const sh=$('#sheet');sh.dataset.tipo='catalogo';sh.setAttribute('aria-label','Catálogo de produtos');
@@ -103,7 +103,7 @@ function formProduto(){
     <div class="erro" id="prErro" hidden></div>
     <button class="btn" type="submit" id="prSalvar">${x?'Salvar produto':'Adicionar ao catálogo'}</button>
     ${x?`<button class="btn danger" type="button" data-pr-excluir>Excluir produto</button>`:''}
-    <button class="btn ghost" type="button" data-pr-voltar>Voltar ao catálogo</button></form>`;
+    <button class="btn ghost" type="button" data-pr-voltar>${catOrigem==='aba'?'Cancelar':'Voltar ao catálogo'}</button></form>`;
 }
 function erroProd(t){const e=$('#prErro');if(e){e.textContent=t;e.hidden=!t}}
 function verFoto(src){const el=$('#prFotoPrev');if(el)el.innerHTML=src?`<img src="${esc(src)}" alt="Foto do produto" referrerpolicy="no-referrer">`:'<span class="s">Sem foto</span>'}
@@ -153,13 +153,15 @@ async function salvarProduto(e){
   const novo={id,marca:mid,ref:ref.slice(0,60),nome:nome.slice(0,160),preco:Math.round((preco||0)*100)/100,foto:fotoOk(foto)};
   if(x)Object.assign(x,novo);else PRODUTOS.push(novo);
   if(antiga&&antiga!==novo.foto)apagarFotoSemUso(antiga);
-  catSalvando=false;catEdit=null;catFoto=null;catMarca=mid;salvar();renderCatalogo();renderItensForm();
+  catSalvando=false;catEdit=null;catFoto=null;catMarca=mid;salvar();depoisDeEditar();renderItensForm();
   toast((x?'Produto atualizado':'Produto adicionado ao catálogo')+aviso);
 }
+// volta para onde a pessoa estava: o catálogo (folha) ou a aba Produtos
+function depoisDeEditar(){if(typeof renderProdutos==='function')renderProdutos();if(catOrigem==='aba'){catOrigem='sheet';fecharLoja()}else renderCatalogo()}
 function excluirProduto(btn){
   const x=produto(catEdit);if(!x)return;
   if(!btn.dataset.ok){btn.dataset.ok='1';btn.textContent='Toque de novo para excluir';return}
-  PRODUTOS=PRODUTOS.filter(y=>y!==x);apagarFotoSemUso(x.foto);catEdit=null;catFoto=null;salvar();renderCatalogo();renderItensForm();toast('Produto excluído. Pedidos antigos continuam com ele.');
+  PRODUTOS=PRODUTOS.filter(y=>y!==x);apagarFotoSemUso(x.foto);catEdit=null;catFoto=null;salvar();depoisDeEditar();renderItensForm();toast('Produto excluído. Pedidos antigos continuam com ele.');
 }
 
 // ---------- itens no formulário do pedido ----------
@@ -332,7 +334,7 @@ function salvarProdutosPlan(){
   const r=plan&&plan.prodRes;if(!r)return;
   r.novos.forEach(x=>PRODUTOS.push({id:novoIdProd(),...x}));r.atual.forEach(([e,m])=>Object.assign(e,m));
   const n=r.novos.length+r.atual.length,mid=r.novos[0]&&r.novos[0].marca;plan=null;salvar();renderItensForm();
-  abrirCatalogo(mid);toast(`${n} ${n===1?'produto salvo':'produtos salvos'} no catálogo`);
+  if(typeof renderProdutos==='function')renderProdutos();abrirCatalogo(mid);toast(`${n} ${n===1?'produto salvo':'produtos salvos'} no catálogo`);
 }
 
 // ---------- exemplo: alguns produtos com desenho no lugar da foto ----------
@@ -357,12 +359,12 @@ document.addEventListener('click',e=>{
   else if('catNovo' in d){if(d.catNovo)catMarca=d.catNovo;catEdit='novo';catFoto=null;renderCatalogo();if(!$('#sheet').classList.contains('on'))mostrarSheet();$('#sheet').scrollTop=0}
   else if('catEdit' in d){catEdit=d.catEdit;catFoto=null;renderCatalogo();$('#sheet').scrollTop=0}
   else if('catMais' in d){catLimite+=120;listaCatalogo()}
-  else if('catImportar' in d){abrirAjustes('dados');setTimeout(()=>{const a=$('#impArq');if(a)a.click()},350)}
+  else if('catImportar' in d)abrirImportProd();
   else if('prColar' in d)colarImagem();
   else if('prGoogle' in d)buscarNoGoogle();
   else if('prSemFoto' in d){catFoto={tipo:'remover'};$('#prLink').value='';verFoto('');t.remove()}
   else if('prExcluir' in d)excluirProduto(t);
-  else if('prVoltar' in d){catEdit=null;catFoto=null;renderCatalogo()}
+  else if('prVoltar' in d){catEdit=null;catFoto=null;depoisDeEditar()}
   else if('escAbrir' in d)abrirEscolha();
   else if('escMais' in d){mudarQtd(d.escMais,1);listaEscolha();rodapeEscolha()}
   else if('escMenos' in d){mudarQtd(d.escMenos,-1);listaEscolha();rodapeEscolha()}
