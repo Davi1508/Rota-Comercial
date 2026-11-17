@@ -15,6 +15,7 @@ function thumb(x,cls){const f=x&&(x.foto!==undefined?x.foto:'');
   return f?`<img class="thumb${cls?' '+cls:''}" src="${esc(f)}" alt="" loading="lazy" referrerpolicy="no-referrer" data-ini="${esc(iniciais(x.nome))}">`:`<span class="thumb vazio${cls?' '+cls:''}" aria-hidden="true">${esc(iniciais(x&&x.nome))}</span>`}
 // foto que não abre (link quebrado): vira as iniciais
 document.addEventListener('error',e=>{const t=e.target;if(t&&t.tagName==='IMG'&&t.classList.contains('thumb')){const s=document.createElement('span');s.className=t.className+' vazio';s.setAttribute('aria-hidden','true');s.textContent=t.dataset.ini||'?';t.replaceWith(s)}},true);
+document.addEventListener('error',e=>{const t=e.target;if(t&&t.tagName==='IMG'&&t.closest&&t.closest('.busca-foto'))t.closest('.busca-foto').remove()},true);
 const mostrarSheet=()=>{$('#veu').style.display='block';requestAnimationFrame(()=>$('#sheet').classList.add('on'))};
 
 // ---------- fotos ----------
@@ -144,7 +145,7 @@ async function buscarFotos(){
     buscaFotos=d.fotos||[];
     if(!$('#prBusca'))return;
     box.innerHTML=`<div class="busca-fotos"><div class="busca-top"><b>Toque na foto certa</b>${d.limite?`<span class="s num">${d.usadas} de ${d.limite} buscas no mês</span>`:''}</div>
-      ${buscaFotos.length?`<div class="busca-grade">${buscaFotos.map((f,i)=>`<button type="button" class="busca-foto" data-pr-escolher="${i}" title="${esc(f.titulo)}"><img src="${esc(f.thumb)}" alt="" loading="lazy" referrerpolicy="no-referrer"><span class="s">${esc(f.fonte.replace(/^www\./,''))}</span></button>`).join('')}</div>`:'<p class="s" style="margin:0">Não achei fotos. Tente mudar o nome do produto.</p>'}
+      ${buscaFotos.length?`<div class="busca-grade">${buscaFotos.map((f,i)=>`<button type="button" class="busca-foto" data-pr-escolher="${i}" title="${esc(f.titulo)}"><span class="bf-img"><img src="${esc(f.thumb)}" alt="" loading="lazy" referrerpolicy="no-referrer"></span><span class="bf-fonte">${esc(f.fonte.replace(/^(www|blog|loja|lojavirtual|shop|m)\./,''))}</span></button>`).join('')}</div>`:'<p class="s" style="margin:0">Não achei fotos. Tente mudar o nome do produto.</p>'}
       <button type="button" class="chipbtn" data-pr-google style="margin:var(--s2) 0 0">Abrir no Google</button></div>`;
   }catch(e){if($('#prBusca'))box.innerHTML=`<div class="busca-fotos"><p class="s" style="margin:0;color:var(--bad)">${esc(e.message||'Não deu para buscar agora')}</p><button type="button" class="chipbtn" data-pr-google style="margin:var(--s2) 0 0">Abrir no Google</button></div>`}
 }
