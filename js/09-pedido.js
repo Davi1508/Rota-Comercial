@@ -31,7 +31,7 @@ function preencherForm(){
   $('#pData').value=isoD(HOJE);$('#pData').max=isoD(HOJE);$('#vData').value=isoD(HOJE);$('#vData').max=isoD(HOJE);
   syncMarcaLoja();
 }
-function syncMarcaLoja(){const l=loja($('#pLoja').value);if(l&&l.marcas.length&&!l.marcas.includes(marcaForm())){const r=document.querySelector(`input[name=marca][value="${l.marcas[0]}"]`);if(r)r.checked=true}preview()}
+function syncMarcaLoja(){const l=loja($('#pLoja').value);if(!itensForm.length&&l&&l.marcas.length&&!l.marcas.includes(marcaForm())){const r=document.querySelector(`input[name=marca][value="${l.marcas[0]}"]`);if(r)r.checked=true}if(typeof renderItensForm==='function')renderItensForm();preview()}
 function preview(){
   avisoPed='';$('#pErro').hidden=true;
   const v=num($('#pValor').value),pv=num($('#pPrev').value),m=marca(marcaForm());
@@ -52,12 +52,12 @@ function editarPedido(id){
   const o=pedidos.find(p=>p.id==id);if(!o)return;fecharLoja();irAba('pedido');pedEdit=o;
   $('#pedTit').textContent='Editar pedido';$('#pSalvar').textContent='Salvar alterações';$('#pExcluir').hidden=false;$('#pCancelar').hidden=false;
   $('#pValor').value=o.pendente?'':String(o.valor).replace('.',',');$('#pPrev').value=o.previsto?String(o.previsto).replace('.',','):'';$('#pLoja').value=o.loja;const r=document.querySelector(`input[name=marca][value="${o.marca}"]`);if(r)r.checked=true;
-  $('#pData').value=isoD(o.data);$('#pColecao').value=o.colecao||'';$('#pPago').checked=o.pago;preview();
+  $('#pData').value=isoD(o.data);$('#pColecao').value=o.colecao||'';$('#pPago').checked=o.pago;itensForm=(o.itens||[]).map(x=>({...x}));renderItensForm();preview();
 }
 function sairEdicaoPedido(){
   pedEdit=null;$('#pedTit').textContent='Novo pedido';$('#pSalvar').textContent='Salvar pedido';
   const ex=$('#pExcluir');ex.hidden=true;ex.dataset.ok='';ex.textContent='Excluir pedido';$('#pCancelar').hidden=true;
-  $('#pValor').value='';$('#pPrev').value='';$('#pColecao').value='';$('#pPago').checked=false;$('#pData').value=isoD(HOJE);preview();
+  $('#pValor').value='';$('#pPrev').value='';$('#pColecao').value='';$('#pPago').checked=false;$('#pData').value=isoD(HOJE);itensForm=[];renderItensForm();preview();
 }
 function erroPed(t){const e=$('#pErro');e.textContent=t;e.hidden=false}
 function salvarPedido(e){
@@ -78,6 +78,7 @@ function salvarPedido(e){
   if(pedEdit){o=pedEdit;if(o.marca!==mid)o.taxa=marca(mid).taxa;Object.assign(o,{valor:v,loja:l.id,marca:mid,data,pago:$('#pPago').checked,colecao:col})}
   else{o=addPedido(l.id,mid,v,data,$('#pPago').checked);o.colecao=col}
   if(prev)o.previsto=prev;else delete o.previsto;
+  if(itensForm.length)o.itens=limparItens(itensForm);else delete o.itens;
   if(!v){o.pendente=true;o.pago=false}else delete o.pendente;
   if(!l.marcas.includes(mid))l.marcas.push(mid);
   const editado=!!pedEdit;sairEdicaoPedido();salvar();renderTudo();

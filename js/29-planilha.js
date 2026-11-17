@@ -105,9 +105,14 @@ const CAMPOS_PLAN=[
   {k:'regiao',t:'Região',sin:['regiao','rota','zona','territorio']},
   {k:'categoria',t:'Categoria (despesa)',sin:['categoria','tipo de despesa','tipo despesa','conta','natureza']},
   {k:'descricao',t:'Descrição (despesa)',sin:['descricao','historico','observacao','obs','detalhe','item']},
+  {k:'ref',t:'Referência / código',sin:['referencia','ref','codigo','cod','sku','codigo do produto','cod produto','codigo produto','ref produto','referencia do produto','modelo','artigo','cod ref','codigo referencia']},
+  {k:'produto',t:'Nome do produto',sin:['produto','nome do produto','descricao do produto','descricao produto','nome produto','descricao','item','nome','titulo','title']},
+  {k:'preco',t:'Preço',sin:['preco','preco unitario','preco de venda','preco venda','valor unitario','vlr unitario','vl unitario','preco tabela','preco de tabela','preco atacado','preco lojista','valor','price']},
+  {k:'foto',t:'Foto (link da imagem)',sin:['imagem','foto','url imagem','link imagem','url da imagem','link da imagem','link da foto','url foto','link foto','imagem url','image','image url','image link','picture','url']},
 ];
-const USADOS_POR_TIPO={pedido:['loja','cidade','uf','marca','data','valor','previsto','colecao','pago','status','comissao','regiao'],loja:['loja','cidade','uf','marca','regiao'],despesa:['data','valor','categoria','descricao']};
-const OBRIG={pedido:['loja','data','valor'],loja:['loja'],despesa:['data','valor']};
+const CAMPOS_PROD=['ref','produto','preco','foto','marca'],CAMPOS_GERAIS=CAMPOS_PLAN.map(f=>f.k).filter(k=>!['ref','produto','preco','foto'].includes(k));
+const USADOS_POR_TIPO={produto:['ref','produto','preco','foto','marca'],pedido:['loja','cidade','uf','marca','data','valor','previsto','colecao','pago','status','comissao','regiao'],loja:['loja','cidade','uf','marca','regiao'],despesa:['data','valor','categoria','descricao']};
+const OBRIG={produto:['produto'],pedido:['loja','data','valor'],loja:['loja'],despesa:['data','valor']};
 const normCab=s=>norm(String(s||'')).replace(/[^a-z0-9% ]/g,' ').replace(/\s+/g,' ').trim();
 
 function acharCabecalho(linhas){
@@ -118,10 +123,10 @@ function acharCabecalho(linhas){
   });
   return nota>=2?melhor:0;
 }
-function mapearColunas(cab){
-  const h=cab.map(normCab),mapa={},usadas=new Set();
+function mapearColunas(cab,ks){
+  const h=cab.map(normCab),mapa={},usadas=new Set(),CAMPOS=ks?CAMPOS_PLAN.filter(f=>ks.includes(f.k)):CAMPOS_PLAN;
   // 1º nomes exatos, na ordem de preferência de cada campo; 2º nomes que contêm a palavra
-  for(const passo of ['igual','contem'])for(const f of CAMPOS_PLAN){
+  for(const passo of ['igual','contem'])for(const f of CAMPOS){
     if(mapa[f.k]!=null)continue;
     for(const s of f.sin){
       const i=h.findIndex((x,j)=>!usadas.has(j)&&x&&(passo==='igual'?x===s:(s.length>3&&(x.includes(s)||(x.length>3&&s.includes(x))))));
@@ -131,7 +136,8 @@ function mapearColunas(cab){
   // "comissão" sozinha às vezes é o valor da comissão em R$, não o %: só usa se parecer porcentagem depois (ver taxasSugeridas)
   return mapa;
 }
-function adivinharTipo(m){
+function adivinharTipo(m,mp){
+  if(mp&&m.data==null&&m.cidade==null&&mp.produto!=null&&(mp.preco!=null||mp.foto!=null)&&(mp.ref!=null||mp.foto!=null||m.loja==null))return'produto';
   if(m.valor!=null&&m.loja!=null)return'pedido';
   if(m.valor!=null&&(m.categoria!=null||m.descricao!=null))return'despesa';
   if(m.loja!=null)return'loja';
@@ -156,6 +162,7 @@ function dataPlan(v){
   if(/^\d{5}(\.\d+)?$/.test(s))return dataPlan(+s);
   return s;
 }
+const dataBR=v=>{const s=dataPlan(v),m=String(s).match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?`${m[3]}/${m[2]}/${m[1]}`:String(s||'')};
 const linhaDeTotal=l=>l.some(c=>/^(sub)?total( geral)?:?$/i.test(String(c).trim()));
 const CANCELADO=/cancel|excluid|recusad|devolvid|orcament|rascunho|perdid/i;
 
@@ -170,7 +177,7 @@ function abrirPlanilha(abas,nomeArq){
 function prepararAba(){
   const a=plan.abas[plan.aba];plan.cab=acharCabecalho(a.linhas);
   const cab=a.linhas[plan.cab]||[];plan.colunas=cab.map((c,i)=>String(c||'').trim()||`Coluna ${i+1}`);
-  plan.mapa=mapearColunas(cab);plan.tipo=adivinharTipo(plan.mapa);
+  const mg=mapearColunas(cab,CAMPOS_GERAIS),mp=mapearColunas(cab,CAMPOS_PROD);plan.tipo=adivinharTipo(mg,mp);plan.mapa=plan.tipo==='produto'?mp:mg;plan.prodRes=null;
   plan.dados=a.linhas.slice(plan.cab+1).filter(l=>l.some(c=>c!==''&&c!=null));
 }
 const celula=(l,k)=>plan.mapa[k]!=null?l[plan.mapa[k]]:'';
@@ -216,24 +223,26 @@ function cancelarPlanilha(){plan=null;impItens=null;impMarcasNovas=new Map();ren
 function blocoPlanilha(){
   if(!plan)return'';
   const a=plan.abas[plan.aba],usados=USADOS_POR_TIPO[plan.tipo],ob=OBRIG[plan.tipo];
-  const ex=k=>{const i=plan.mapa[k];if(i==null)return'';const v=plan.dados.map(l=>l[i]).find(x=>x!==''&&x!=null);return v==null?'':String(k==='data'?dataPlan(v):v).slice(0,24)};
+  const ex=k=>{const i=plan.mapa[k];if(i==null)return'';const v=plan.dados.map(l=>l[i]).find(x=>x!==''&&x!=null);return v==null?'':String(k==='data'?dataBR(v):v).slice(0,24)};
   const opcoes=k=>`<option value="">— não tem —</option>`+plan.colunas.map((c,i)=>`<option value="${i}"${plan.mapa[k]===i?' selected':''}>${esc(c)}</option>`).join('');
   const campos=usados.map(k=>{const f=CAMPOS_PLAN.find(x=>x.k===k);return `<div class="plan-campo"><label class="f" for="pc-${k}">${esc(f.t)}${ob.includes(k)?' *':''}</label><select id="pc-${k}" data-plan-col="${k}" data-sem-combo>${opcoes(k)}</select>${ex(k)?`<div class="s">ex.: ${esc(ex(k))}</div>`:''}</div>`}).join('');
-  const semMarca=plan.tipo!=='despesa'&&plan.mapa.marca==null,semCidade=plan.tipo!=='despesa'&&plan.mapa.cidade==null;
-  const prev=(()=>{if(plan.tipo==='despesa')return plan.dados.slice(0,3).map(l=>`${dataPlan(celula(l,'data'))} · ${fmt2.format(valorPlan(celula(l,'valor'))||0)} · ${celula(l,'categoria')||celula(l,'descricao')||''}`);
-    return plan.dados.filter(l=>!linhaDeTotal(l)).slice(0,3).map(l=>{const v=valorPlan(celula(l,'valor'));return [celula(l,'loja')||'?',(celula(l,'cidade')||plan.cidadePadrao||'?')+'/'+(celula(l,'uf')||plan.ufPadrao),celula(l,'marca')||plan.marcaPadrao||'',plan.tipo==='pedido'?dataPlan(celula(l,'data')):'',plan.tipo==='pedido'?fmt2.format(v>0?v:0):''].filter(Boolean).join(' · ')})})();
+  const semMarca=plan.tipo!=='despesa'&&plan.mapa.marca==null,semCidade=plan.tipo!=='despesa'&&plan.tipo!=='produto'&&plan.mapa.cidade==null;
+  const prev=(()=>{if(plan.tipo==='produto')return plan.dados.filter(l=>!linhaDeTotal(l)).slice(0,3).map(l=>{const v=valorPlan(celula(l,'preco'));return [celula(l,'ref')&&'Ref. '+celula(l,'ref'),celula(l,'produto')||'?',v>0?fmt2.format(v):'',celula(l,'foto')?'com foto':''].filter(Boolean).join(' · ')});
+    if(plan.tipo==='despesa')return plan.dados.slice(0,3).map(l=>`${dataBR(celula(l,'data'))} · ${fmt2.format(valorPlan(celula(l,'valor'))||0)} · ${celula(l,'categoria')||celula(l,'descricao')||''}`);
+    return plan.dados.filter(l=>!linhaDeTotal(l)).slice(0,3).map(l=>{const v=valorPlan(celula(l,'valor'));return [celula(l,'loja')||'?',(celula(l,'cidade')||plan.cidadePadrao||'?')+'/'+(celula(l,'uf')||plan.ufPadrao),celula(l,'marca')||plan.marcaPadrao||'',plan.tipo==='pedido'?dataBR(celula(l,'data')):'',plan.tipo==='pedido'?fmt2.format(v>0?v:0):''].filter(Boolean).join(' · ')})})();
   return `<div id="planBox" class="aviso plan">
     <div class="plan-top"><div class="grow"><b>${esc(plan.nomeArq)}</b><div class="s">${plan.dados.length} ${plan.dados.length===1?'linha':'linhas'}${plan.abas.length>1?` · aba "${esc(a.nome)}"`:''}</div></div><button class="chipbtn" data-plan-cancelar>Cancelar</button></div>
     ${plan.abas.length>1?`<label class="f" for="planAba">Aba da planilha</label><select id="planAba" data-sem-combo>${plan.abas.map((x,i)=>`<option value="${i}"${i===plan.aba?' selected':''}>${esc(x.nome)} (${x.linhas.length} linhas)</option>`).join('')}</select>`:''}
     <div class="f" style="margin-top:var(--s3)">O que tem nessa planilha?</div>
-    <div class="plan-tipos" role="radiogroup">${[['pedido','Pedidos'],['loja','Clientes (lojas)'],['despesa','Despesas']].map(([k,t])=>`<button type="button" class="chip${plan.tipo===k?' on':''}" role="radio" aria-checked="${plan.tipo===k}" data-plan-tipo="${k}">${t}</button>`).join('')}</div>
+    <div class="plan-tipos" role="radiogroup">${[['pedido','Pedidos'],['loja','Clientes (lojas)'],['despesa','Despesas'],['produto','Produtos (catálogo)']].map(([k,t])=>`<button type="button" class="chip${plan.tipo===k?' on':''}" role="radio" aria-checked="${plan.tipo===k}" data-plan-tipo="${k}">${t}</button>`).join('')}</div>
     <p class="s" style="margin:var(--s3) 0 var(--s1)">Confira de qual coluna vem cada informação. Já liguei as que reconheci.</p>
     <div class="plan-campos">${campos}</div>
-    ${semMarca?`<label class="f" for="planMarca">Marca de ${plan.tipo==='loja'?'todas as lojas':'todos os pedidos'}${plan.tipo==='pedido'?' *':''}</label><input id="planMarca" list="planMarcas" placeholder="Ex.: ${esc((MARCAS[0]||{}).nome||'Maré Alta')}" value="${esc(plan.marcaPadrao)}" autocomplete="off"><datalist id="planMarcas">${MARCAS.map(m=>`<option value="${esc(m.nome)}">`).join('')}</datalist><div class="s">A planilha não tem coluna de marca. Comum quando o app exporta uma representada por vez.</div>`:''}
+    ${semMarca?`<label class="f" for="planMarca">Marca de ${plan.tipo==='loja'?'todas as lojas':plan.tipo==='produto'?'todos os produtos':'todos os pedidos'}${plan.tipo==='pedido'||plan.tipo==='produto'?' *':''}</label><input id="planMarca" list="planMarcas" placeholder="Ex.: ${esc((MARCAS[0]||{}).nome||'Maré Alta')}" value="${esc(plan.marcaPadrao)}" autocomplete="off"><datalist id="planMarcas">${MARCAS.map(m=>`<option value="${esc(m.nome)}">`).join('')}</datalist><div class="s">A planilha não tem coluna de marca. Comum quando o app exporta uma representada por vez.</div>`:''}
     ${semCidade?`<div class="plan-campos"><div class="plan-campo"><label class="f" for="planCidade">Cidade das lojas novas</label><input id="planCidade" value="${esc(plan.cidadePadrao)}" placeholder="Ex.: Salvador" autocomplete="off"></div><div class="plan-campo"><label class="f" for="planUF">Estado</label><select id="planUF" data-sem-combo>${Object.keys(UFS).sort().map(u=>`<option${u===plan.ufPadrao?' selected':''}>${u}</option>`).join('')}</select></div></div><div class="s">Usada só para lojas que ainda não existem no app.</div>`:''}
     ${prev.length?`<div class="f" style="margin-top:var(--s3)">Prévia</div><div class="plan-prev">${prev.map(p=>`<div>${esc(p)}</div>`).join('')}</div>`:''}
     <button class="btn" data-plan-conferir style="margin-top:var(--s3)">Conferir ${plan.dados.length} ${plan.dados.length===1?'linha':'linhas'}</button>
-    ${plan.conferida&&plan.ignoradas?`<p class="s" style="margin:var(--s2) 0 0">${plan.ignoradas} ${plan.ignoradas===1?'linha ignorada':'linhas ignoradas'} (totais, vazias ou pedidos cancelados).</p>`:''}
+    ${plan.tipo==='produto'?blocoProdutosPlan():''}
+    ${plan.conferida&&plan.ignoradas&&plan.tipo!=='produto'?`<p class="s" style="margin:var(--s2) 0 0">${plan.ignoradas} ${plan.ignoradas===1?'linha ignorada':'linhas ignoradas'} (totais, vazias ou pedidos cancelados).</p>`:''}
   </div>`;
 }
 async function lerArquivoImport(f){
@@ -249,17 +258,19 @@ async function lerArquivoImport(f){
 }
 document.addEventListener('change',e=>{
   const t=e.target;if(!plan||!t)return;
-  if(t.dataset&&t.dataset.planCol){const k=t.dataset.planCol;if(t.value==='')delete plan.mapa[k];else{const i=+t.value;for(const x in plan.mapa)if(plan.mapa[x]===i&&x!==k)delete plan.mapa[x];plan.mapa[k]=i}plan.conferida=false;impItens=null;renderAjustes()}
+  if(t.dataset&&t.dataset.planCol){const k=t.dataset.planCol;if(t.value==='')delete plan.mapa[k];else{const i=+t.value;for(const x in plan.mapa)if(plan.mapa[x]===i&&x!==k)delete plan.mapa[x];plan.mapa[k]=i}plan.conferida=false;plan.prodRes=null;impItens=null;renderAjustes()}
   else if(t.id==='planAba'){plan.aba=+t.value;prepararAba();plan.conferida=false;impItens=null;renderAjustes()}
   else if(t.id==='planUF'){plan.ufPadrao=t.value}
 });
 document.addEventListener('input',e=>{
   const t=e.target;if(!plan||!t)return;
-  if(t.id==='planMarca')plan.marcaPadrao=t.value;else if(t.id==='planCidade')plan.cidadePadrao=t.value;
+  if(t.id==='planMarca'){plan.marcaPadrao=t.value;if(plan.prodRes){plan.prodRes=null;plan.conferida=false;const r=$('#prodRes');if(r)r.remove()}}else if(t.id==='planCidade')plan.cidadePadrao=t.value;
 });
 document.addEventListener('click',e=>{
   if(!plan)return;const t=e.target.closest('[data-plan-tipo],[data-plan-conferir],[data-plan-cancelar]');if(!t)return;
-  if(t.dataset.planTipo){plan.tipo=t.dataset.planTipo;plan.conferida=false;impItens=null;renderAjustes()}
-  else if('planConferir' in t.dataset)conferirPlanilha();
+  if(t.dataset.planTipo){const era=plan.tipo;plan.tipo=t.dataset.planTipo;
+    if((era==='produto')!==(plan.tipo==='produto'))plan.mapa=mapearColunas(plan.abas[plan.aba].linhas[plan.cab]||[],plan.tipo==='produto'?CAMPOS_PROD:CAMPOS_GERAIS);
+    plan.conferida=false;plan.prodRes=null;impItens=null;renderAjustes()}
+  else if('planConferir' in t.dataset){if(plan.tipo==='produto')conferirProdutos();else conferirPlanilha()}
   else cancelarPlanilha();
 });

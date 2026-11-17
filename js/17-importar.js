@@ -30,7 +30,9 @@ Marcas: ${ms}
 Regiões: ${rs}
 Coleções: ${cs}`;
 }
-const GENERICAS=new Set(['loja','lojas','moda','modas','store','boutique','casa','fashion','center','the','das','dos','atelie','emporio','vitrine','jeans','kids','look','chic','estilo','cia']);
+const GENERICAS=new Set(['loja','lojas','moda','modas','store','boutique','casa','fashion','center','the','das','dos','atelie','emporio','vitrine','jeans','kids','look','chic','estilo','cia',
+  // regiões e palavras de lugar não indicam que é a mesma loja
+  'sul','norte','leste','oeste','nordeste','sudeste','centro','central','extremo','baixo','alto','nova','novo','grande','praia','shopping','mall','plaza','ltda','eireli','comercio','confeccoes','representacoes','bahia']);
 const palavras=s=>norm(s).replace(/[^a-z0-9 ]/g,' ').split(/\s+/).filter(w=>w.length>2&&!GENERICAS.has(w));
 function parecido(a,b){const A=palavras(a),B=palavras(b),na=norm(a),nb=norm(b);return A.some(w=>B.includes(w))||na.includes(nb)||nb.includes(na)}
 // Acha a loja do relatório; se não existir, prepara o cadastro (feito só na hora de lançar)
@@ -163,7 +165,7 @@ function blocoImportar(){
       ${prob.length+ok.length>LIM?`<p class="s" style="margin:var(--s2) 0 0">Mostrando ${LIM} de ${prob.length+ok.length}. Os problemas aparecem primeiro.</p>`:''}
       <button class="btn acc" data-lancar-imp ${ok.length?'':'disabled'}>Lançar ${ok.length} ${ok.length===1?'item':'itens'}</button>`})():'';
   return `<h2>Importar de outro app ou planilha</h2>
-    <p class="ufmsg" style="margin-top:0">Traga seus pedidos, clientes ou despesas de uma planilha do Excel, do Google Planilhas ou do app que você usava (Mercos e outros). Exporte em .xlsx ou .csv, escolha o arquivo e confira antes de lançar.</p>
+    <p class="ufmsg" style="margin-top:0">Traga seus pedidos, clientes, despesas ou o catálogo de produtos de uma planilha do Excel, do Google Planilhas ou do app que você usava (Mercos e outros). Exporte em .xlsx ou .csv, escolha o arquivo e confira antes de lançar.</p>
     <label class="btn" style="text-align:center;cursor:pointer">Escolher planilha ou arquivo<input type="file" id="impArq" accept=".xlsx,.xlsm,.csv,.tsv,.txt,.json,.html,.htm,.xls,text/csv,application/json,text/html,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden></label>
     <textarea id="impTexto" rows="4" placeholder="Ou cole aqui: uma tabela copiada do Excel ou a lista da outra IA" style="margin-top:var(--s2)">${esc(impTxt)}</textarea>
     <button class="btn ghost" data-conferir-imp>Conferir o que colei</button>
