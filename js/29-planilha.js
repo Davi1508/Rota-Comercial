@@ -127,7 +127,7 @@ const CAMPOS_PLAN=[
   {k:'data',t:'Data',sin:['data','data do pedido','data pedido','emissao','data de emissao','data emissao','dt emissao','dt pedido','data da venda','data venda','criado em','data de criacao','dt']},
   {k:'valor',t:'Valor (real)',sin:['valor total','total do pedido','valor do pedido','valor liquido','total liquido','valor','total','vlr total','vl total','valor faturado','faturado','valor final']},
   {k:'previsto',t:'Valor previsto',sin:['previsto','valor previsto','previsao','estimativa','valor estimado','meta pedido']},
-  {k:'colecao',t:'Coleção',sin:['colecao','temporada','estacao','linha','campanha']},
+  {k:'colecao',t:'Campanha / coleção',sin:['colecao','temporada','estacao','linha','campanha']},
   {k:'pago',t:'Comissão paga?',sin:['pago','comissao paga','status comissao','situacao comissao','recebido','status pagamento','pagamento']},
   {k:'status',t:'Situação do pedido',sin:['status','situacao','status do pedido','situacao do pedido','etapa']},
   {k:'comissao',t:'Comissão (%)',sin:['% comissao','comissao %','percentual comissao','perc comissao','comissao','taxa comissao','% com']},

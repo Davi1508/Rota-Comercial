@@ -164,7 +164,7 @@ async function salvarImportProd(){
   toast(`${(novos+atual).toLocaleString('pt-BR')} produtos salvos no catálogo`);
 }
 function baixarModelo(){
-  const txt='﻿Referência;Nome do produto;Preço;Foto (link da imagem);Marca\r\nMA-1021;Vestido longo de linho;189,90;https://site-da-marca.com.br/fotos/ma-1021.jpg;'+((MARCAS[0]||{}).nome||'Maré Alta')+'\r\nMA-1034;Saia midi estampada;129,90;;'+((MARCAS[0]||{}).nome||'Maré Alta')+'\r\n';
+  const txt='﻿Referência;Nome do produto;Preço;Foto (link da imagem);Marca\r\nCF-500;Café torrado 500 g;18,90;https://site-da-marca.com.br/fotos/cf-500.jpg;'+((MARCAS[0]||{}).nome||'Maré Alta')+'\r\nFR-650;Furadeira de impacto 650 W;289,90;;'+((MARCAS[0]||{}).nome||'Maré Alta')+'\r\n';
   const u=URL.createObjectURL(new Blob([txt],{type:'text/csv;charset=utf-8'})),a=document.createElement('a');a.href=u;a.download='modelo-catalogo-rota-comercial.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000);
   toast('Modelo baixado. Abra no Excel, preencha e importe aqui.');
 }

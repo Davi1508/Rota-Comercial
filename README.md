@@ -25,7 +25,7 @@ O app não precisa de etapa de montagem: o navegador carrega os arquivos direto.
 | `11-salvar.js` | Salvamento no aparelho e na conta, validação dos dados |
 | `12-boas-vindas.js` | Primeiros passos e modo exemplo |
 | `13-ajustes.js` | Ajustes: marcas, cópia de segurança |
-| `14-divisoes.js` | Regiões e coleções |
+| `14-divisoes.js` | Regiões e campanhas (coleções) |
 | `15-filtros.js` | Botão de filtros |
 | `16-viagem.js` | Despesas de viagem |
 | `17-importar.js` | Importação de relatórios de outra IA |
@@ -36,7 +36,7 @@ O app não precisa de etapa de montagem: o navegador carrega os arquivos direto.
 | `22-inicio.js` | Liga os botões e abre o app |
 | `23-conta.js` | Conta, login e sincronização com o Supabase |
 | `24-app.js` | App instalável e fim do teste grátis |
-| `25-metas.js` | Metas por marca e coleção |
+| `25-metas.js` | Metas por marca e campanha |
 | `26-lgpd.js` | Privacidade e excluir conta |
 | `27-google.js` | Entrar com Google |
 | `00-erros.js` | Registro de erros do app |

@@ -98,7 +98,7 @@ function formProduto(){
     <label class="f" for="prLink">Ou cole o link da imagem <small class="opc">da internet</small></label><input id="prLink" type="url" inputmode="url" placeholder="https://…" autocomplete="off" value="${catFoto&&catFoto.tipo==='link'?esc(catFoto.url):''}">
     <label class="f" for="prMarca">Marca</label><select id="prMarca" data-sem-combo>${MARCAS.map(m=>`<option value="${esc(m.id)}"${m.id===mid?' selected':''}>${esc(m.nome)}</option>`).join('')}</select>
     <label class="f" for="prRef">Referência <small class="opc">código do produto</small></label><input id="prRef" type="text" maxlength="60" autocomplete="off" value="${x?esc(x.ref):''}">
-    <label class="f" for="prNome">Nome</label><input id="prNome" type="text" maxlength="160" autocomplete="off" placeholder="Ex.: Vestido longo de linho" value="${x?esc(x.nome):''}">
+    <label class="f" for="prNome">Nome</label><input id="prNome" type="text" maxlength="160" autocomplete="off" placeholder="Ex.: Café torrado 500 g" value="${x?esc(x.nome):''}">
     <label class="f" for="prPreco">Preço</label><div class="valor"><span>R$</span><input id="prPreco" class="num" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off" value="${x&&x.preco?String(x.preco.toFixed(2)).replace('.',','):''}"></div>
     <div class="erro" id="prErro" hidden></div>
     <button class="btn" type="submit" id="prSalvar">${x?'Salvar produto':'Adicionar ao catálogo'}</button>
@@ -340,10 +340,13 @@ function salvarProdutosPlan(){
 // ---------- exemplo: alguns produtos com desenho no lugar da foto ----------
 function produtosExemplo(){
   const svg=(cor,forma)=>'data:image/svg+xml;base64,'+btoa(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240"><rect width="240" height="240" fill="#F2F3F7"/><path d="${forma}" fill="${cor}"/></svg>`);
-  const VEST='M96 40h48l8 28 36 112c2 8-4 16-12 16H64c-8 0-14-8-12-16l36-112z',BLUSA='M80 52l24-12h32l24 12 40 28-16 28-20-10v104H76V98l-20 10-16-28z',CALCA='M72 40h96l12 160h-40l-20-104-20 104H60z',SAIA='M88 56h64l40 136H48z';
-  return[['mare','MA-1021','Vestido longo de linho',189.9,'#14A0A8',VEST],['mare','MA-1034','Saia midi estampada',129.9,'#E5487F',SAIA],['mare','MA-1102','Blusa de alcinha',79.9,'#F5A524',BLUSA],
-    ['urb','UJ-550','Calça jeans reta',159.9,'#2F6FED',CALCA],['urb','UJ-561','Calça jeans clara',149.9,'#7FA6F5',CALCA],['urb','UJ-610','Camisa jeans',139.9,'#24479E',BLUSA],
-    ['flor','FL-301','Vestido floral curto',149.9,'#DB2777',VEST],['flor','FL-322','Blusa de renda',99.9,'#8B5CF6',BLUSA],['kids','SK-12','Conjunto infantil',89.9,'#16A34A',BLUSA]]
+  const VEST='M96 40h48l8 28 36 112c2 8-4 16-12 16H64c-8 0-14-8-12-16l36-112z',BLUSA='M80 52l24-12h32l24 12 40 28-16 28-20-10v104H76V98l-20 10-16-28z',
+    FRASCO='M100 36h40v28l16 16v124c0 8-6 12-12 12H96c-6 0-12-4-12-12V80l16-16z',POTE='M64 72h112v8l-8 116c0 8-6 12-12 12H84c-6 0-12-4-12-12L64 80z M72 52h96v20H72z',
+    CAIXA='M48 84l72-36 72 36v88l-72 36-72-36z',FURADEIRA='M40 80h112l32 16v24l-32 16H120l-12 64H76l12-64H40z',CHAVE='M60 176l84-84a32 32 0 1 1 20 20l-84 84z';
+  return[['mare','MA-1021','Vestido longo de linho',189.9,'#14A0A8',VEST],['mare','MA-1102','Blusa de alcinha',79.9,'#F5A524',BLUSA],
+    ['urb','UF-550','Furadeira de impacto 650 W',289.9,'#2F6FED',FURADEIRA],['urb','UF-561','Jogo de chaves combinadas',129.9,'#24479E',CHAVE],['urb','UF-610','Caixa organizadora',59.9,'#7FA6F5',CAIXA],
+    ['flor','FL-301','Shampoo hidratante 300 ml',32.9,'#DB2777',FRASCO],['flor','FL-322','Creme para as mãos',24.9,'#8B5CF6',POTE],
+    ['kids','SA-12','Café torrado 500 g',18.9,'#B45309',CAIXA],['kids','SA-40','Doce de leite 400 g',12.5,'#16A34A',POTE]]
     .map(([marca,ref,nome,preco,cor,f],i)=>({id:'pe'+i,marca,ref,nome,preco,foto:svg(cor,f)}));
 }
 

@@ -7,7 +7,7 @@ const CIDADES={'Salvador':[-38.50,-12.97],'Feira de Santana':[-38.97,-12.27],'Vi
 // Estado do app: começa vazio e é carregado do celular (ou da conta, quando disponível)
 let MARCAS=[],lojas=[],pedidos=[],sugestoes=[],pid=1,exemplo=false,atualizado=0;
 // Divisões que a própria pessoa cria (ex.: regiões das lojas, coleções dos pedidos)
-const REGIOES_PADRAO=['Extremo Sul','Baixo Sul','Oeste'],COLECOES_PADRAO=['Outono','Inverno','Primavera','Verão'];
+const REGIOES_PADRAO=['Extremo Sul','Baixo Sul','Oeste'],COLECOES_PADRAO=[];
 let REGIOES=[],COLECOES=[...COLECOES_PADRAO];
 // Despesas de viagem (separadas das comissões) e nome de quem usa o app
 let DESPESAS=[],NOME='',desEdit=null;

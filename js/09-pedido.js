@@ -22,7 +22,7 @@ function preencherDivisoes(){
   const r=$('#lRegiao').value,c=$('#pColecao').value;
   $('#lRegiao').innerHTML='<option value="">Sem região</option>'+REGIOES.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('');
   if(REGIOES.includes(r))$('#lRegiao').value=r;
-  $('#pColecao').innerHTML='<option value="">Sem coleção</option>'+COLECOES.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('');
+  $('#pColecao').innerHTML='<option value="">Sem campanha</option>'+COLECOES.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('');
   if(COLECOES.includes(c))$('#pColecao').value=c;
 }
 function preencherForm(){
