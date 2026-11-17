@@ -93,8 +93,9 @@ function formProduto(){
     <div class="foto-box"><div class="foto-prev" id="prFotoPrev">${fotoAtual?`<img src="${esc(fotoAtual)}" alt="Foto do produto" referrerpolicy="no-referrer">`:'<span class="s">Sem foto</span>'}</div>
       <div class="foto-acoes"><label class="btn ghost" style="cursor:pointer">Tirar ou escolher foto<input type="file" id="prFotoArq" accept="image/*" hidden></label>
         <button type="button" class="btn ghost" data-pr-colar>Colar imagem copiada</button>
-        <button type="button" class="btn ghost" data-pr-google>Buscar foto no Google</button>
+        <button type="button" class="btn ghost" data-pr-buscar>Buscar foto</button>
         ${fotoAtual?'<button type="button" class="chipbtn" data-pr-sem-foto style="margin:0">Tirar a foto</button>':''}</div></div>
+    <div id="prBusca"></div>
     <label class="f" for="prLink">Ou cole o link da imagem <small class="opc">da internet</small></label><input id="prLink" type="url" inputmode="url" placeholder="https://…" autocomplete="off" value="${catFoto&&catFoto.tipo==='link'?esc(catFoto.url):''}">
     <label class="f" for="prMarca">Marca</label><select id="prMarca" data-sem-combo>${MARCAS.map(m=>`<option value="${esc(m.id)}"${m.id===mid?' selected':''}>${esc(m.nome)}</option>`).join('')}</select>
     <label class="f" for="prRef">Referência <small class="opc">código do produto</small></label><input id="prRef" type="text" maxlength="60" autocomplete="off" value="${x?esc(x.ref):''}">
@@ -127,6 +128,31 @@ async function colarImagem(){
     toast('Não achei imagem copiada. No Google, segure a foto e toque em Copiar.');
   }catch(e){toast('Este aparelho não deixou colar daqui. Segure no campo do link e toque em Colar.')}
 }
+// Busca fotos sem sair do app (Brave, pelo servidor do app). Sem conta, abre o Google.
+let buscaFotos=null;
+async function buscarFotos(){
+  const nome=$('#prNome').value.trim(),m=marca($('#prMarca').value);
+  if(!nome)return erroProd('Digite o nome do produto antes de buscar a foto.');
+  if(!naConta()){buscarNoGoogle();return}
+  const box=$('#prBusca'),q=[m&&m.nome,nome].filter(Boolean).join(' ');
+  box.innerHTML='<div class="busca-fotos"><p class="s" style="margin:0">Buscando fotos…</p></div>';erroProd('');
+  try{
+    const{data}=await sb.auth.getSession(),tk=data&&data.session&&data.session.access_token;if(!tk)throw new Error('Entre na sua conta de novo');
+    const r=await fetch(SB_URL+'/functions/v1/busca-fotos',{method:'POST',headers:{Authorization:'Bearer '+tk,apikey:SB_CHAVE,'Content-Type':'application/json'},body:JSON.stringify({q,site:(m&&m.site)||''})});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok)throw new Error(d.erro||'Não deu para buscar agora');
+    buscaFotos=d.fotos||[];
+    if(!$('#prBusca'))return;
+    box.innerHTML=`<div class="busca-fotos"><div class="busca-top"><b>Toque na foto certa</b>${d.limite?`<span class="s num">${d.usadas} de ${d.limite} buscas no mês</span>`:''}</div>
+      ${buscaFotos.length?`<div class="busca-grade">${buscaFotos.map((f,i)=>`<button type="button" class="busca-foto" data-pr-escolher="${i}" title="${esc(f.titulo)}"><img src="${esc(f.thumb)}" alt="" loading="lazy" referrerpolicy="no-referrer"><span class="s">${esc(f.fonte.replace(/^www\./,''))}</span></button>`).join('')}</div>`:'<p class="s" style="margin:0">Não achei fotos. Tente mudar o nome do produto.</p>'}
+      <button type="button" class="chipbtn" data-pr-google style="margin:var(--s2) 0 0">Abrir no Google</button></div>`;
+  }catch(e){if($('#prBusca'))box.innerHTML=`<div class="busca-fotos"><p class="s" style="margin:0;color:var(--bad)">${esc(e.message||'Não deu para buscar agora')}</p><button type="button" class="chipbtn" data-pr-google style="margin:var(--s2) 0 0">Abrir no Google</button></div>`}
+}
+function escolherFotoBusca(i){
+  const f=buscaFotos&&buscaFotos[i];if(!f)return;
+  catFoto={tipo:'web',url:f.img,thumb:f.thumb,ver:f.thumb};const l=$('#prLink');if(l)l.value='';verFoto(f.thumb);erroProd('');
+  document.querySelectorAll('[data-pr-escolher]').forEach(b=>b.classList.toggle('on',+b.dataset.prEscolher===i));
+}
 function buscarNoGoogle(){
   const m=marca($('#prMarca').value),q=[m&&m.nome,$('#prRef').value.trim(),$('#prNome').value.trim()].filter(Boolean).join(' ');
   if(!$('#prRef').value.trim()&&!$('#prNome').value.trim())return erroProd('Digite a referência ou o nome antes de buscar a foto.');
@@ -146,6 +172,9 @@ async function salvarProduto(e){
   try{
     if(catFoto&&catFoto.tipo==='remover')foto='';
     else if(catFoto&&catFoto.tipo==='blob')foto=await guardarFoto(catFoto.blob,id);
+    else if(catFoto&&catFoto.tipo==='web'){ // foto escolhida na busca: traz a original; se o site não deixar, a miniatura
+      let b=null;try{b=await baixarImagem(catFoto.url)}catch(err){try{b=await baixarImagem(catFoto.thumb)}catch(err2){}}
+      if(b)foto=await guardarFoto(b,id);else{foto=catFoto.url;aviso=' (a foto ficou como link do site)'}}
     else if(catFoto&&catFoto.tipo==='link'){foto=catFoto.url;
       // traz uma cópia para a conta: o link original pode sumir do site da marca
       if(naConta())try{foto=await guardarFoto(await baixarImagem(catFoto.url),id)}catch(err){foto=catFoto.url;aviso=' (a foto ficou como link do site)'}}
@@ -357,7 +386,7 @@ document.addEventListener('input',e=>{const t=e.target;if(!t)return;
   if(t.id==='catBusca'){catBusca=t.value;catLimite=60;listaCatalogo()}
   else if(t.id==='escBusca'){escBusca=t.value;escLimite=60;listaEscolha()}});
 document.addEventListener('click',e=>{
-  const t=e.target.closest('[data-cat-abrir],[data-cat-marca],[data-cat-novo],[data-cat-edit],[data-cat-mais],[data-cat-importar],[data-pr-colar],[data-pr-google],[data-pr-sem-foto],[data-pr-excluir],[data-pr-voltar],[data-esc-abrir],[data-esc-novo],[data-esc-mais],[data-esc-menos],[data-esc-maislista],[data-esc-pronto],[data-it-mais],[data-it-menos],[data-copia-cliente],[data-copia-enviar],[data-copia-texto],[data-plan-salvar-prod]');
+  const t=e.target.closest('[data-cat-abrir],[data-cat-marca],[data-cat-novo],[data-cat-edit],[data-cat-mais],[data-cat-importar],[data-pr-colar],[data-pr-google],[data-pr-buscar],[data-pr-escolher],[data-pr-sem-foto],[data-pr-excluir],[data-pr-voltar],[data-esc-abrir],[data-esc-novo],[data-esc-mais],[data-esc-menos],[data-esc-maislista],[data-esc-pronto],[data-it-mais],[data-it-menos],[data-copia-cliente],[data-copia-enviar],[data-copia-texto],[data-plan-salvar-prod]');
   if(!t)return;const d=t.dataset;
   if('catAbrir' in d)abrirCatalogo(d.catAbrir||null);
   else if('catMarca' in d){catMarca=d.catMarca;catLimite=60;renderCatalogo()}
@@ -367,6 +396,8 @@ document.addEventListener('click',e=>{
   else if('catImportar' in d)abrirImportProd();
   else if('prColar' in d)colarImagem();
   else if('prGoogle' in d)buscarNoGoogle();
+  else if('prBuscar' in d)buscarFotos();
+  else if('prEscolher' in d)escolherFotoBusca(+d.prEscolher);
   else if('prSemFoto' in d){catFoto={tipo:'remover'};$('#prLink').value='';verFoto('');t.remove()}
   else if('prExcluir' in d)excluirProduto(t);
   else if('prVoltar' in d){catEdit=null;catFoto=null;depoisDeEditar()}
