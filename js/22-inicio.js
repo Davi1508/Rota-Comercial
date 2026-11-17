@@ -6,7 +6,7 @@ function renderPeriodo(){
 }
 function mudarPeriodo(){let a=$('#pDe').value,b=$('#pAte').value;if(!a||!b)return;if(a>b)[a,b]=[b,a];if(b>isoD(HOJE))b=isoD(HOJE);filtro.de=a;filtro.ate=b;renderTudo()}
 function renderTudo(){
-  ultCache=null;renderPeriodo();renderDivisoes();renderPrevisto();$('#hello').textContent=saudacao();renderViagem();
+  ultCache=null;renderPeriodo();renderDivisoes();renderPrevisto();$('#hello').textContent=saudacao();renderViagem();if(typeof renderProdutos==='function')renderProdutos();
   if(filtro.marca!=='todas'&&!marca(filtro.marca))filtro.marca='todas';
   renderFbar();
   renderBoas();estadoPedido();renderHero();atualizarMapa();renderLojasUF();renderCidadeBox();renderPainel();renderLojas();

@@ -20,7 +20,7 @@ function renderMetas(){
     const m=marca(mt.marca),p=progressoMeta(mt),c=corMeta(p.r),falta=mt.valor-p.real;
     const desde=mt.desde?`desde ${deIso(mt.desde).toLocaleDateString('pt-BR')}`:'todos os pedidos';
     return `<button class="meta" data-meta-edit="${esc(mt.id)}">
-      <div class="meta-h"><i class="dot" style="background:${m.cor};margin:0"></i><div class="grow"><div class="t">${esc(m.nome)}</div><div class="s">${esc(mt.colecao||'Todas as coleções')} · ${desde}</div></div><b class="num meta-pc" style="color:var(--${c})">${Math.round(p.r*100)}%</b></div>
+      <div class="meta-h"><i class="dot" style="background:${m.cor};margin:0"></i><div class="grow"><div class="t">${esc(m.nome)}</div><div class="s">${esc(mt.colecao||'Todas as campanhas')} · ${desde}</div></div><b class="num meta-pc" style="color:var(--${c})">${Math.round(p.r*100)}%</b></div>
       <div class="meta-bar" role="img" aria-label="${Math.round(p.r*100)}% da meta${p.prev?`, ${Math.round(p.rp*100)}% contando as previsões`:''}"><i class="prev" style="width:${Math.min(100,p.rp*100)}%"></i><i style="width:${Math.min(100,p.r*100)}%;background:var(--${c})"></i></div>
       <div class="s"><span class="num">${fmt.format(p.real)}</span> de <span class="num">${fmt.format(mt.valor)}</span> · ${falta>0?`faltam <b class="num">${fmt.format(falta)}</b>`:`<b style="color:var(--ok)">meta batida${falta<0?` (+${fmt.format(-falta)})`:''}</b>`}</div>
       ${p.prev?`<div class="s">${fmt.format(p.prev)} em previsões esperando o valor real: se fecharem, chega a ${Math.round(p.rp*100)}%</div>`:''}
@@ -42,10 +42,10 @@ function abrirMeta(id){
   sh.innerHTML=`<div class="sh-top"><div class="grab"></div><div class="sh-h"><div><h3>${metaEdit?'Editar meta':'Nova meta'}</h3><div class="s">O valor que a marca pediu para você vender</div></div><button class="x" data-close aria-label="Fechar">×</button></div></div>
     <div class="sh-body"><form id="formMeta" novalidate>
       <label class="f" for="mtMarca">Marca</label><select id="mtMarca">${MARCAS.map(m=>`<option value="${esc(m.id)}"${m.id===mt.marca?' selected':''}>${esc(m.nome)}</option>`).join('')}</select>
-      <label class="f" for="mtColecao">Coleção</label><select id="mtColecao"><option value="">Todas as coleções</option>${cols.map(c=>`<option value="${esc(c)}"${c===mt.colecao?' selected':''}>${esc(c)}</option>`).join('')}</select>
+      <label class="f" for="mtColecao">Campanha</label><select id="mtColecao"><option value="">Todas as campanhas</option>${cols.map(c=>`<option value="${esc(c)}"${c===mt.colecao?' selected':''}>${esc(c)}</option>`).join('')}</select>
       <label class="f" for="mtValor">Valor da meta</label><div class="valor"><span>R$</span><input id="mtValor" class="num" type="text" inputmode="decimal" placeholder="0" autocomplete="off" value="${mt.valor?mt.valor.toLocaleString('pt-BR'):''}"></div>
       <label class="f" for="mtDesde">Contar pedidos a partir de</label><input id="mtDesde" type="date" value="${mt.desde||desdeSugerido(mt.marca,mt.colecao)}">
-      <div class="hint">Use o início das vendas da coleção. Pedidos antes dessa data não entram na meta.</div>
+      <div class="hint">Use o início das vendas da campanha. Pedidos antes dessa data não entram na meta.</div>
       <p class="erro" id="mtErro" role="alert" hidden></p>
       <div class="fpe">${metaEdit?'<button type="button" class="btn ghost" data-meta-del>Excluir</button>':'<button type="button" class="btn ghost" data-close>Cancelar</button>'}<button type="submit" class="btn">Salvar meta</button></div>
     </form></div>`;
@@ -62,7 +62,7 @@ function salvarMeta(){
   if(!(v>0))return erro('Digite o valor da meta.');
   if(!marca(mid))return erro('Escolha a marca.');
   const repetida=METAS.find(x=>x!==metaEdit&&x.marca===mid&&x.colecao===col&&x.desde===ds);
-  if(repetida)return erro('Já existe uma meta igual para essa marca e coleção. Toque nela para editar.');
+  if(repetida)return erro('Já existe uma meta igual para essa marca e campanha. Toque nela para editar.');
   const mt=metaEdit||{id:'mt'+Date.now().toString(36)};
   Object.assign(mt,{marca:mid,colecao:col,valor:v,desde:/^\d{4}-\d{2}-\d{2}$/.test(ds)?ds:''});
   if(!metaEdit)METAS.push(mt);

@@ -6,10 +6,10 @@ function instrucoesImport(){
   return `Leia o relatório e devolva SOMENTE uma lista JSON, sem nenhum texto antes ou depois. Cada item da lista é um lançamento, de um destes 3 tipos:
 
 1) Loja (cadastro de loja nova):
-{"tipo":"loja","nome":"Boutique Ondina","cidade":"Salvador","uf":"BA","regiao":"Baixo Sul","marcas":["Maré Alta"]}
+{"tipo":"loja","nome":"Mercado Ondina","cidade":"Salvador","uf":"BA","regiao":"Baixo Sul","marcas":["Maré Alta"]}
 
 2) Pedido de venda:
-{"tipo":"pedido","data":"2026-11-09","loja":"Boutique Ondina","cidade":"Salvador","uf":"BA","regiao":"Baixo Sul","marca":"Maré Alta","valor":1500.00,"pago":false,"colecao":"Inverno"}
+{"tipo":"pedido","data":"2026-11-09","loja":"Mercado Ondina","cidade":"Salvador","uf":"BA","regiao":"Baixo Sul","marca":"Maré Alta","valor":1500.00,"pago":false,"colecao":"Inverno"}
 
 3) Despesa de viagem:
 {"tipo":"despesa","data":"2026-11-10","valor":120.50,"categoria":"Combustível","descricao":"Gasolina em Barreiras"}
@@ -28,11 +28,11 @@ Regras:
 Lojas cadastradas (nome, cidade/UF): ${ls}
 Marcas: ${ms}
 Regiões: ${rs}
-Coleções: ${cs}`;
+Campanhas (coleções): ${cs}`;
 }
 const GENERICAS=new Set(['loja','lojas','moda','modas','store','boutique','casa','fashion','center','the','das','dos','atelie','emporio','vitrine','jeans','kids','look','chic','estilo','cia',
   // regiões e palavras de lugar não indicam que é a mesma loja
-  'sul','norte','leste','oeste','nordeste','sudeste','centro','central','extremo','baixo','alto','nova','novo','grande','praia','shopping','mall','plaza','ltda','eireli','comercio','confeccoes','representacoes','bahia']);
+  'sul','norte','leste','oeste','nordeste','sudeste','centro','central','extremo','baixo','alto','nova','novo','grande','praia','shopping','mall','plaza','ltda','eireli','mercado','mercadinho','supermercado','atacado','atacadao','atacadista','distribuidora','distribuidor','armazem','emporio','farma','farmacia','drogaria','ferragens','materiais','construcao','autopecas','pecas','agro','agropecas','home','center','comercial','utilidades','embalagens','beleza','pet','shop','comercio','confeccoes','representacoes','bahia']);
 const palavras=s=>norm(s).replace(/[^a-z0-9 ]/g,' ').split(/\s+/).filter(w=>w.length>2&&!GENERICAS.has(w));
 function parecido(a,b){const A=palavras(a),B=palavras(b),na=norm(a),nb=norm(b);return A.some(w=>B.includes(w))||na.includes(nb)||nb.includes(na)}
 // Acha a loja do relatório; se não existir, prepara o cadastro (feito só na hora de lançar)
@@ -83,7 +83,7 @@ function analisarItem(x,vistos,novas){
     const m=MARCAS.find(m=>norm(m.nome)===norm(x.marca||'')),col0=String(x.colecao||'').trim(),col=COLECOES.find(c=>norm(c)===norm(col0));
     r.resumo=`Pedido · ${dt} · ${fmt2.format(val)} · ${x.loja||'?'} · ${m?m.nome:(x.marca||'?')}`;
     if(!m)return(r.msg=String(x.marca||'').trim()?pedirMarca(String(x.marca)):'Falta a marca do pedido',r);
-    if(col0&&!col)return(r.msg=`Coleção "${col0}" não existe em Ajustes`,r);
+    if(col0&&!col)return(r.msg=`Campanha "${col0}" não existe em Ajustes`,r);
     const res=resolverLoja(x,novas);if(res.erro)return(r.msg=res.erro,r);
     const lk=res.l?res.l.id:'novo:'+res.nova.k,k=['p',lk,m.id,isoD(ds),val].join('|');
     if(vistos.has(k)||(res.l&&pedidos.some(o=>o.loja===res.l.id&&o.marca===m.id&&o.valor===val&&isoD(o.data)===isoD(ds))))return(r.msg='Já existe igual: não será lançado de novo',r);

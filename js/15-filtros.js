@@ -12,8 +12,8 @@ function renderFbar(){
   if($('#sheet').classList.contains('on')&&$('#sheet').dataset.tipo==='filtros')renderFiltrosLista();
 }
 function abrirFiltros(){lojaAberta=null;fBusca='';const sh=$('#sheet');sh.dataset.tipo='filtros';sh.setAttribute('aria-label','Filtros');
-  sh.innerHTML=`<div class="sh-top"><div class="grab"></div><div class="sh-h"><div><h3>Filtros</h3><div class="s">Escolha marca, região e coleção</div></div><button class="x" data-close aria-label="Fechar">×</button></div>
-    <input class="search" id="fBusca" type="search" placeholder="Buscar marca, região ou coleção" autocomplete="off" aria-label="Buscar nos filtros" style="margin-top:var(--s3)"></div>
+  sh.innerHTML=`<div class="sh-top"><div class="grab"></div><div class="sh-h"><div><h3>Filtros</h3><div class="s">Escolha marca, região e campanha</div></div><button class="x" data-close aria-label="Fechar">×</button></div>
+    <input class="search" id="fBusca" type="search" placeholder="Buscar marca, região ou campanha" autocomplete="off" aria-label="Buscar nos filtros" style="margin-top:var(--s3)"></div>
     <div class="sh-body"><div id="fLista"></div><div class="fpe"><button class="btn ghost" data-limpar-f>Limpar</button><button class="btn" data-close>Ver resultados</button></div></div>`;
   $('#fBusca').oninput=e=>{fBusca=e.target.value;renderFiltrosLista()};renderFiltrosLista();
   $('#veu').style.display='block';requestAnimationFrame(()=>sh.classList.add('on'));
@@ -24,5 +24,5 @@ function renderFiltrosLista(){
     return `<div class="fsec"><h4>${tit}</h4>${(q?[]:[['todas',todas]]).concat(vis).map(([v,t,c])=>`<button class="fop${filtro[tipo]===v?' on':''}" data-f-tipo="${tipo}" data-val="${esc(v)}">${c?`<i class="dot" style="background:${c}"></i>`:''}${esc(t)}<span class="ck" aria-hidden="true"></span></button>`).join('')}</div>`};
   el.innerHTML=(sec('Marca','marca','Todas as marcas',MARCAS.map(m=>[m.id,m.nome,m.cor]))
     +(REGIOES.length?sec('Região','regiao','Todas as regiões',REGIOES.map(r=>[r,r])):'')
-    +(COLECOES.length?sec('Coleção','colecao','Todas as coleções',COLECOES.map(c=>[c,c])):''))||'<p class="empty">Nada encontrado.</p>';
+    +(COLECOES.length?sec('Campanha','colecao','Todas as campanhas',COLECOES.map(c=>[c,c])):''))||'<p class="empty">Nada encontrado.</p>';
 }
