@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /dono/
+
+Sitemap: https://rotacomercial.app.br/sitemap.xml
