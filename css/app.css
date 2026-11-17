@@ -480,3 +480,11 @@ a.btn{display:grid;place-items:center;text-decoration:none;margin-top:var(--s3)}
 .progresso i{display:block;height:100%;background:var(--primary);transition:width .2s}
 .ok-box{background:var(--surface);border:1px solid var(--line);border-radius:var(--r2);padding:var(--s3)}
 .cat-ferr .esc-novo{margin:0;flex:none;height:56px;border-radius:var(--r2)}
+/* busca de fotos no cadastro do produto */
+.busca-fotos{background:var(--surface);border:1px solid var(--line);border-radius:var(--r2);padding:var(--s3);margin-top:var(--s3)}
+.busca-top{display:flex;justify-content:space-between;align-items:baseline;gap:var(--s2);margin-bottom:var(--s2)}
+.busca-grade{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--s2)}
+.busca-foto{display:flex;flex-direction:column;gap:var(--s1);padding:var(--s1);border:2px solid var(--line);border-radius:var(--r1);background:#fff;cursor:pointer;min-width:0}
+.busca-foto img{width:100%;aspect-ratio:1;object-fit:contain}
+.busca-foto .s{font-size:12px;line-height:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#646A8A}
+.busca-foto.on{border-color:var(--primary);box-shadow:0 0 0 2px var(--primary)}

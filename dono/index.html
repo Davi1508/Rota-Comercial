@@ -114,6 +114,13 @@ function espacoHtml(e){
     ${e.maiores&&e.maiores.length?`<div class="s" style="margin-top:var(--s3)">Quem mais usa fotos</div>${e.maiores.map(m=>`<div class="esp-u"><span>${esc(m.email||'conta excluída')}</span><span class="num">${(+m.n).toLocaleString('pt-BR')} · ${tam(+m.bytes)}</span></div>`).join('')}`:''}
   </div>`;
 }
+// Busca de fotos (Brave): US$ 5 por mil buscas, com US$ 5 grátis por mês
+function buscasHtml(b){
+  if(!b)return'';const n=+b.mes||0,custo=Math.max(0,n*0.005-5),pc=Math.min(100,n/1000*100);
+  return `<h2>Busca de fotos <span class="s">este mês</span></h2><div class="card"><div class="esp"><div class="esp-h"><b>${n.toLocaleString('pt-BR')} buscas</b><span class="num">${custo?'custo estimado US$ '+custo.toFixed(2).replace('.',','):'dentro do grátis'}</span></div>
+    <div class="esp-bar"><i class="${pc>=90?'bad':pc>=70?'warn':'ok'}" style="width:${Math.max(1,pc)}%"></i></div>
+    <div class="s">${(+b.usuarios||0).toLocaleString('pt-BR')} ${+b.usuarios===1?'pessoa usou':'pessoas usaram'} · as primeiras 1.000 do mês são grátis (US$ 5), depois US$ 5 por mil. Buscas repetidas não contam.</div></div></div>`;
+}
 function desenhar(){
   const r=dados.resumo,us=dados.usuarios,por=dados.por_dia;
   $('#quando').textContent='Atualizado às '+new Date(dados.agora).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
@@ -134,7 +141,7 @@ function desenhar(){
       ${kpi(r.total,'Usuários')}${kpi(r.novos7,'Novos em 7 dias')}${kpi(r.ativos7,'Entraram em 7 dias')}
       ${kpi(conv+'%','Lançaram pedido')}
     </div>
-    ${espacoHtml(dados.espaco)}
+    ${espacoHtml(dados.espaco)}${buscasHtml(dados.buscas)}
     <h2>Cadastros por dia <span class="s">últimos 30 dias</span></h2>
     <div class="card"><div class="barras" role="img" aria-label="Cadastros por dia nos últimos 30 dias">${por.map(p=>`<i class="${p.n?'':'zero'}" style="height:${p.n?Math.max(8,p.n/max*100):3}%" title="${dia(p.d)}: ${p.n}"></i>`).join('')}</div>
       <div class="eixo s"><span>${dia(por[0]&&por[0].d)}</span><span>${por.reduce((a,p)=>a+p.n,0)} no período</span><span>hoje</span></div></div>
@@ -147,9 +154,11 @@ function desenhar(){
           <div><span>Criou a conta</span>${dia(u.criado)}</div>
           <div><span>Último acesso</span>${relativo(u.ultimo_acesso)}</div>
           <div><span>Pedidos · lojas · produtos</span>${u.pedidos} · ${u.lojas} · ${u.produtos||0}</div>
+          <div><span>Buscas de foto no mês</span>${u.buscas||0} de ${u.limite_buscas||150}</div>
           <div><span>${u.situacao==='pagante'?'Paga por mês':'Teste até'}</span>${u.situacao==='pagante'?real(u.valor||29.90):dia(u.trial_ate)}</div>
         </div>
         <div class="acoes">
+          ${(u.buscas||0)>=(u.limite_buscas||150)*0.8?`<button class="btn mini" data-acao="buscas" data-valor="${(u.limite_buscas||150)+150}" data-email="${esc(u.email)}">+150 buscas</button>`:''}
           ${u.situacao!=='pagante'?`<button class="btn mini pri" data-acao="ativar" data-valor="29.90" data-email="${esc(u.email)}">Ativar R$ 29,90</button><button class="btn mini" data-acao="ativar" data-valor="19.90" data-email="${esc(u.email)}">Fundador R$ 19,90</button><button class="btn mini" data-acao="mais7" data-email="${esc(u.email)}">+7 dias de teste</button>`
             :`<button class="btn mini perigo" data-acao="pausar" data-email="${esc(u.email)}">${confirmar==='pausar|'+u.email?'Toque de novo para pausar':'Pausar (parou de pagar)'}</button>`}
           <button class="btn mini" data-copiar="${esc(u.email)}">Copiar e-mail</button>
@@ -168,7 +177,7 @@ document.addEventListener('click',async e=>{
   confirmar=null;a.disabled=true;
   const {error}=await sb.rpc('dono_alterar',{p_email:email,p_acao:acao,p_valor:valor?Number(valor):null});
   if(error){a.disabled=false;toast('Não deu: '+error.message);return}
-  toast({ativar:'Conta ativada',mais7:'+7 dias de teste',pausar:'Conta pausada'}[acao]);
+  toast({ativar:'Conta ativada',mais7:'+7 dias de teste',pausar:'Conta pausada',buscas:'Limite de buscas aumentado'}[acao]);
   carregar();
 });
 $('#atualizar').onclick=carregar;

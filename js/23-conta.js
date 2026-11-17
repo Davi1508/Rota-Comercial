@@ -12,7 +12,7 @@ Object.assign(STATUS,{conta:['ok','Salvo na sua conta'],pendente:['warn','Sem co
 // Dados do app → linhas do banco
 function linhas(){
   return{
-    marcas:MARCAS.map(m=>({id:String(m.id),nome:m.nome,taxa:m.taxa,cor:m.cor})),
+    marcas:MARCAS.map(m=>({id:String(m.id),nome:m.nome,taxa:m.taxa,cor:m.cor,site:m.site||''})),
     produtos:PRODUTOS.map(x=>({id:String(x.id),marca:x.marca,ref:x.ref||'',nome:x.nome,preco:x.preco||0,foto:/^https?:/i.test(x.foto||'')?x.foto:''})),
     lojas:lojas.map(l=>({id:String(l.id),nome:l.nome,cidade:l.cidade||'',uf:l.uf,regiao:l.regiao||'',marcas:l.marcas||[],lng:l.coord?l.coord[0]:null,lat:l.coord?l.coord[1]:null,arquivada:!!l.arquivada})),
     pedidos:pedidos.map(o=>({id:String(o.id),loja:String(o.loja),marca:o.marca,data:isoD(o.data),valor:o.valor||0,previsto:o.previsto||null,pendente:!!o.pendente,pago:!!o.pago,taxa:o.taxa,colecao:o.colecao||'',itens:o.itens&&o.itens.length?o.itens:null})),
@@ -63,7 +63,7 @@ async function lerConta(){
   const{data:p,error}=await sb.from('profiles').select('*').eq('id',conta.id).single();if(error)throw error;perfil=p;
   const [ma,pr,lo,pe,de]=await Promise.all(TABELAS.map(buscarTudo));
   return{vazio:!ma.length&&!pr.length&&!lo.length&&!pe.length&&!de.length,dados:{v:1,atualizado:Date.now(),nome:p.nome,regioes:p.regioes,colecoes:p.colecoes,sugestoes:(p.extras||{}).sugestoes||[],metas:(p.extras||{}).metas||[],
-    marcas:ma.map(m=>({id:m.id,nome:m.nome,taxa:+m.taxa,cor:m.cor})),
+    marcas:ma.map(m=>({id:m.id,nome:m.nome,taxa:+m.taxa,cor:m.cor,site:m.site||''})),
     produtos:pr.map(x=>({id:x.id,marca:x.marca,ref:x.ref,nome:x.nome,preco:+x.preco,foto:x.foto})),
     lojas:lo.map(l=>({id:l.id,nome:l.nome,cidade:l.cidade,uf:l.uf,regiao:l.regiao,marcas:l.marcas||[],coord:l.lng!=null&&l.lat!=null?[l.lng,l.lat]:null,arquivada:l.arquivada})),
     pedidos:pe.map(o=>({id:/^\d+$/.test(o.id)?+o.id:o.id,loja:o.loja,marca:o.marca,data:o.data,valor:+o.valor,previsto:o.previsto!=null?+o.previsto:0,pendente:o.pendente,pago:o.pago,taxa:+o.taxa,colecao:o.colecao,...(o.itens?{itens:o.itens}:{})})),

@@ -7,11 +7,13 @@ const fotoOk=x=>{const s=String(x||'');return /^https?:\/\/\S{4,590}$/i.test(s)|
 function limparItens(a){
   return(Array.isArray(a)?a:[]).slice(0,500).filter(x=>x&&String(x.nome||'').trim()).map(x=>({p:String(x.p||'').slice(0,40),ref:String(x.ref||'').slice(0,60).trim(),nome:String(x.nome).slice(0,160).trim(),preco:Math.max(0,Math.round((+x.preco||0)*100)/100),qtd:Math.min(99999,Math.max(1,Math.round(+x.qtd||1))),foto:/^https?:/i.test(fotoOk(x.foto))?fotoOk(x.foto):''}));
 }
+// Site da marca: só o endereço (ex.: lojavirtual.marca.com.br), para achar as fotos oficiais dos produtos
+const siteOk=x=>{const s=String(x||'').trim().replace(/^https?:\/\//i,'').replace(/\/.*$/,'').toLowerCase();return /^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(s)&&s.length<=120?s:''};
 const idOk=x=>x!=null&&/^[\w-]{1,40}$/.test(String(x)),dataOk=x=>/^\d{4}-\d{2}-\d{2}$/.test(x)&&!isNaN(deIso(x));
 function limpar(d){
   d=d&&typeof d==='object'?d:{};
   const txt=(x,n=80)=>String(x==null?'':x).slice(0,n).trim(),arr=x=>Array.isArray(x)?x:[];
-  const marcas=arr(d.marcas).filter(m=>m&&idOk(m.id)&&txt(m.nome)).map((m,i)=>({id:String(m.id),nome:txt(m.nome),taxa:Math.min(1,Math.max(0,+m.taxa||0)),cor:/^#[0-9a-f]{3,8}$/i.test(m.cor)?m.cor:PALETA[i%PALETA.length]}));
+  const marcas=arr(d.marcas).filter(m=>m&&idOk(m.id)&&txt(m.nome)).map((m,i)=>({id:String(m.id),nome:txt(m.nome),taxa:Math.min(1,Math.max(0,+m.taxa||0)),cor:/^#[0-9a-f]{3,8}$/i.test(m.cor)?m.cor:PALETA[i%PALETA.length],...(siteOk(m.site)?{site:siteOk(m.site)}:{})}));
   const mids=new Set(marcas.map(m=>m.id));
   const lojas=arr(d.lojas).filter(l=>l&&idOk(l.id)&&txt(l.nome)).map(l=>({id:String(l.id),nome:txt(l.nome),cidade:txt(l.cidade)||'Sem cidade',uf:UFS[l.uf]?l.uf:'BA',regiao:txt(l.regiao),marcas:arr(l.marcas).filter(x=>mids.has(x)),coord:Array.isArray(l.coord)&&l.coord.length===2&&l.coord.every(Number.isFinite)?l.coord:null,...(l.arquivada?{arquivada:true}:{})}));
   const lids=new Set(lojas.map(l=>l.id));

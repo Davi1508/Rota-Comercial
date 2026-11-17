@@ -6,6 +6,8 @@ function renderAjustes(){
   const formMarca=m=>`<form class="form" id="formMarca" style="max-width:none">
      <label class="f" for="mNome">Nome da marca</label><input id="mNome" type="text" value="${m?esc(m.nome):''}" required autocomplete="off">
      <label class="f" for="mTaxa">Comissão (%)</label><input id="mTaxa" type="text" inputmode="decimal" value="${m?String(+(m.taxa*100).toFixed(2)).replace('.',','):''}" placeholder="Ex.: 10 ou 8,5" autocomplete="off" required>
+     <label class="f" for="mSite">Site da marca <small class="opc">opcional</small></label><input id="mSite" type="text" inputmode="url" value="${m&&m.site?esc(m.site):''}" placeholder="Ex.: lojavirtual.marca.com.br" autocomplete="off">
+     <p class="ufmsg" style="margin-top:var(--s1)">Ajuda a achar as fotos oficiais dos produtos desta marca.</p>
      <span class="f">Cor</span><div class="cores">${PALETA.map((c,i)=>`<label><input type="radio" name="mcor" value="${c}" ${(m?m.cor===c:i===MARCAS.length%PALETA.length)?'checked':''}><i style="background:${c}"></i></label>`).join('')}</div>
      ${m?'<p class="ufmsg">Se mudar a comissão, a nova taxa vale para os próximos pedidos. Os pedidos já registrados mantêm a taxa da época.</p>':''}
      <div class="erro" id="mErro" hidden></div>
@@ -51,8 +53,10 @@ function salvarMarca(e){
   if(!(t>0&&t<=50))return err('A comissão precisa ficar entre 0,1% e 50%.');
   const edit=marcaEdit!=='nova'&&marca(marcaEdit);
   if(MARCAS.some(m=>m!==edit&&norm(m.nome)===norm(nome)))return err('Já existe uma marca com esse nome.');
+  const sv=($('#mSite')||{value:''}).value.trim(),site=siteOk(sv);
+  if(sv&&!site)return err('Site inválido. Use só o endereço, como lojavirtual.marca.com.br');
   const taxa=+(t/100).toFixed(4);
-  if(edit)Object.assign(edit,{nome,taxa,cor});else MARCAS.push({id:'m'+Date.now().toString(36),nome,taxa,cor});
+  if(edit){Object.assign(edit,{nome,taxa,cor});if(site)edit.site=site;else delete edit.site}else MARCAS.push({id:'m'+Date.now().toString(36),nome,taxa,cor,...(site?{site}:{})});
   marcaEdit=null;salvar();preencherMarcas();syncMarcaLoja();renderTudo();renderAjustes();toast(edit?'Marca atualizada':'Marca adicionada');
 }
 function excluirMarca(id,btn){
