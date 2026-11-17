@@ -103,7 +103,7 @@ function formProduto(){
     <div class="erro" id="prErro" hidden></div>
     <button class="btn" type="submit" id="prSalvar">${x?'Salvar produto':'Adicionar ao catálogo'}</button>
     ${x?`<button class="btn danger" type="button" data-pr-excluir>Excluir produto</button>`:''}
-    <button class="btn ghost" type="button" data-pr-voltar>${catOrigem==='aba'?'Cancelar':'Voltar ao catálogo'}</button></form>`;
+    <button class="btn ghost" type="button" data-pr-voltar>${catOrigem==='aba'?'Cancelar':catOrigem==='escolha'?'Voltar aos produtos do pedido':'Voltar ao catálogo'}</button></form>`;
 }
 function erroProd(t){const e=$('#prErro');if(e){e.textContent=t;e.hidden=!t}}
 function verFoto(src){const el=$('#prFotoPrev');if(el)el.innerHTML=src?`<img src="${esc(src)}" alt="Foto do produto" referrerpolicy="no-referrer">`:'<span class="s">Sem foto</span>'}
@@ -153,11 +153,13 @@ async function salvarProduto(e){
   const novo={id,marca:mid,ref:ref.slice(0,60),nome:nome.slice(0,160),preco:Math.round((preco||0)*100)/100,foto:fotoOk(foto)};
   if(x)Object.assign(x,novo);else PRODUTOS.push(novo);
   if(antiga&&antiga!==novo.foto)apagarFotoSemUso(antiga);
-  catSalvando=false;catEdit=null;catFoto=null;catMarca=mid;salvar();depoisDeEditar();renderItensForm();
-  toast((x?'Produto atualizado':'Produto adicionado ao catálogo')+aviso);
+  catSalvando=false;catEdit=null;catFoto=null;catMarca=mid;salvar();const naEscolha=catOrigem==='escolha';depoisDeEditar(x?null:novo);renderItensForm();
+  if(!naEscolha||x||aviso)toast((x?'Produto atualizado':'Produto adicionado ao catálogo')+aviso);
 }
 // volta para onde a pessoa estava: o catálogo (folha) ou a aba Produtos
-function depoisDeEditar(){if(typeof renderProdutos==='function')renderProdutos();if(catOrigem==='aba'){catOrigem='sheet';fecharLoja()}else renderCatalogo()}
+function depoisDeEditar(novo){if(typeof renderProdutos==='function')renderProdutos();
+  if(catOrigem==='escolha'){catOrigem='sheet';if(novo&&novo.marca===marcaForm()){mudarQtd(novo.id,1);escBusca='';toast('Produto criado e colocado no pedido')}else if(novo)toast('Produto criado em outra marca: não entrou neste pedido');renderEscolha();$('#sheet').scrollTop=0;return true}
+  if(catOrigem==='aba'){catOrigem='sheet';fecharLoja()}else renderCatalogo()}
 function excluirProduto(btn){
   const x=produto(catEdit);if(!x)return;
   if(!btn.dataset.ok){btn.dataset.ok='1';btn.textContent='Toque de novo para excluir';return}
@@ -195,8 +197,8 @@ function abrirEscolha(){const mid=marcaForm();if(!mid)return toast('Escolha a ma
 function renderEscolha(){
   const sh=$('#sheet'),mid=marcaForm(),m=marca(mid),ps=prodDaMarca(mid);sh.dataset.tipo='escolher';sh.setAttribute('aria-label','Escolher produtos');
   sh.innerHTML=topoSheet(`Produtos da ${esc(m?m.nome:'marca')}`,ps.length?`${ps.length} no catálogo · toque em + para pôr no pedido`:'Catálogo vazio')+`<div class="sh-body" style="padding-top:var(--s3);padding-bottom:0">
-    ${ps.length?`<input class="search" id="escBusca" type="search" placeholder="Buscar por nome ou referência" autocomplete="off" aria-label="Buscar produto"><div id="escLista"></div>`
-      :`<p class="empty">Ainda não tem produtos da ${esc(m?m.nome:'marca')}. Cadastre com foto e preço, ou importe a planilha da marca.</p><button class="btn" data-cat-novo="${esc(mid)}">Cadastrar produto</button><button class="btn ghost" data-cat-importar>Importar planilha</button>`}
+    ${ps.length?`<div class="cat-ferr"><input class="search" id="escBusca" type="search" placeholder="Buscar produto" autocomplete="off" aria-label="Buscar produto"><button type="button" class="chipbtn esc-novo" data-esc-novo>+ Novo produto</button></div><div id="escLista"></div>`
+      :`<p class="empty">Ainda não tem produtos da ${esc(m?m.nome:'marca')}. Cadastre com foto e preço, ou importe a planilha da marca.</p><button class="btn" data-esc-novo>Cadastrar produto</button><button class="btn ghost" data-cat-importar>Importar planilha</button>`}
     <div class="esc-rodape" id="escRodape"></div></div>`;
   listaEscolha();rodapeEscolha();
 }
@@ -355,7 +357,7 @@ document.addEventListener('input',e=>{const t=e.target;if(!t)return;
   if(t.id==='catBusca'){catBusca=t.value;catLimite=60;listaCatalogo()}
   else if(t.id==='escBusca'){escBusca=t.value;escLimite=60;listaEscolha()}});
 document.addEventListener('click',e=>{
-  const t=e.target.closest('[data-cat-abrir],[data-cat-marca],[data-cat-novo],[data-cat-edit],[data-cat-mais],[data-cat-importar],[data-pr-colar],[data-pr-google],[data-pr-sem-foto],[data-pr-excluir],[data-pr-voltar],[data-esc-abrir],[data-esc-mais],[data-esc-menos],[data-esc-maislista],[data-esc-pronto],[data-it-mais],[data-it-menos],[data-copia-cliente],[data-copia-enviar],[data-copia-texto],[data-plan-salvar-prod]');
+  const t=e.target.closest('[data-cat-abrir],[data-cat-marca],[data-cat-novo],[data-cat-edit],[data-cat-mais],[data-cat-importar],[data-pr-colar],[data-pr-google],[data-pr-sem-foto],[data-pr-excluir],[data-pr-voltar],[data-esc-abrir],[data-esc-novo],[data-esc-mais],[data-esc-menos],[data-esc-maislista],[data-esc-pronto],[data-it-mais],[data-it-menos],[data-copia-cliente],[data-copia-enviar],[data-copia-texto],[data-plan-salvar-prod]');
   if(!t)return;const d=t.dataset;
   if('catAbrir' in d)abrirCatalogo(d.catAbrir||null);
   else if('catMarca' in d){catMarca=d.catMarca;catLimite=60;renderCatalogo()}
@@ -369,6 +371,7 @@ document.addEventListener('click',e=>{
   else if('prExcluir' in d)excluirProduto(t);
   else if('prVoltar' in d){catEdit=null;catFoto=null;depoisDeEditar()}
   else if('escAbrir' in d)abrirEscolha();
+  else if('escNovo' in d){catOrigem='escolha';catMarca=marcaForm()||catMarca;catEdit='novo';catFoto=null;renderCatalogo();$('#sheet').scrollTop=0}
   else if('escMais' in d){mudarQtd(d.escMais,1);listaEscolha();rodapeEscolha()}
   else if('escMenos' in d){mudarQtd(d.escMenos,-1);listaEscolha();rodapeEscolha()}
   else if('escMaislista' in d){escLimite+=120;listaEscolha()}
