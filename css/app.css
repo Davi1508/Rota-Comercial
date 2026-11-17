@@ -479,3 +479,4 @@ a.btn{display:grid;place-items:center;text-decoration:none;margin-top:var(--s3)}
 .progresso{height:16px;border-radius:var(--pill);background:var(--surface-2);border:1px solid var(--line);overflow:hidden;margin-top:var(--s3)}
 .progresso i{display:block;height:100%;background:var(--primary);transition:width .2s}
 .ok-box{background:var(--surface);border:1px solid var(--line);border-radius:var(--r2);padding:var(--s3)}
+.cat-ferr .esc-novo{margin:0;flex:none;height:56px;border-radius:var(--r2)}
