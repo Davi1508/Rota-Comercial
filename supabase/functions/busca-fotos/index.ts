@@ -55,9 +55,12 @@ Deno.serve(async (req: Request) => {
     let fotos = (d.results || []).map((x: any) => ({
       img: String(x.properties?.url || ""), thumb: String(x.thumbnail?.src || ""), fonte: String(x.source || "").slice(0, 80),
       titulo: String(x.title || "").slice(0, 140), w: +x.properties?.width || 0, h: +x.properties?.height || 0,
-    })).filter((f: any) => /^https:\/\//.test(f.thumb) && /^https?:\/\//.test(f.img) && !(f.w && f.h && Math.min(f.w, f.h) < 200));
-    if (palavra) fotos = [...fotos.filter((f: any) => f.fonte.includes(palavra)), ...fotos.filter((f: any) => !f.fonte.includes(palavra))];
-    fotos = fotos.slice(0, 12);
+    })).filter((f: any) => /^https:\/\//.test(f.thumb) && /^https?:\/\//.test(f.img) && !(f.w && f.h && (Math.min(f.w, f.h) < 200 || f.w / f.h > 2.2 || f.w / f.h < 0.4)));
+    // ordem: site da marca primeiro; bancos de imagem e redes (marca d'água, repost) por último; fotos maiores e mais quadradas antes
+    const RUINS = /pinterest|magnific|freepik|shutterstock|istockphoto|dreamstime|alamy|depositphotos|123rf|gettyimages|adobe|instagram|facebook|tiktok|youtube|blogspot|wordpress/;
+    const nota = (f: any) => (palavra && f.fonte.includes(palavra) ? 100 : 0) - (RUINS.test(f.fonte) ? 50 : 0) - (/^blog\./.test(f.fonte) ? 20 : 0)
+      + (f.w && f.h ? (Math.min(f.w, f.h) >= 500 ? 5 : 0) - Math.abs(Math.log(f.w / f.h)) * 2 : 0);
+    fotos = fotos.map((f: any, i: number) => ({ f, n: nota(f) - i })).sort((a: any, b: any) => b.n - a.n).map((x: any) => x.f).slice(0, 12);
     await rpc("busca_cache_gravar", { p_q: chaveCache, p_res: fotos });
     return json(200, { fotos, usadas: cont.usadas, limite: cont.limite });
   } catch (e) {
