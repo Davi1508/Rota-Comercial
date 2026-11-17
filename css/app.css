@@ -279,7 +279,7 @@ input[type=date]::-webkit-date-and-time-value{text-align:left}
 .formtit{margin:0 0 var(--s2);font-size:20px;line-height:28px}
 .f{display:block;font-size:14px;line-height:20px;font-weight:600;color:var(--muted);margin:var(--s3) 0 var(--s2)}
 .f:first-child{margin-top:0}
-select,input[type=date],input[type=text],input[type=email],input[type=password]{width:100%;height:56px;font:inherit;font-size:16px;line-height:24px;padding:0 var(--s3);border-radius:var(--r2);border:1px solid var(--line);background:var(--surface-2);color:var(--ink)}
+select,input[type=date],input[type=text],input[type=email],input[type=password],input[type=url],input:not([type]){width:100%;height:56px;font:inherit;font-size:16px;line-height:24px;padding:0 var(--s3);border-radius:var(--r2);border:1px solid var(--line);background:var(--surface-2);color:var(--ink)}
 textarea{width:100%;font:inherit;font-size:16px;line-height:24px;padding:var(--s3);border-radius:var(--r2);border:1px solid var(--line);background:var(--surface-2);color:var(--ink);resize:vertical}
 .valor{display:flex;align-items:center;min-height:72px;border:1px solid var(--line);background:var(--surface-2);border-radius:var(--r2);padding:0 var(--s3)}
 .valor span{font-weight:800;font-size:24px;line-height:32px;color:var(--muted)}
@@ -422,3 +422,29 @@ a.btn{display:grid;place-items:center;text-decoration:none;margin-top:var(--s3)}
 .imp-resumo{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s2);margin-top:var(--s3)}
 .imp-resumo div{background:var(--surface);border:1px solid var(--line);border-radius:var(--r2);padding:var(--s2) var(--s3);text-align:center}
 .imp-resumo b{display:block;font-size:24px;line-height:32px}.imp-resumo span{font-size:12px;line-height:16px;color:var(--muted)}
+/* catálogo de produtos e itens do pedido */
+.thumb{width:56px;height:56px;border-radius:var(--r1);object-fit:cover;flex:none;background:var(--surface-2);border:1px solid var(--line);display:grid;place-items:center;font-size:14px;line-height:20px;font-weight:700;color:var(--muted)}
+.thumb.p48{width:48px;height:48px}
+.cat-entrada{background:var(--surface);border:1px solid var(--line);border-radius:var(--r3);padding:var(--s3);margin-bottom:var(--s3)}
+.cat-entrada .thumb{font-size:24px;line-height:24px;color:var(--primary)}
+.mchips{display:flex;gap:var(--s2);overflow-x:auto;margin:var(--s3) calc(-1 * var(--s3)) 0;padding:0 var(--s3);scrollbar-width:none}
+.mchips::-webkit-scrollbar{display:none}
+.mchips .mchip{cursor:pointer;color:var(--ink)}
+.cat-acoes,.itens-acoes{display:grid;grid-template-columns:1fr 1fr;gap:var(--s2);margin:var(--s3) 0}
+.cat-acoes .btn,.itens-acoes .btn{margin:0;height:48px;font-size:14px;line-height:20px}
+.passo{display:flex;align-items:center;gap:var(--s1);flex:none}
+.passo button{width:40px;height:40px;border-radius:var(--pill);border:1px solid var(--line);background:var(--surface-2);color:var(--ink);font:inherit;font-size:20px;line-height:20px;font-weight:700;cursor:pointer;display:grid;place-items:center;padding:0}
+.passo b{min-width:32px;text-align:center}
+.foto-box{display:flex;gap:var(--s3);align-items:flex-start;flex-wrap:wrap}
+.foto-prev{width:136px;height:136px;border-radius:var(--r2);background:var(--surface);border:1px solid var(--line);overflow:hidden;display:grid;place-items:center;flex:none}
+.foto-prev img{width:100%;height:100%;object-fit:contain}
+.foto-acoes{flex:1 1 176px;display:flex;flex-direction:column;gap:var(--s2);align-items:stretch}
+.foto-acoes .btn{margin:0;height:40px;font-size:14px;line-height:20px}
+.itens .ped{gap:var(--s2)}
+.itens .ped .t{font-weight:700;font-size:14px;line-height:20px}
+.itens-total{display:flex;justify-content:space-between;align-items:center;padding:var(--s3) 0;border-top:1px solid var(--line);font-weight:700}
+.esc-rodape{position:sticky;bottom:0;display:flex;align-items:center;gap:var(--s3);background:var(--bg);border-top:1px solid var(--line);margin:var(--s3) calc(-1 * var(--s3)) 0;padding:var(--s3) var(--s3) max(var(--s3),env(safe-area-inset-bottom))}
+.esc-rodape:empty{display:none}
+.copia{margin-top:var(--s2)}
+.copia-prev{display:flex;gap:var(--s2);overflow-x:auto;padding-bottom:var(--s1)}
+.copia-prev img{height:240px;width:auto;border-radius:var(--r1);border:1px solid var(--line);flex:none;background:#fff}

@@ -2,7 +2,7 @@
 // Troca cada <select> por um campo onde se digita e as opções vão aparecendo
 const valorSel=Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype,'value');
 function combo(sel){
-  if(sel.dataset.combo)return;sel.dataset.combo='1';
+  if(sel.dataset.combo||sel.hasAttribute('data-sem-combo'))return;sel.dataset.combo='1';
   const w=document.createElement('div');w.className='combo';sel.parentNode.insertBefore(w,sel);w.appendChild(sel);
   const inp=document.createElement('input');inp.type='text';inp.className='combo-in';inp.autocomplete='off';inp.setAttribute('role','combobox');inp.setAttribute('aria-autocomplete','list');
   inp.setAttribute('aria-label',sel.getAttribute('aria-label')||(sel.id&&document.querySelector(`label[for="${sel.id}"]`)||{}).textContent||'Escolher');

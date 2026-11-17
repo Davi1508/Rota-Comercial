@@ -31,6 +31,8 @@ async function excluirConta(){
   if($('#exConfirma').value.trim().toUpperCase()!==PALAVRA_EXCLUIR)return erro(`Digite ${PALAVRA_EXCLUIR} para confirmar.`);
   if(!navigator.onLine)return erro('Você está sem internet. Conecte e tente de novo.');
   const b=$('#exBotao');b.disabled=true;b.textContent='Excluindo…';
+  // apaga as fotos do catálogo antes (o banco não apaga arquivos sozinho)
+  try{const pasta=conta.id;for(let i=0;i<50;i++){const{data}=await sb.storage.from('fotos').list(pasta,{limit:1000});if(!data||!data.length)break;await sb.storage.from('fotos').remove(data.map(f=>pasta+'/'+f.name));if(data.length<1000)break}}catch(e){}
   const {error}=await sb.rpc('excluir_conta');
   if(error){b.disabled=false;b.textContent='Excluir para sempre';return erro('Não foi possível excluir agora. Tente de novo ou escreva para contato@rotacomercial.app.br.')}
   // conta apagada no servidor: limpa este aparelho e sai

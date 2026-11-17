@@ -1,7 +1,12 @@
 // ---------- salvar no celular (e na conta, quando o link permite) ----------
 const CHAVE='rc-dados-v1';
 let nuvem=null,salvarT=null,fila=Promise.resolve(),enviados={};
-function serializar(){return{v:1,atualizado,marcas:MARCAS,lojas,sugestoes,regioes:REGIOES,colecoes:COLECOES,metas:METAS,nome:NOME,despesas:DESPESAS.map(x=>({...x,data:isoD(x.data)})),pedidos:pedidos.map(o=>({...o,data:isoD(o.data)}))}}
+function serializar(){return{v:1,atualizado,marcas:MARCAS,lojas,sugestoes,regioes:REGIOES,colecoes:COLECOES,metas:METAS,produtos:PRODUTOS,nome:NOME,despesas:DESPESAS.map(x=>({...x,data:isoD(x.data)})),pedidos:pedidos.map(o=>({...o,data:isoD(o.data)}))}}
+// Foto: link da internet ou, sem conta, uma imagem pequena guardada no próprio celular
+const fotoOk=x=>{const s=String(x||'');return /^https?:\/\/\S{4,590}$/i.test(s)||(/^data:image\/(jpeg|png|webp|svg\+xml);base64,[\w+/=]+$/.test(s)&&s.length<80000)?s:''};
+function limparItens(a){
+  return(Array.isArray(a)?a:[]).slice(0,500).filter(x=>x&&String(x.nome||'').trim()).map(x=>({p:String(x.p||'').slice(0,40),ref:String(x.ref||'').slice(0,60).trim(),nome:String(x.nome).slice(0,160).trim(),preco:Math.max(0,Math.round((+x.preco||0)*100)/100),qtd:Math.min(99999,Math.max(1,Math.round(+x.qtd||1))),foto:/^https?:/i.test(fotoOk(x.foto))?fotoOk(x.foto):''}));
+}
 const idOk=x=>x!=null&&/^[\w-]{1,40}$/.test(String(x)),dataOk=x=>/^\d{4}-\d{2}-\d{2}$/.test(x)&&!isNaN(deIso(x));
 function limpar(d){
   d=d&&typeof d==='object'?d:{};
@@ -11,14 +16,15 @@ function limpar(d){
   const lojas=arr(d.lojas).filter(l=>l&&idOk(l.id)&&txt(l.nome)).map(l=>({id:String(l.id),nome:txt(l.nome),cidade:txt(l.cidade)||'Sem cidade',uf:UFS[l.uf]?l.uf:'BA',regiao:txt(l.regiao),marcas:arr(l.marcas).filter(x=>mids.has(x)),coord:Array.isArray(l.coord)&&l.coord.length===2&&l.coord.every(Number.isFinite)?l.coord:null,...(l.arquivada?{arquivada:true}:{})}));
   const lids=new Set(lojas.map(l=>l.id));
   const pedidos=arr(d.pedidos).filter(o=>o&&lids.has(String(o.loja))&&mids.has(o.marca)&&dataOk(o.data)).map((o,i)=>{const v=Math.max(0,+o.valor||0),pv=Math.max(0,+o.previsto||0),r={id:idOk(o.id)?o.id:'r'+i,loja:String(o.loja),marca:o.marca,valor:v,data:o.data,pago:!!o.pago&&v>0,taxa:o.taxa!=null&&Number.isFinite(+o.taxa)?+o.taxa:marcas.find(m=>m.id===o.marca).taxa,colecao:txt(o.colecao)};
-    if(pv)r.previsto=pv;if(!v&&pv)r.pendente=true;return r}).filter(o=>o.valor>0||o.pendente);
+    if(pv)r.previsto=pv;if(!v&&pv)r.pendente=true;const it=limparItens(o.itens);if(it.length)r.itens=it;return r}).filter(o=>o.valor>0||o.pendente);
   const despesas=arr(d.despesas).filter(x=>x&&dataOk(x.data)&&+x.valor>0).map((x,i)=>({id:idOk(x.id)?String(x.id):'d'+i,data:x.data,valor:+x.valor,categoria:txt(x.categoria),descricao:txt(x.descricao,120)}));
+  const pids=new Set(),produtos=arr(d.produtos).filter(x=>x&&idOk(x.id)&&mids.has(x.marca)&&txt(x.nome,160)&&!pids.has(String(x.id))&&pids.add(String(x.id))).map(x=>({id:String(x.id),marca:x.marca,ref:txt(x.ref,60),nome:txt(x.nome,160),preco:Math.max(0,Math.round((+x.preco||0)*100)/100),foto:fotoOk(x.foto)}));
   const metas=arr(d.metas).filter(m=>m&&idOk(m.id)&&mids.has(m.marca)&&+m.valor>0).map(m=>({id:String(m.id),marca:m.marca,colecao:txt(m.colecao),valor:Math.round(+m.valor*100)/100,desde:dataOk(m.desde)?m.desde:''}));
   const lista=x=>Array.isArray(x)?[...new Set(x.map(y=>txt(y)).filter(Boolean))]:undefined;
-  return{...d,marcas,lojas,pedidos,despesas,metas,regioes:lista(d.regioes),colecoes:lista(d.colecoes),nome:d.nome!==undefined?txt(d.nome,40):undefined,sugestoes:arr(d.sugestoes)};
+  return{...d,marcas,lojas,pedidos,despesas,metas,produtos,regioes:lista(d.regioes),colecoes:lista(d.colecoes),nome:d.nome!==undefined?txt(d.nome,40):undefined,sugestoes:arr(d.sugestoes)};
 }
 function aplicar(d){
-  d=limpar(d);ultCache=null;MARCAS=d.marcas||[];lojas=d.lojas||[];sugestoes=d.sugestoes||[];REGIOES=Array.isArray(d.regioes)?d.regioes:[];COLECOES=Array.isArray(d.colecoes)?d.colecoes:[...COLECOES_PADRAO];DESPESAS=(d.despesas||[]).map(x=>({...x,data:deIso(x.data)}));NOME=d.nome||'';METAS=d.metas||[];
+  d=limpar(d);ultCache=null;MARCAS=d.marcas||[];lojas=d.lojas||[];sugestoes=d.sugestoes||[];REGIOES=Array.isArray(d.regioes)?d.regioes:[];COLECOES=Array.isArray(d.colecoes)?d.colecoes:[...COLECOES_PADRAO];DESPESAS=(d.despesas||[]).map(x=>({...x,data:deIso(x.data)}));NOME=d.nome||'';METAS=d.metas||[];PRODUTOS=d.produtos||[];
   pedidos=(d.pedidos||[]).map(o=>({...o,data:deIso(o.data)}));pid=pedidos.reduce((a,o)=>Math.max(a,+o.id||0),0)+1;
   exemplo=!!d.exemplo;atualizado=d.atualizado||0;filtro.marca='todas';filtro.regiao='todas';filtro.colecao='todas';estadoSel=null;cidadeSel=null;
 }

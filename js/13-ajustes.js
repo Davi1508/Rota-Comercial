@@ -10,12 +10,12 @@ function renderAjustes(){
      ${m?'<p class="ufmsg">Se mudar a comissão, a nova taxa vale para os próximos pedidos. Os pedidos já registrados mantêm a taxa da época.</p>':''}
      <div class="erro" id="mErro" hidden></div>
      <button class="btn" type="submit">${m?'Salvar marca':'Adicionar marca'}</button>
-     ${m?`<button class="btn danger" type="button" data-del-marca="${m.id}">Excluir marca</button>`:''}
+     ${m?`<button class="btn ghost" type="button" data-cat-abrir="${m.id}">Produtos desta marca (${PRODUTOS.filter(x=>x.marca===m.id).length})</button><button class="btn danger" type="button" data-del-marca="${m.id}">Excluir marca</button>`:''}
      <button class="btn ghost" type="button" data-marca-cancel>Cancelar</button></form>`;
   let corpo='';
   if(ajusteAba==='marcas'){
     corpo=marcaEdit!==null?formMarca(marcaEdit==='nova'?null:marca(marcaEdit))
-      :`<div class="list">${MARCAS.map(m=>`<button class="row" data-edit-marca="${m.id}"><i class="sw" style="background:${m.cor};height:32px;align-self:center"></i><div class="grow"><div class="t">${esc(m.nome)}</div><div class="s">${pct(m.taxa)} de comissão, ${usos(m.id)} pedido${usos(m.id)!==1?'s':''}</div></div><span class="s">Editar</span></button>`).join('')||'<p class="empty">Nenhuma marca ainda. Adicione a primeira.</p>'}</div><button class="btn" data-edit-marca="nova">Adicionar marca</button>`;
+      :`${MARCAS.length?`<button class="row cat-entrada" data-cat-abrir><span class="thumb vazio" aria-hidden="true">▦</span><div class="grow"><div class="t">Catálogo de produtos</div><div class="s">${PRODUTOS.length?`${PRODUTOS.length} ${PRODUTOS.length===1?'produto':'produtos'} com foto e preço`:'Fotos e preços para montar pedidos e mandar ao cliente'}</div></div><span class="s">Abrir</span></button>`:''}<div class="list">${MARCAS.map(m=>`<button class="row" data-edit-marca="${m.id}"><i class="sw" style="background:${m.cor};height:32px;align-self:center"></i><div class="grow"><div class="t">${esc(m.nome)}</div><div class="s">${pct(m.taxa)} de comissão, ${usos(m.id)} pedido${usos(m.id)!==1?'s':''}${(n=>n?`, ${n} produto${n!==1?'s':''}`:'')(PRODUTOS.filter(x=>x.marca===m.id).length)}</div></div><span class="s">Editar</span></button>`).join('')||'<p class="empty">Nenhuma marca ainda. Adicione a primeira.</p>'}</div><button class="btn" data-edit-marca="nova">Adicionar marca</button>`;
   }else if(ajusteAba==='divisoes'){
     corpo=bloco('regiao','Regiões','Crie as divisões que fizerem sentido para você, como áreas de venda. Cada loja escolhe uma região.',REGIOES)
       +bloco('colecao','Coleções','Crie as coleções ou épocas das suas marcas, como Outono, Verão ou a coleção do ano. Cada pedido pode receber uma.',COLECOES);

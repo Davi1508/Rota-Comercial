@@ -2,7 +2,7 @@
 // A chave abaixo é pública por natureza: quem protege os dados são as regras do banco (cada um só vê o que é seu).
 const SB_URL='https://ulafdnjjdiscowijqwdg.supabase.co',SB_CHAVE='sb_publishable_-1c4r5XV26WUFY82X6Rwtw_9KmLDXj4';
 const SB_LIB='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js';
-const TABELAS=['marcas','lojas','pedidos','despesas'];
+const TABELAS=['marcas','produtos','lojas','pedidos','despesas'];
 const BACKUP_ANTES='rc-dados-antes-da-conta',PENDENTE='rc-conta-pendente',DONO='rc-dono-dos-dados',OUTRA_CONTA='rc-dados-de-outra-conta';
 const lsSet=(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}},lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 let sb=null,conta=null,perfil=null,espelho=null,contaT=null,contaFila=Promise.resolve(),contaMsg='',contaEmail='';
@@ -13,8 +13,9 @@ Object.assign(STATUS,{conta:['ok','Salvo na sua conta'],pendente:['warn','Sem co
 function linhas(){
   return{
     marcas:MARCAS.map(m=>({id:String(m.id),nome:m.nome,taxa:m.taxa,cor:m.cor})),
+    produtos:PRODUTOS.map(x=>({id:String(x.id),marca:x.marca,ref:x.ref||'',nome:x.nome,preco:x.preco||0,foto:/^https?:/i.test(x.foto||'')?x.foto:''})),
     lojas:lojas.map(l=>({id:String(l.id),nome:l.nome,cidade:l.cidade||'',uf:l.uf,regiao:l.regiao||'',marcas:l.marcas||[],lng:l.coord?l.coord[0]:null,lat:l.coord?l.coord[1]:null,arquivada:!!l.arquivada})),
-    pedidos:pedidos.map(o=>({id:String(o.id),loja:String(o.loja),marca:o.marca,data:isoD(o.data),valor:o.valor||0,previsto:o.previsto||null,pendente:!!o.pendente,pago:!!o.pago,taxa:o.taxa,colecao:o.colecao||''})),
+    pedidos:pedidos.map(o=>({id:String(o.id),loja:String(o.loja),marca:o.marca,data:isoD(o.data),valor:o.valor||0,previsto:o.previsto||null,pendente:!!o.pendente,pago:!!o.pago,taxa:o.taxa,colecao:o.colecao||'',itens:o.itens&&o.itens.length?o.itens:null})),
     despesas:DESPESAS.map(x=>({id:String(x.id),data:isoD(x.data),valor:x.valor,categoria:x.categoria||'',descricao:x.descricao||''}))
   };
 }
@@ -45,7 +46,7 @@ function enviarConta(semApagar){
           const{error}=await sb.from(t).delete().in('id',parte);if(error)throw error;parte.forEach(id=>espelho[t].delete(id))}
       }
       if(pAtual!==espelho.perfil){const{error}=await sb.from('profiles').update(perfilLocal()).eq('id',conta.id);if(error)throw error;espelho.perfil=pAtual}
-      lsSet(PENDENTE,null);marcarStatus('conta');
+      lsSet(PENDENTE,null);marcarStatus('conta');if(typeof subirFotosLocais==='function')setTimeout(subirFotosLocais,0);
     }catch(e){console.warn('Não salvou na conta',e);marcarStatus(contaAtiva()?'pendente':'bloqueada')}
   });
   return contaFila;
@@ -60,14 +61,15 @@ async function buscarTudo(t){
 // Banco → dados do app
 async function lerConta(){
   const{data:p,error}=await sb.from('profiles').select('*').eq('id',conta.id).single();if(error)throw error;perfil=p;
-  const [ma,lo,pe,de]=await Promise.all(TABELAS.map(buscarTudo));
-  return{vazio:!ma.length&&!lo.length&&!pe.length&&!de.length,dados:{v:1,atualizado:Date.now(),nome:p.nome,regioes:p.regioes,colecoes:p.colecoes,sugestoes:(p.extras||{}).sugestoes||[],metas:(p.extras||{}).metas||[],
+  const [ma,pr,lo,pe,de]=await Promise.all(TABELAS.map(buscarTudo));
+  return{vazio:!ma.length&&!pr.length&&!lo.length&&!pe.length&&!de.length,dados:{v:1,atualizado:Date.now(),nome:p.nome,regioes:p.regioes,colecoes:p.colecoes,sugestoes:(p.extras||{}).sugestoes||[],metas:(p.extras||{}).metas||[],
     marcas:ma.map(m=>({id:m.id,nome:m.nome,taxa:+m.taxa,cor:m.cor})),
+    produtos:pr.map(x=>({id:x.id,marca:x.marca,ref:x.ref,nome:x.nome,preco:+x.preco,foto:x.foto})),
     lojas:lo.map(l=>({id:l.id,nome:l.nome,cidade:l.cidade,uf:l.uf,regiao:l.regiao,marcas:l.marcas||[],coord:l.lng!=null&&l.lat!=null?[l.lng,l.lat]:null,arquivada:l.arquivada})),
-    pedidos:pe.map(o=>({id:/^\d+$/.test(o.id)?+o.id:o.id,loja:o.loja,marca:o.marca,data:o.data,valor:+o.valor,previsto:o.previsto!=null?+o.previsto:0,pendente:o.pendente,pago:o.pago,taxa:+o.taxa,colecao:o.colecao})),
+    pedidos:pe.map(o=>({id:/^\d+$/.test(o.id)?+o.id:o.id,loja:o.loja,marca:o.marca,data:o.data,valor:+o.valor,previsto:o.previsto!=null?+o.previsto:0,pendente:o.pendente,pago:o.pago,taxa:+o.taxa,colecao:o.colecao,...(o.itens?{itens:o.itens}:{})})),
     despesas:de.map(x=>({id:x.id,data:x.data,valor:+x.valor,categoria:x.categoria,descricao:x.descricao}))}};
 }
-const temDadosLocais=()=>!exemplo&&(MARCAS.length||lojas.length||pedidos.length||DESPESAS.length);
+const temDadosLocais=()=>!exemplo&&(MARCAS.length||lojas.length||pedidos.length||DESPESAS.length||PRODUTOS.length);
 
 // Depois de entrar: conta vazia recebe os dados do celular; conta com dados manda nos dados do celular (com cópia guardada)
 async function sincronizarAoEntrar(){
