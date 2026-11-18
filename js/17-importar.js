@@ -167,7 +167,7 @@ function blocoImportar(){
   return `<h2>Importar de outro app ou planilha</h2>
     <p class="ufmsg" style="margin-top:0">Traga seus pedidos, clientes, despesas ou o catálogo de produtos de uma planilha do Excel, do Google Planilhas ou do app que você usava (Mercos e outros). Exporte em .xlsx ou .csv, escolha o arquivo e confira antes de lançar.</p>
     <label class="btn" style="text-align:center;cursor:pointer">Escolher planilha ou arquivo<input type="file" id="impArq" accept=".xlsx,.xlsm,.csv,.tsv,.txt,.json,.html,.htm,.xls,text/csv,application/json,text/html,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden></label>
-    <textarea id="impTexto" rows="4" placeholder="Ou cole aqui: uma tabela copiada do Excel ou a lista da outra IA" style="margin-top:var(--s2)">${esc(impTxt)}</textarea>
+    <textarea id="impTexto" rows="4" placeholder="Ou cole aqui: uma tabela copiada do Excel ou a lista da outra IA" style="margin-top:var(--s2)" maxlength="2000000">${esc(impTxt)}</textarea>
     <button class="btn ghost" data-conferir-imp>Conferir o que colei</button>
     <button class="btn ghost" data-copiar-instr>Copiar instruções para outra IA ler um relatório</button>
     ${typeof blocoPlanilha==='function'?blocoPlanilha():''}

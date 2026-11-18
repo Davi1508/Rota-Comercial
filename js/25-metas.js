@@ -43,7 +43,7 @@ function abrirMeta(id){
     <div class="sh-body"><form id="formMeta" novalidate>
       <label class="f" for="mtMarca">Marca</label><select id="mtMarca">${MARCAS.map(m=>`<option value="${esc(m.id)}"${m.id===mt.marca?' selected':''}>${esc(m.nome)}</option>`).join('')}</select>
       <label class="f" for="mtColecao">Campanha</label><select id="mtColecao"><option value="">Todas as campanhas</option>${cols.map(c=>`<option value="${esc(c)}"${c===mt.colecao?' selected':''}>${esc(c)}</option>`).join('')}</select>
-      <label class="f" for="mtValor">Valor da meta</label><div class="valor"><span>R$</span><input id="mtValor" class="num" type="text" inputmode="decimal" placeholder="0" autocomplete="off" value="${mt.valor?mt.valor.toLocaleString('pt-BR'):''}"></div>
+      <label class="f" for="mtValor">Valor da meta</label><div class="valor"><span>R$</span><input id="mtValor" class="num" type="text" inputmode="decimal" placeholder="0" autocomplete="off" value="${mt.valor?mt.valor.toLocaleString('pt-BR'):''}" maxlength="14"></div>
       <label class="f" for="mtDesde">Contar pedidos a partir de</label><input id="mtDesde" type="date" value="${mt.desde||desdeSugerido(mt.marca,mt.colecao)}">
       <div class="hint">Use o início das vendas da campanha. Pedidos antes dessa data não entram na meta.</div>
       <p class="erro" id="mtErro" role="alert" hidden></p>

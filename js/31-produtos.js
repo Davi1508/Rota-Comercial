@@ -50,7 +50,7 @@ function renderImportProd(){
     ${ip.erro?`<div class="erro">${esc(ip.erro)}</div>`:''}
     <label class="btn" style="cursor:pointer">Escolher planilha<input type="file" id="ipArq" accept=".xlsx,.xlsm,.csv,.tsv,.txt,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" hidden></label>
     <button class="btn ghost" data-ip-modelo>Baixar planilha modelo</button>
-    <details class="colar"><summary>Ou colar do Excel ou do Google Planilhas</summary><textarea id="ipTexto" rows="5" placeholder="Selecione as linhas na planilha (com o cabeçalho), copie e cole aqui"></textarea><button class="btn ghost" data-ip-colar>Usar o que colei</button></details>`;
+    <details class="colar"><summary>Ou colar do Excel ou do Google Planilhas</summary><textarea id="ipTexto" rows="5" placeholder="Selecione as linhas na planilha (com o cabeçalho), copie e cole aqui" maxlength="2000000"></textarea><button class="btn ghost" data-ip-colar>Usar o que colei</button></details>`;
   else if(ip.etapa==='colunas'){
     const a=ip.abas[ip.aba],ex=k=>{const i=ip.mapa[k];if(i==null)return'';const v=ip.dados.map(l=>l[i]).find(x=>x!==''&&x!=null);if(v==null)return'';if(k==='preco'){const n=valorPlan(v);return n>0?fmt2.format(n):String(v).slice(0,40)}return String(v).slice(0,40)};
     const op=k=>`<option value="">— não tem —</option>`+ip.colunas.map((c,i)=>`<option value="${i}"${ip.mapa[k]===i?' selected':''}>${esc(c)}</option>`).join('');

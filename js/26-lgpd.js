@@ -18,7 +18,7 @@ function abrirExcluirConta(){
       <p class="ufmsg">Quer guardar seus dados antes? Baixe uma cópia primeiro.</p>
       <button type="button" class="btn ghost" data-backup>Baixar cópia antes</button>
       <label class="f" for="exConfirma">Para confirmar, digite ${PALAVRA_EXCLUIR}</label>
-      <input id="exConfirma" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="${PALAVRA_EXCLUIR}">
+      <input id="exConfirma" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="${PALAVRA_EXCLUIR}" maxlength="20">
       <p class="erro" id="exErro" role="alert" hidden></p>
       <div class="fpe"><button type="button" class="btn ghost" data-close>Cancelar</button><button type="submit" class="btn danger" id="exBotao">Excluir para sempre</button></div>
     </form></div>`;
