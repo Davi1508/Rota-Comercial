@@ -1,5 +1,5 @@
 // Busca uma imagem da internet para o app (o navegador não consegue por causa de CORS).
-// Só para quem está logado; só imagens; até 8 MB; nada de endereços internos.
+// Só para quem está logado; só imagens; até 8 MB; nada de endereços internos nem IP cru.
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info",
@@ -9,18 +9,20 @@ const erro = (status: number, msg: string) =>
   new Response(JSON.stringify({ erro: msg }), { status, headers: { ...CORS, "Content-Type": "application/json" } });
 const MAX = 8 * 1024 * 1024;
 
+// Só deixa passar um domínio de verdade (com letra e ponto). Bloqueia IP em qualquer forma
+// (decimal 2130706433, hex 0x7f000001, octal, 127.0.0.1, ::1), endereços internos e portas estranhas.
 function enderecoProibido(u: URL): boolean {
   if (!/^https?:$/.test(u.protocol)) return true;
   if (u.username || u.password) return true;
+  if (u.port && !["", "80", "443"].includes(u.port)) return true;
   const h = u.hostname.toLowerCase().replace(/^\[|\]$/g, "");
-  if (!h.includes(".") || h === "localhost" || h.endsWith(".localhost") || h.endsWith(".local") || h.endsWith(".internal")) return true;
-  if (h.includes(":")) return true; // IPv6 literal
-  const m = h.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/);
-  if (m) {
-    const [a, b] = [+m[1], +m[2]];
-    if (a === 10 || a === 127 || a === 0 || a >= 224 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127)) return true;
-  }
-  if (/^\d+$/.test(h) || /^0x/i.test(h)) return true;
+  if (h.includes(":")) return true;                 // IPv6
+  if (!/^[a-z0-9.-]+$/.test(h)) return true;         // só caracteres de domínio
+  if (!h.includes(".")) return true;                 // precisa de ponto (localhost, nomes internos)
+  if (/\.(local|internal|localhost|lan|home|corp|intranet)$/.test(h)) return true;
+  if (/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/.test(h)) return true; // IPv4 pontilhado (os privados e todos os outros)
+  if (!/[a-z]/.test(h)) return true;                 // sem nenhuma letra = não é domínio (decimal/hex/octal viram assim)
+  if (!/\.[a-z]{2,}$/.test(h)) return true;          // precisa terminar num TLD de letras
   return false;
 }
 
