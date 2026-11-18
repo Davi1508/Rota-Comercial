@@ -38,6 +38,7 @@ function salvar(){
   atualizado=Date.now();let ok=true;
   try{localStorage.setItem(CHAVE,JSON.stringify(serializar()))}catch(e){ok=false}
   if(!ok)toast('Não foi possível salvar neste aparelho. Faça uma cópia de segurança em Ajustes.');
+  if(typeof carimbar==='function')carimbar();
   if(typeof agendarConta==='function'&&agendarConta()){}
   else if(nuvem){marcarStatus('salvando');clearTimeout(salvarT);salvarT=setTimeout(enviarNuvem,800)}
   else marcarStatus(ok?'local':'erro');

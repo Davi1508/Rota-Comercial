@@ -28,7 +28,7 @@ function resetarTurnstile(){tsToken='';if(tsAtivo()&&window.turnstile&&tsWidget!
 Object.assign(STATUS,{conta:['ok','Salvo na sua conta'],pendente:['warn','Sem conexão: salvo no celular, envia depois'],bloqueada:['bad','Teste encerrado: salvo só no celular']});
 
 // Dados do app → linhas do banco
-function linhas(){
+function linhasBase(){
   return{
     marcas:MARCAS.map(m=>({id:String(m.id),nome:m.nome,taxa:m.taxa,cor:m.cor,site:m.site||''})),
     produtos:PRODUTOS.map(x=>({id:String(x.id),marca:x.marca,ref:x.ref||'',nome:x.nome,preco:x.preco||0,foto:/^https?:/i.test(x.foto||'')?x.foto:''})),
@@ -37,8 +37,49 @@ function linhas(){
     despesas:DESPESAS.map(x=>({id:String(x.id),data:isoD(x.data),valor:x.valor,categoria:x.categoria||'',descricao:x.descricao||''}))
   };
 }
+
+// Quando cada registro foi editado (ms). O servidor ignora uma gravação mais antiga que a que ele já tem,
+// então uma edição feita sem internet não desfaz outra mais nova feita em outro aparelho.
+// carimbos[tabela][id]={h:conteúdo do registro, e:quando foi editado}
+const CARIMBOS='rc-carimbos';
+let carimbos=(()=>{try{return JSON.parse(localStorage.getItem(CARIMBOS))||{}}catch(e){return{}}})();
+const guardarCarimbos=()=>{try{localStorage.setItem(CARIMBOS,JSON.stringify(carimbos))}catch(e){}};
+function linhas(){
+  const l=linhasBase();
+  TABELAS.forEach(t=>{const c=carimbos[t]||{};l[t]=l[t].map(r=>({...r,editado_em:(c[r.id]||{}).e||0}))});
+  return l;
+}
+// Marca como "editado agora" o que mudou desde o último carimbo. Registro igual ao que o servidor já tem herda o carimbo dele.
+function carimbar(){
+  const l=linhasBase();
+  TABELAS.forEach(t=>{
+    const c=carimbos[t]=carimbos[t]||{},vivos=new Set();
+    l[t].forEach(r=>{
+      vivos.add(r.id);const s=JSON.stringify(r),en=c[r.id];
+      if(en&&en.h===s)return;
+      let e=Date.now();
+      const sv=espelho&&espelho[t]&&espelho[t].get(r.id);
+      if(sv){try{const{editado_em,...resto}=JSON.parse(sv);if(JSON.stringify(resto)===s)e=editado_em||0}catch(x){}}
+      c[r.id]={h:s,e};
+    });
+    Object.keys(c).forEach(id=>{if(!vivos.has(id))delete c[id]});
+  });
+  guardarCarimbos();
+}
+// Depois de ler o servidor: os registros passam a ter o carimbo que o servidor guarda
+function semearCarimbos(srv){
+  const l=linhasBase();
+  TABELAS.forEach(t=>{
+    const c={};
+    l[t].forEach(r=>{const e=srv[t]&&srv[t][r.id];if(e!==undefined)c[r.id]={h:JSON.stringify(r),e};else if((carimbos[t]||{})[r.id])c[r.id]=carimbos[t][r.id]});
+    carimbos[t]=c;
+  });
+  guardarCarimbos();
+}
 const perfilLocal=()=>({nome:NOME,regioes:REGIOES,colecoes:COLECOES,extras:{sugestoes,metas:METAS}});
-const espelhar=()=>{const l=linhas(),e={perfil:JSON.stringify(perfilLocal())};TABELAS.forEach(t=>e[t]=new Map(l[t].map(r=>[r.id,JSON.stringify(r)])));return e};
+// srv: carimbos vindos do servidor, para montar o espelho do que o servidor tem de fato
+const espelhar=srv=>{const l=linhas(),e={perfil:JSON.stringify(perfilLocal())};
+  TABELAS.forEach(t=>e[t]=new Map(l[t].map(r=>[r.id,JSON.stringify(srv&&srv[t]&&srv[t][r.id]!==undefined?{...r,editado_em:srv[t][r.id]}:r)])));return e};
 const vazioEspelho=()=>{const e={perfil:''};TABELAS.forEach(t=>e[t]=new Map());return e};
 
 function contaAtiva(){if(!perfil)return true;return perfil.plano==='ativo'||(perfil.plano==='trial'&&new Date(perfil.trial_ate)>new Date())}
@@ -49,6 +90,7 @@ function diasTrial(){return perfil?Math.max(0,Math.ceil((new Date(perfil.trial_a
 function enviarConta(semApagar){
   if(!conta||exemplo||!espelho)return Promise.resolve();
   contaFila=contaFila.then(async()=>{
+    carimbar();
     const atual=linhas(),pAtual=JSON.stringify(perfilLocal());
     try{
       marcarStatus('salvando');
@@ -80,7 +122,8 @@ async function buscarTudo(t){
 async function lerConta(){
   const{data:p,error}=await sb.from('profiles').select('*').eq('id',conta.id).single();if(error)throw error;perfil=p;
   const [ma,pr,lo,pe,de]=await Promise.all(TABELAS.map(buscarTudo));
-  return{vazio:!ma.length&&!pr.length&&!lo.length&&!pe.length&&!de.length,dados:{v:1,atualizado:Date.now(),nome:p.nome,regioes:p.regioes,colecoes:p.colecoes,sugestoes:(p.extras||{}).sugestoes||[],metas:(p.extras||{}).metas||[],
+  const srvCarimbos=Object.fromEntries(TABELAS.map((t,i)=>[t,Object.fromEntries([ma,pr,lo,pe,de][i].map(x=>[String(x.id),+x.editado_em||0]))]));
+  return{vazio:!ma.length&&!pr.length&&!lo.length&&!pe.length&&!de.length,carimbos:srvCarimbos,dados:{v:1,atualizado:Date.now(),nome:p.nome,regioes:p.regioes,colecoes:p.colecoes,sugestoes:(p.extras||{}).sugestoes||[],metas:(p.extras||{}).metas||[],
     marcas:ma.map(m=>({id:m.id,nome:m.nome,taxa:+m.taxa,cor:m.cor,site:m.site||''})),
     produtos:pr.map(x=>({id:x.id,marca:x.marca,ref:x.ref,nome:x.nome,preco:+x.preco,foto:x.foto})),
     lojas:lo.map(l=>({id:l.id,nome:l.nome,cidade:l.cidade,uf:l.uf,regiao:l.regiao,marcas:l.marcas||[],coord:l.lng!=null&&l.lat!=null?[l.lng,l.lat]:null,arquivada:l.arquivada})),
@@ -113,8 +156,8 @@ async function sincronizarAoEntrar(){
     }else{
       if(temDadosLocais()){lsSet(BACKUP_ANTES,JSON.stringify(serializar()));
         // Mudanças feitas sem internet: sobem primeiro, depois tudo é lido de novo do servidor
-        if(lsGet(PENDENTE)===conta.id){const meu=serializar();aplicar(r.dados);espelho=espelhar();aplicar(meu);await enviarConta(true);r=await lerConta()}}
-      aplicar(r.dados);try{localStorage.setItem(CHAVE,JSON.stringify(serializar()))}catch(e){}
+        if(lsGet(PENDENTE)===conta.id){const meu=serializar();aplicar(r.dados);espelho=espelhar(r.carimbos);aplicar(meu);await enviarConta(true);r=await lerConta()}}
+      aplicar(r.dados);semearCarimbos(r.carimbos);try{localStorage.setItem(CHAVE,JSON.stringify(serializar()))}catch(e){}
       espelho=espelhar();
       if(!NOME){const m=conta.user_metadata||{},n=String(m.nome||m.full_name||m.name||'').trim().split(/\s+/)[0];if(n){NOME=n.slice(0,40);try{localStorage.setItem(CHAVE,JSON.stringify(serializar()))}catch(e){}agendarConta()}}lsSet(DONO,conta.id);sairEdicoes();preencherForm();renderTudo();marcarStatus('conta');toast('Dados da sua conta carregados');
     }
