@@ -491,3 +491,6 @@ a.btn{display:grid;place-items:center;text-decoration:none;margin-top:var(--s3)}
 .bf-fonte{display:block;width:100%;box-sizing:border-box;padding:var(--s1) var(--s2);font-size:12px;line-height:16px;color:#646A8A;background:#F2F3F7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .busca-foto.on{border-color:var(--primary);box-shadow:0 0 0 2px var(--primary)}
 .busca-foto.on .bf-fonte{background:var(--primary);color:#fff}
+/* anti-robô (Turnstile) */
+.ts-box{min-height:66px;margin:var(--s3) 0 0;display:flex;justify-content:center}
+.ts-box:empty{min-height:0;margin:0}

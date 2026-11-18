@@ -97,11 +97,11 @@ function formProduto(){
         <button type="button" class="btn ghost" data-pr-buscar>Buscar foto</button>
         ${fotoAtual?'<button type="button" class="chipbtn" data-pr-sem-foto style="margin:0">Tirar a foto</button>':''}</div></div>
     <div id="prBusca"></div>
-    <label class="f" for="prLink">Ou cole o link da imagem <small class="opc">da internet</small></label><input id="prLink" type="url" inputmode="url" placeholder="https://…" autocomplete="off" value="${catFoto&&catFoto.tipo==='link'?esc(catFoto.url):''}">
+    <label class="f" for="prLink">Ou cole o link da imagem <small class="opc">da internet</small></label><input id="prLink" type="url" inputmode="url" placeholder="https://…" autocomplete="off" value="${catFoto&&catFoto.tipo==='link'?esc(catFoto.url):''}" maxlength="600">
     <label class="f" for="prMarca">Marca</label><select id="prMarca" data-sem-combo>${MARCAS.map(m=>`<option value="${esc(m.id)}"${m.id===mid?' selected':''}>${esc(m.nome)}</option>`).join('')}</select>
     <label class="f" for="prRef">Referência <small class="opc">código do produto</small></label><input id="prRef" type="text" maxlength="60" autocomplete="off" value="${x?esc(x.ref):''}">
     <label class="f" for="prNome">Nome</label><input id="prNome" type="text" maxlength="160" autocomplete="off" placeholder="Ex.: Café torrado 500 g" value="${x?esc(x.nome):''}">
-    <label class="f" for="prPreco">Preço</label><div class="valor"><span>R$</span><input id="prPreco" class="num" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off" value="${x&&x.preco?String(x.preco.toFixed(2)).replace('.',','):''}"></div>
+    <label class="f" for="prPreco">Preço</label><div class="valor"><span>R$</span><input id="prPreco" class="num" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off" value="${x&&x.preco?String(x.preco.toFixed(2)).replace('.',','):''}" maxlength="14"></div>
     <div class="erro" id="prErro" hidden></div>
     <button class="btn" type="submit" id="prSalvar">${x?'Salvar produto':'Adicionar ao catálogo'}</button>
     ${x?`<button class="btn danger" type="button" data-pr-excluir>Excluir produto</button>`:''}

@@ -6,6 +6,22 @@ const TABELAS=['marcas','produtos','lojas','pedidos','despesas'];
 const BACKUP_ANTES='rc-dados-antes-da-conta',PENDENTE='rc-conta-pendente',DONO='rc-dono-dos-dados',OUTRA_CONTA='rc-dados-de-outra-conta';
 const lsSet=(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}},lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 let sb=null,conta=null,perfil=null,espelho=null,contaT=null,contaFila=Promise.resolve(),contaMsg='',contaEmail='';
+// Anti-robô (Cloudflare Turnstile): cole aqui a CHAVE DO SITE quando for ligar. Vazio = desligado.
+const TURNSTILE_SITE='';
+let tsToken='',tsWidget=null;
+function tsAtivo(){return !!TURNSTILE_SITE}
+function carregarTurnstile(){
+  if(!tsAtivo()||window.turnstile||document.getElementById('ts-js'))return;
+  const s=document.createElement('script');s.id='ts-js';s.src='https://challenges.cloudflare.com/turnstile/v0/api.js';s.async=true;s.defer=true;document.head.appendChild(s);
+}
+function renderTurnstile(){
+  if(!tsAtivo())return;const alvo=document.getElementById('ts-box');if(!alvo)return;
+  const faz=()=>{if(!window.turnstile||!document.getElementById('ts-box'))return;tsToken='';
+    try{tsWidget=window.turnstile.render('#ts-box',{sitekey:TURNSTILE_SITE,language:'pt-br',callback:t=>{tsToken=t},'error-callback':()=>{tsToken=''},'expired-callback':()=>{tsToken=''}})}catch(e){}};
+  if(window.turnstile)faz();else{carregarTurnstile();let n=0;const iv=setInterval(()=>{if(window.turnstile||n++>50){clearInterval(iv);faz()}},100)}
+}
+function resetarTurnstile(){tsToken='';if(tsAtivo()&&window.turnstile&&tsWidget!=null){try{window.turnstile.reset(tsWidget)}catch(e){}}}
+
 
 Object.assign(STATUS,{conta:['ok','Salvo na sua conta'],pendente:['warn','Sem conexão: salvo no celular, envia depois'],bloqueada:['bad','Teste encerrado: salvo só no celular']});
 
@@ -172,8 +188,8 @@ function mostrarEntrada(modo){
 function esconderEntrada(){const el=$('#entrada');if(el)el.hidden=true;document.body.classList.remove('com-entrada')}
 function renderEntrada(){
   const el=$('#entrada');if(!el)return;
-  const m=entradaModo,car=entradaCarregando,campoEmail=(foco)=>`<label class="f" for="cEmail">E-mail</label><input id="cEmail" type="email" autocomplete="email" inputmode="email" placeholder="voce@email.com" value="${esc(contaEmail)}"${foco?' autofocus':''}>`;
-  const campoSenha=(novo)=>`<label class="f" for="cSenha">${m==='nova'?'Nova senha':'Senha'}</label><div class="en-senha"><input id="cSenha" type="password" autocomplete="${novo?'new-password':'current-password'}" placeholder="${novo?'Pelo menos 8 caracteres':''}"><button type="button" class="en-olho" data-en-olho aria-label="Mostrar senha">${OLHO}</button></div>`;
+  const m=entradaModo,car=entradaCarregando,campoEmail=(foco)=>`<label class="f" for="cEmail">E-mail</label><input id="cEmail" type="email" autocomplete="email" inputmode="email" maxlength="160" placeholder="voce@email.com" value="${esc(contaEmail)}"${foco?' autofocus':''}>`;
+  const campoSenha=(novo)=>`<label class="f" for="cSenha">${m==='nova'?'Nova senha':'Senha'}</label><div class="en-senha"><input id="cSenha" type="password" autocomplete="${novo?'new-password':'current-password'}" maxlength="72" placeholder="${novo?'8+ caracteres, com letra e número':''}"><button type="button" class="en-olho" data-en-olho aria-label="Mostrar senha">${OLHO}</button></div>`;
   let corpo='';
   if(m==='confirme'){
     corpo=`<div class="en-aviso"><div class="en-ico">${ENVELOPE}</div><h2>Confira seu e-mail</h2><p>Enviamos um link para <b>${esc(contaEmail)}</b>. Toque nele para ativar sua conta e voltar para o app.</p></div>
@@ -184,7 +200,7 @@ function renderEntrada(){
     corpo=`<h2 class="en-tit">Recuperar senha</h2><p class="en-sub">Enviamos um link para você criar uma senha nova.</p>
       <form novalidate data-en-form>${campoEmail(true)}
       ${entradaOk?`<div class="en-ok">${esc(entradaOk)}</div>`:''}${entradaMsg?`<div class="erro">${esc(entradaMsg)}</div>`:''}
-      <button class="btn"${car?' disabled':''}>${car?'Enviando…':'Enviar link'}</button></form>
+      ${tsAtivo()?'<div id="ts-box" class="ts-box"></div>':''}<button class="btn"${car?' disabled':''}>${car?'Enviando…':'Enviar link'}</button></form>
       <button type="button" class="en-link" data-en-modo="entrar">Voltar para entrar</button>`;
   }else if(m==='nova'){
     corpo=`<h2 class="en-tit">Crie uma senha nova</h2><form novalidate data-en-form>${campoSenha(true)}
@@ -195,34 +211,45 @@ function renderEntrada(){
       <button type="button" class="btn en-google" data-en-google${car?' disabled':''}><span class="en-g" aria-hidden="true">G</span>Continuar com Google</button>
       <div class="en-ou" aria-hidden="true"><span>ou com e-mail</span></div>
       <form novalidate data-en-form>
-      ${criar?`<label class="f" for="cNome">Seu nome</label><input id="cNome" type="text" autocomplete="given-name" value="${esc(contaNome||NOME)}" placeholder="Como quer ser chamado">`:''}
+      ${criar?`<label class="f" for="cNome">Seu nome</label><input id="cNome" type="text" autocomplete="given-name" maxlength="40" value="${esc(contaNome||NOME)}" placeholder="Como quer ser chamado">`:''}
       ${campoEmail(!criar)}${campoSenha(criar)}
       ${entradaMsg?`<div class="erro">${esc(entradaMsg)}</div>`:''}
-      <button class="btn"${car?' disabled':''}>${car?(criar?'Criando conta…':'Entrando…'):(criar?'Começar 7 dias grátis':'Entrar')}</button>
+      ${tsAtivo()?'<div id="ts-box" class="ts-box"></div>':''}<button class="btn"${car?' disabled':''}>${car?(criar?'Criando conta…':'Entrando…'):(criar?'Começar 7 dias grátis':'Entrar')}</button>
       </form>
       ${criar?'<p class="en-nota">Sem cartão de crédito. Seus dados deste aparelho vão junto para a conta.</p><p class="en-nota">Ao criar a conta, você concorda com os <a href="termos.html" target="_blank" rel="noopener">Termos de uso</a> e a <a href="privacidade.html" target="_blank" rel="noopener">Política de privacidade</a>.</p>':'<button type="button" class="en-link" data-en-modo="esqueci">Esqueci minha senha</button>'}`;
   }
   el.innerHTML=`<div class="en-wrap"><header class="en-hero"><div class="en-logo">${PIN_SVG}</div><h1>Rota Comercial</h1><p>Comissões, lojas e viagens do representante, num lugar só.</p>${ROTA_SVG}</header>
     <section class="en-card">${corpo}${m==='nova'?'':`<button type="button" class="en-pular" data-en-pular>Continuar sem conta<span>Os dados ficam só neste aparelho</span></button>`}</section></div>`;
   const f=el.querySelector('[data-en-form]');if(f)f.onsubmit=e=>{e.preventDefault();enviarEntrada()};
+  if(['entrar','criar','esqueci'].includes(m))renderTurnstile();
 }
+// Senha forte: 8 a 72 caracteres, com pelo menos uma letra e um número
+function senhaForte(s){s=String(s||'');senhaForte.motivo='';
+  if(s.length<8){senhaForte.motivo='A senha precisa ter pelo menos 8 caracteres.';return false}
+  if(s.length>72){senhaForte.motivo='A senha pode ter no máximo 72 caracteres.';return false}
+  if(!/[A-Za-zÀ-ÿ]/.test(s)||!/[0-9]/.test(s)){senhaForte.motivo='Misture letras e números para uma senha mais segura.';return false}
+  return true}
 const lerCampos=()=>{const v=id=>($(id)||{}).value;if(v('#cEmail')!=null)contaEmail=v('#cEmail').trim();if(v('#cNome')!=null)contaNome=v('#cNome').trim();return{email:contaEmail,senha:v('#cSenha')||''}};
 async function enviarEntrada(){
   if(entradaCarregando)return;
   const{email,senha}=lerCampos(),m=entradaModo;entradaMsg='';entradaOk='';
   if(m!=='nova'&&!/^\S+@\S+\.\S+$/.test(email))entradaMsg='Digite um e-mail válido.';
-  else if((m==='entrar'||m==='criar'||m==='nova')&&senha.length<8)entradaMsg=m==='entrar'?'Digite sua senha.':'A senha precisa ter pelo menos 8 caracteres.';
+  else if(m==='entrar'&&!senha)entradaMsg='Digite sua senha.';
+  else if((m==='criar'||m==='nova')&&!senhaForte(senha))entradaMsg=senhaForte.motivo;
+  if(!entradaMsg&&tsAtivo()&&(m==='criar'||m==='entrar'||m==='esqueci')&&!tsToken)entradaMsg='Confirme que você não é um robô.';
   if(entradaMsg)return renderEntrada();
+  const captchaToken=tsToken||undefined;
   entradaCarregando=true;renderEntrada();
   try{
     if(m==='criar'){
       if(contaNome){NOME=contaNome.slice(0,40);salvar()}
-      const{data,error}=await sb.auth.signUp({email,password:senha,options:{data:{nome:NOME},emailRedirectTo:location.origin+location.pathname}});if(error)throw error;
+      const{data,error}=await sb.auth.signUp({email,password:senha,options:{data:{nome:NOME},emailRedirectTo:location.origin+location.pathname,captchaToken}});if(error)throw error;
       if(!data.session)entradaModo='confirme';
-    }else if(m==='entrar'){const{error}=await sb.auth.signInWithPassword({email,password:senha});if(error)throw error}
-    else if(m==='esqueci'){const{error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});if(error)throw error;entradaOk='Pronto! Se existir uma conta com esse e-mail, o link chega em instantes.'}
+    }else if(m==='entrar'){const{error}=await sb.auth.signInWithPassword({email,password:senha,options:{captchaToken}});if(error)throw error}
+    else if(m==='esqueci'){const{error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname,captchaToken});if(error)throw error;entradaOk='Pronto! Se existir uma conta com esse e-mail, o link chega em instantes.'}
     else if(m==='nova'){const{error}=await sb.auth.updateUser({password:senha});if(error)throw error;toast('Senha nova salva');entradaCarregando=false;esconderEntrada();return}
   }catch(e){entradaMsg=traduzErro(e)}
+  resetarTurnstile();
   entradaCarregando=false;if($('#entrada')&&!$('#entrada').hidden)renderEntrada();
 }
 async function reenviarConfirmacao(){entradaCarregando=true;renderEntrada();try{const{error}=await sb.auth.resend({type:'signup',email:contaEmail,options:{emailRedirectTo:location.origin+location.pathname}});if(error)throw error;entradaOk='E-mail reenviado.'}catch(e){entradaMsg=traduzErro(e)}entradaCarregando=false;renderEntrada()}
@@ -242,10 +269,11 @@ function blocoConta(){
   return `<h2>Sua conta</h2><p class="ufmsg" style="margin-top:0">Com uma conta, seus dados ficam guardados no servidor e aparecem em qualquer aparelho.</p><button class="btn" data-conta-abrir>Entrar ou criar conta</button>`;
 }
 const traduzErro=e=>{const m=String(e&&e.message||e||'');
+  if(/captcha/i.test(m))return'Não consegui confirmar que você não é um robô. Tente de novo.';
   if(/Invalid login/i.test(m))return'E-mail ou senha incorretos.';
   if(/Email not confirmed/i.test(m))return'Confirme seu e-mail pelo link que enviamos antes de entrar.';
   if(/already registered/i.test(m))return'Esse e-mail já tem conta. Toque em Entrar.';
-  if(/Password should be|weak/i.test(m))return'Escolha uma senha mais forte, com pelo menos 8 caracteres.';
+  if(/Password should be|weak/i.test(m))return'Escolha uma senha mais forte: pelo menos 8 caracteres, com letras e números.';
   if(/rate limit|too many/i.test(m))return'Muitas tentativas. Espere alguns minutos e tente de novo.';
   return'Não foi possível agora. Verifique a internet e tente de novo.'};
 async function contaSair(){try{await sb.auth.signOut({scope:'local'})}catch(e){}conta=null;perfil=null;espelho=null;marcarStatus('local');fecharLoja();toast('Você saiu da conta. Os dados continuam neste celular.');mostrarEntrada('entrar')}
