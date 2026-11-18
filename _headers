@@ -8,6 +8,12 @@
   Strict-Transport-Security: max-age=31536000
   Cross-Origin-Opener-Policy: same-origin
 
+/conheca/img/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+/conheca/video/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
 /dono/*
   X-Robots-Tag: noindex, nofollow
   Cache-Control: no-store
