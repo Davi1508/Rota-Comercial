@@ -56,25 +56,6 @@ function enviarNuvem(){
     catch(e){console.warn('Não salvou na conta',e);if(e&&['invalid_argument','revoked','not_granted','capability_disabled'].includes(e.code))nuvem=null;marcarStatus(e&&e.code==='quota_exceeded'?'cheio':'local')}
   });
 }
-async function conectarNuvem(){
-  try{
-    if(!window.claude||typeof claude.use!=='function')return;
-    const [db,user]=await Promise.all([claude.use('db'),claude.use('user')]);
-    if(!db||!user)return;const uid=await user.id();if(!uid)return;
-    const col=db.collection('data/users/'+uid);
-    const snap=await Promise.race([col.doc('base').get(),new Promise(r=>setTimeout(()=>r(null),10000))]);
-    if(!snap)return;
-    if(snap.exists&&(snap.data().atualizado||0)>atualizado){
-      const b=snap.data(),peds=[];
-      for(const y of b.anos||[]){const s=await col.doc('ped-'+y).get();if(s.exists){const l=s.data().lista||[];peds.push(...l);enviados['ped-'+y]=JSON.stringify({lista:l})}}
-      aplicar({...b,pedidos:peds});nuvem=col;
-      try{localStorage.setItem(CHAVE,JSON.stringify(serializar()))}catch(e){}
-      sairEdicoes();preencherForm();renderTudo();marcarStatus('nuvem');toast('Seus dados foram carregados');return;
-    }
-    nuvem=col;
-    if(exemplo)marcarStatus('exemplo');else if(atualizado)enviarNuvem();else marcarStatus('nuvem');
-  }catch(e){console.warn('Conta indisponível para salvar',e)}
-}
 const STATUS={local:['ok','Salvo no celular'],nuvem:['ok','Salvo na sua conta'],salvando:['','Salvando…'],erro:['bad','Não foi possível salvar'],cheio:['warn','Espaço da conta cheio: salvo só no celular'],exemplo:['warn','Exemplo: nada é salvo'],vazio:['','Seus dados ficam salvos neste celular']};
 function marcarStatus(k){const [c,t]=STATUS[k];const el=$('#sync');el.className='sync '+c;el.textContent=t}
 const textoOndeSalva=()=>(typeof conta!=='undefined'&&conta)?'Na sua conta e neste celular. Entrando com o mesmo e-mail em outro aparelho, os dados aparecem lá também.':nuvem?'Na sua conta do Claude e neste celular. Se abrir este link em outro aparelho com a mesma conta, os dados aparecem lá também.':'Neste celular, no navegador. Se você limpar os dados do navegador ou trocar de aparelho, use a cópia de segurança para recuperar tudo.';

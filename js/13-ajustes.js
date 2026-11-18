@@ -74,11 +74,6 @@ async function copiar(txt,ok){try{await navigator.clipboard.writeText(txt);toast
 const textoBackup=()=>JSON.stringify({app:'rota-comercial',...serializar(),exemplo:false});
 async function baixarBackup(){
   const nome=`rota-comercial-copia-${isoD(new Date())}.json`;
-  if(window.claude&&typeof claude.use==='function'){
-    const dl=await claude.use('downloads').catch(()=>null);
-    if(dl){try{await dl.save({filename:nome,data:textoBackup()});toast('Cópia salva')}catch(e){if(e&&e.code!=='declined')copiar(textoBackup(),'Não deu para baixar aqui. A cópia foi copiada como texto: cole num lugar seguro.')}return}
-    copiar(textoBackup(),'Cópia copiada como texto: cole num lugar seguro, como um e-mail para você mesmo');return;
-  }
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([textoBackup()],{type:'application/json'}));a.download=nome;document.body.appendChild(a);a.click();a.remove();toast('Cópia baixada');
 }
 function lerBackup(txt){

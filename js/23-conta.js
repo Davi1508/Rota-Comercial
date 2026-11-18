@@ -189,7 +189,6 @@ function resgatarLoginDaUrl(){
 }
 function carregarLib(){return new Promise((ok,falha)=>{if(window.supabase&&window.supabase.createClient)return ok();const s=document.createElement('script');s.src=SB_LIB;s.integrity=SB_SRI;s.crossOrigin='anonymous';s.onload=ok;s.onerror=falha;document.head.appendChild(s)})}
 async function iniciarConta(){
-  if(window.claude)return; // dentro do artefato do Claude a conexão com servidores de fora é bloqueada
   try{await carregarLib()}catch(e){console.warn('Biblioteca da conta não carregou',e);return}
   // lock simples: a trava do navegador (navigator.locks) às vezes fica presa no Safari e o login nunca termina
   sb=window.supabase.createClient(SB_URL,SB_CHAVE,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,lock:async(_n,_t,fn)=>await fn()}});
@@ -224,7 +223,6 @@ const OLHO='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-wi
 const ENVELOPE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>';
 
 function mostrarEntrada(modo){
-  if(window.claude)return;
   entradaModo=modo||entradaModo;entradaMsg='';entradaOk='';
   let el=$('#entrada');
   if(!el){el=document.createElement('div');el.id='entrada';el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-label','Entrar no Rota Comercial');document.body.appendChild(el)}
@@ -302,7 +300,6 @@ function pularEntrada(){lsSet(SEM_CONTA,'1');esconderEntrada()}
 
 // ---------- conta em Ajustes ----------
 function blocoConta(){
-  if(window.claude)return'';
   if(!sb)return `<h2>Sua conta</h2><p class="ufmsg" style="margin-top:0">A conta não está disponível agora. Verifique a internet e abra Ajustes de novo.</p>`;
   if(conta){
     const ativa=contaAtiva(),d=diasTrial();
