@@ -1,6 +1,6 @@
 // ---------- registro de erros ----------
 // Guarda erros inesperados (só texto técnico, sem dados de pedidos) e envia para a tabela "erros" quando a conta estiver disponível.
-const ERROS={fila:[],enviados:0,vistos:new Set(),MAX:8,VERSAO:'rc-v8'};
+const ERROS={fila:[],enviados:0,vistos:new Set(),MAX:8,VERSAO:'rc-v10'};
 function registrarErro(msg,onde,pilha){
   try{
     msg=String(msg||'erro').slice(0,500);

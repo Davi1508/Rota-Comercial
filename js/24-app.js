@@ -4,8 +4,8 @@
 // Exemplo: PLANO={preco:'R$ 29,90 por mês',whatsapp:'5571999999999'}
 const PLANO={preco:'R$ 29,90 por mês',whatsapp:'5575988189659'};
 
-// Guarda o app no aparelho (abre sem internet). Só no site publicado (https), nunca dentro do artefato do Claude.
-if('serviceWorker' in navigator&&!window.claude&&(location.protocol==='https:'||/[?&]sw=1/.test(location.search))){
+// Guarda o app no aparelho (abre sem internet). Só no site publicado (https).
+if('serviceWorker' in navigator&&(location.protocol==='https:'||/[?&]sw=1/.test(location.search))){
   addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(e=>console.warn('App offline indisponível',e)));
 }
 
@@ -16,7 +16,7 @@ addEventListener('appinstalled',()=>{pedidoInstalar=null;toast('App instalado na
 const instalado=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
 const ehIOS=()=>/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 function blocoInstalar(){
-  if(window.claude||instalado())return'';
+  if(instalado())return'';
   const como=pedidoInstalar?'<button class="btn" data-instalar>Instalar app</button>'
     :ehIOS()?'<p class="s" style="margin:var(--s1) 0 0">No Safari, toque em <b>Compartilhar</b> e depois em <b>Adicionar à Tela de Início</b>.</p>'
     :'<p class="s" style="margin:var(--s1) 0 0">No menu do navegador, toque em <b>Instalar app</b> ou <b>Adicionar à tela inicial</b>.</p>';

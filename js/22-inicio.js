@@ -112,4 +112,4 @@ document.addEventListener('click',e=>{
 });
 // início: dados salvos no celular primeiro (rápido e funciona sem internet), depois a conta, se houver
 (()=>{const local=lerLocal();if(local)aplicar(local);marcarStatus(local&&local.atualizado?'local':'vazio')})();
-preencherForm();renderTudo();carregarMapa();conectarNuvem();
+preencherForm();renderTudo();carregarMapa();
