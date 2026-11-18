@@ -43,7 +43,7 @@ async function guardarFoto(blob,id){
 }
 // Imagem de um link: direto (se o site deixar) ou pelo servidor do app (precisa estar na conta)
 async function baixarImagem(url){
-  try{const r=await fetch(url,{mode:'cors',credentials:'omit'});if(r.ok&&/^image\//.test(r.headers.get('content-type')||''))return await r.blob()}catch(e){}
+  if(/^(data:|blob:)/.test(url)||url.startsWith(SB_URL+'/storage/')){const r=await fetch(url);if(r.ok)return await r.blob();throw new Error('Não consegui abrir essa foto')}
   if(!naConta())throw new Error('Entre na sua conta para trazer fotos de links');
   const{data}=await sb.auth.getSession(),tk=data&&data.session&&data.session.access_token;if(!tk)throw new Error('Entre na sua conta de novo');
   const r=await fetch(SB_URL+'/functions/v1/foto-da-web',{method:'POST',headers:{Authorization:'Bearer '+tk,apikey:SB_CHAVE,'Content-Type':'application/json'},body:JSON.stringify({url})});
