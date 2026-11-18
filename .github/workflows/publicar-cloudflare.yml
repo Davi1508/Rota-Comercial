@@ -29,7 +29,7 @@ jobs:
       - name: Separar os arquivos do site
         run: |
           mkdir site
-          cp -r index.html termos.html privacidade.html manifest.webmanifest sw.js robots.txt sitemap.xml css js icons mapa conheca dono site/
+          cp -r index.html termos.html privacidade.html manifest.webmanifest sw.js robots.txt sitemap.xml _headers css js icons mapa conheca dono site/
 
       - name: Criar o projeto no Cloudflare (só na primeira vez)
         run: npx --yes wrangler@3 pages project create rotacomercial --production-branch=main || echo "Projeto já existe"
