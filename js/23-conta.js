@@ -2,6 +2,8 @@
 // A chave abaixo é pública por natureza: quem protege os dados são as regras do banco (cada um só vê o que é seu).
 const SB_URL='https://ulafdnjjdiscowijqwdg.supabase.co',SB_CHAVE='sb_publishable_-1c4r5XV26WUFY82X6Rwtw_9KmLDXj4';
 const SB_LIB='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js';
+// Hash SRI da versão fixada acima: ao trocar a versão da lib, recalcule (sha384 em base64) e atualize aqui e em dono/index.html.
+const SB_SRI='sha384-0w2KAL2YHP6wKOkUDzkCDGgVvfmHnj02DHeQ6XcHOgTfFsGyonKOpShMH1x6nk9o';
 const TABELAS=['marcas','produtos','lojas','pedidos','despesas'];
 const BACKUP_ANTES='rc-dados-antes-da-conta',PENDENTE='rc-conta-pendente',DONO='rc-dono-dos-dados',OUTRA_CONTA='rc-dados-de-outra-conta';
 const lsSet=(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}},lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
@@ -142,7 +144,7 @@ function resgatarLoginDaUrl(){
     }catch(e){if(typeof registrarErro==='function')registrarErro('diag-login: resgate falhou: '+(e&&e.message||e),'resgate')}
   },4000);
 }
-function carregarLib(){return new Promise((ok,falha)=>{if(window.supabase&&window.supabase.createClient)return ok();const s=document.createElement('script');s.src=SB_LIB;s.onload=ok;s.onerror=falha;document.head.appendChild(s)})}
+function carregarLib(){return new Promise((ok,falha)=>{if(window.supabase&&window.supabase.createClient)return ok();const s=document.createElement('script');s.src=SB_LIB;s.integrity=SB_SRI;s.crossOrigin='anonymous';s.onload=ok;s.onerror=falha;document.head.appendChild(s)})}
 async function iniciarConta(){
   if(window.claude)return; // dentro do artefato do Claude a conexão com servidores de fora é bloqueada
   try{await carregarLib()}catch(e){console.warn('Biblioteca da conta não carregou',e);return}
