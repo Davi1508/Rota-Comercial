@@ -25,13 +25,13 @@ function xlsxBlob(aba,colunas,linhas){
   const cel=(v,c,r)=>{const ref=col(c)+r,tp=colunas[c].tipo;
     if(v===null||v===undefined||v==='')return'';
     if(tp==='data'&&v instanceof Date){const n=(Date.UTC(v.getFullYear(),v.getMonth(),v.getDate())-Date.UTC(1899,11,30))/864e5;return`<c r="${ref}" s="2"><v>${n}</v></c>`}
-    if((tp==='num'||tp==='moeda')&&typeof v==='number'&&isFinite(v))return`<c r="${ref}" s="${estilo[tp]}"><v>${Math.round(v*100)/100}</v></c>`;
+    if((tp==='num'||tp==='moeda')&&typeof v==='number'&&isFinite(v))return`<c r="${ref}" s="${estilo[tp]}"><v>${tp==='num'?Math.round(v*1000)/1000:Math.round(v*100)/100}</v></c>`;
     return`<c r="${ref}" t="inlineStr"><is><t xml:space="preserve">${xmlEsc(v)}</t></is></c>`};
   const cab=`<row r="1">${colunas.map((c,i)=>`<c r="${col(i)}1" t="inlineStr" s="1"><is><t>${xmlEsc(c.t)}</t></is></c>`).join('')}</row>`;
   const corpo=linhas.map((l,k)=>`<row r="${k+2}">${l.map((v,c)=>cel(v,c,k+2)).join('')}</row>`).join('');
   const ult=col(colunas.length-1)+(linhas.length+1);
   const folha=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>${colunas.map((c,i)=>`<col min="${i+1}" max="${i+1}" width="${c.w||14}" customWidth="1"/>`).join('')}</cols><sheetData>${cab}${corpo}</sheetData><autoFilter ref="A1:${ult}"/></worksheet>`;
-  const estilos=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="2"><numFmt numFmtId="164" formatCode="dd/mm/yyyy"/><numFmt numFmtId="165" formatCode="#,##0.00"/></numFmts><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFE8EBFB"/></patternFill></fill></fills><borders count="1"><border/></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="5"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/><xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/><xf numFmtId="3" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/><xf numFmtId="165" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
+  const estilos=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="3"><numFmt numFmtId="164" formatCode="dd/mm/yyyy"/><numFmt numFmtId="165" formatCode="#,##0.00"/><numFmt numFmtId="166" formatCode="#,##0.###"/></numFmts><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFE8EBFB"/></patternFill></fill></fills><borders count="1"><border/></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="5"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/><xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/><xf numFmtId="166" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/><xf numFmtId="165" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
   const nomeAba=xmlEsc(String(aba).replace(/[\\/?*[\]:]/g,' ').slice(0,31)||'Pedidos');
   return zipArquivos([
     {nome:'[Content_Types].xml',dados:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'},
@@ -60,14 +60,14 @@ function mascaraCnpj(inp){const d=soDigitos(inp.value).slice(0,14);let v=d;
 const COLS_PEDIDO=[
   {t:'Data',tipo:'data',w:12},{t:'Pedido',tipo:'texto',w:16},{t:'Cliente',tipo:'texto',w:32},{t:'CNPJ',tipo:'texto',w:20},
   {t:'Cidade',tipo:'texto',w:20},{t:'UF',tipo:'texto',w:6},{t:'Marca',tipo:'texto',w:20},{t:'Campanha',tipo:'texto',w:16},
-  {t:'Referência',tipo:'texto',w:14},{t:'Produto',tipo:'texto',w:36},{t:'Quantidade',tipo:'num',w:12},{t:'Preço unitário',tipo:'moeda',w:14},
+  {t:'Referência',tipo:'texto',w:14},{t:'Produto',tipo:'texto',w:36},{t:'Quantidade',tipo:'num',w:12},{t:'Unidade',tipo:'texto',w:10},{t:'Preço unitário',tipo:'moeda',w:14},
   {t:'Total do item',tipo:'moeda',w:14},{t:'Valor do pedido',tipo:'moeda',w:16},{t:'Representante',tipo:'texto',w:20}];
 function linhasPedido(o){
   const l=loja(o.loja)||{},m=marca(o.marca)||{},cnpj=l.cnpj?cnpjBR(l.cnpj):'';
   const base=[o.data,String(o.id||''),l.nome||'',cnpj,l.cidade||'',l.uf||'',m.nome||'',o.colecao||''];
   const its=(o.itens||[]).filter(i=>i&&i.qtd>0);
-  if(!its.length)return[[...base,'','',null,null,null,o.valor||0,NOME||'']];
-  return its.map(i=>[...base,i.ref||'',i.nome||'',i.qtd,i.preco||0,(i.preco||0)*i.qtd,o.valor||0,NOME||'']);
+  if(!its.length)return[[...base,'','',null,'',null,null,o.valor||0,NOME||'']];
+  return its.map(i=>[...base,i.ref||'',i.nome||'',i.qtd,unCurta(i.un)||'un',i.preco||0,(i.preco||0)*i.qtd,o.valor||0,NOME||'']);
 }
 const nomeArqPlan=t=>norm(t).replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40)||'pedidos';
 async function entregarPlanilha(blob,nome,texto){

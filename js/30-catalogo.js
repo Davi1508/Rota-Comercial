@@ -9,6 +9,17 @@ const novoIdProd=()=>'p'+Date.now().toString(36)+(++seqProd).toString(36)+Math.r
 const iniciais=t=>String(t||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase()||'?';
 const precoBR=v=>fmt2.format(+v||0);
 const pecas=it=>it.reduce((a,i)=>a+(+i.qtd||0),0);
+// Unidade de venda do produto (embalagem industrial vende por caixa, milheiro, kg...). 'un' é o padrão e não é gravado.
+const UNIDADES={un:['unidade','unidades','un'],cx:['caixa','caixas','cx'],pct:['pacote','pacotes','pct'],fd:['fardo','fardos','fd'],cto:['cento','centos','cento'],mil:['milheiro','milheiros','milheiro'],kg:['kg','kg','kg'],m:['metro','metros','m'],m2:['m²','m²','m²'],rl:['rolo','rolos','rolo'],l:['litro','litros','L'],par:['par','pares','par'],dz:['dúzia','dúzias','dz']};
+const SIN_UN={un:'un',und:'un',unid:'un',unidade:'un',unidades:'un',pc:'un',pca:'un',peca:'un',pecas:'un',cx:'cx',caixa:'cx',caixas:'cx',pct:'pct',pac:'pct',pacote:'pct',pacotes:'pct',fd:'fd',fardo:'fd',fardos:'fd',cto:'cto',cento:'cto',mil:'mil',milheiro:'mil',milh:'mil',mi:'mil',kg:'kg',quilo:'kg',kilo:'kg',m:'m',mt:'m',metro:'m',metros:'m',m2:'m2',rl:'rl',rolo:'rl',rolos:'rl',l:'l',lt:'l',litro:'l',litros:'l',par:'par',pares:'par',dz:'dz',duzia:'dz'};
+const unOk=u=>{const s=norm(String(u||'')).replace(/[^a-z0-9]/g,'');return SIN_UN[s]||(s&&s.length<=8?s:'')};
+const unCurta=u=>u&&u!=='un'?(UNIDADES[u]?UNIDADES[u][2]:u):'';
+const unNome=(u,q)=>{const x=UNIDADES[u||'un'];return x?x[q===1?0:1]:u};
+const qtdBR=q=>(+q||0).toLocaleString('pt-BR',{maximumFractionDigits:3});
+const qtdUn=(q,u)=>`${qtdBR(q)} ${unNome(u,+q)}`;
+// resumo: "1.500 unidades" quando é tudo na mesma unidade; senão "3 produtos"
+const resumoItens=it=>{const us=new Set(it.map(i=>i.un||'un'));return us.size===1?qtdUn(pecas(it),[...us][0]):`${it.length} produtos`};
+const lerQtd=v=>{const n=num(String(v||'').trim());return n>0?Math.min(9999999,Math.round(n*1000)/1000):0};
 const totalItens=it=>Math.round(it.reduce((a,i)=>a+(+i.qtd||0)*(+i.preco||0),0)*100)/100;
 const fotoDoItem=i=>{const p=produto(i.p);return(p&&p.foto)||i.foto||''};
 function thumb(x,cls){const f=x&&(x.foto!==undefined?x.foto:'');
@@ -84,7 +95,7 @@ function listaCatalogo(){
   const el=$('#catLista');if(!el)return;const q=norm(catBusca.trim());
   const ls=PRODUTOS.filter(x=>(catMarca==='todas'||x.marca===catMarca)&&(!q||norm(x.ref+' '+x.nome).includes(q))).sort((a,b)=>a.marca===b.marca?a.nome.localeCompare(b.nome):(marca(a.marca)||{nome:''}).nome.localeCompare((marca(b.marca)||{nome:''}).nome));
   if(!ls.length){el.innerHTML=`<p class="empty">${PRODUTOS.length?'Nenhum produto encontrado.':'Nenhum produto ainda. Adicione um por um, com foto, ou importe a planilha da marca (Excel ou .csv com referência, nome, preço e link da foto).'}</p>`;return}
-  el.innerHTML=`<div class="list">${ls.slice(0,catLimite).map(x=>{const m=marca(x.marca);return `<button class="row" data-cat-edit="${esc(x.id)}">${thumb(x)}<div class="grow"><div class="t">${esc(x.nome)}</div><div class="s">${[x.ref&&'Ref. '+esc(x.ref),catMarca==='todas'&&m&&esc(m.nome)].filter(Boolean).join(' · ')}</div></div><b class="num">${x.preco?precoBR(x.preco):''}</b></button>`}).join('')}</div>
+  el.innerHTML=`<div class="list">${ls.slice(0,catLimite).map(x=>{const m=marca(x.marca);return `<button class="row" data-cat-edit="${esc(x.id)}">${thumb(x)}<div class="grow"><div class="t">${esc(x.nome)}</div><div class="s">${[x.ref&&'Ref. '+esc(x.ref),catMarca==='todas'&&m&&esc(m.nome)].filter(Boolean).join(' · ')}</div></div><b class="num">${x.preco?precoBR(x.preco)+(unCurta(x.un)?`<small class="s"> / ${unCurta(x.un)}</small>`:''):''}</b></button>`}).join('')}</div>
     ${ls.length>catLimite?`<button class="btn ghost" data-cat-mais>Mostrar mais (${ls.length-catLimite})</button>`:''}`;
 }
 function formProduto(){
@@ -101,6 +112,7 @@ function formProduto(){
     <label class="f" for="prMarca">Marca</label><select id="prMarca" data-sem-combo>${MARCAS.map(m=>`<option value="${esc(m.id)}"${m.id===mid?' selected':''}>${esc(m.nome)}</option>`).join('')}</select>
     <label class="f" for="prRef">Referência <small class="opc">código do produto</small></label><input id="prRef" type="text" maxlength="60" autocomplete="off" value="${x?esc(x.ref):''}">
     <label class="f" for="prNome">Nome</label><input id="prNome" type="text" maxlength="160" autocomplete="off" placeholder="Ex.: Café torrado 500 g" value="${x?esc(x.nome):''}">
+    <label class="f" for="prUn">Vendido por <small class="opc">unidade do preço</small></label><select id="prUn" data-sem-combo>${Object.entries(UNIDADES).map(([k,v])=>`<option value="${k}"${(x&&x.un||'un')===k?' selected':''}>${v[0][0].toUpperCase()+v[0].slice(1)}</option>`).join('')}${x&&x.un&&!UNIDADES[x.un]?`<option value="${esc(x.un)}" selected>${esc(x.un)}</option>`:''}</select>
     <label class="f" for="prPreco">Preço</label><div class="valor"><span>R$</span><input id="prPreco" class="num" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off" value="${x&&x.preco?String(x.preco.toFixed(2)).replace('.',','):''}" maxlength="14"></div>
     <div class="erro" id="prErro" hidden></div>
     <button class="btn" type="submit" id="prSalvar">${x?'Salvar produto':'Adicionar ao catálogo'}</button>
@@ -180,8 +192,8 @@ async function salvarProduto(e){
       // traz uma cópia para a conta: o link original pode sumir do site da marca
       if(naConta())try{foto=await guardarFoto(await baixarImagem(catFoto.url),id)}catch(err){foto=catFoto.url;aviso=' (a foto ficou como link do site)'}}
   }catch(err){foto=antiga;aviso=' (a foto não foi salva)'}
-  const novo={id,marca:mid,ref:ref.slice(0,60),nome:nome.slice(0,160),preco:Math.round((preco||0)*100)/100,foto:fotoOk(foto)};
-  if(x)Object.assign(x,novo);else PRODUTOS.push(novo);
+  const un=unOk(($('#prUn')||{}).value),novo={id,marca:mid,ref:ref.slice(0,60),nome:nome.slice(0,160),preco:Math.round((preco||0)*100)/100,foto:fotoOk(foto),...(un&&un!=='un'?{un}:{})};
+  if(x){Object.assign(x,novo);if(!novo.un)delete x.un}else PRODUTOS.push(novo);
   if(antiga&&antiga!==novo.foto)apagarFotoSemUso(antiga);
   catSalvando=false;catEdit=null;catFoto=null;catMarca=mid;salvar();const naEscolha=catOrigem==='escolha';depoisDeEditar(x?null:novo);renderItensForm();
   if(!naEscolha||x||aviso)toast((x?'Produto atualizado':'Produto adicionado ao catálogo')+aviso);
@@ -201,24 +213,31 @@ function renderItensForm(){
   const box=$('#pItensBox');if(!box)return;copiaPronta=null;
   const mid=typeof marcaForm==='function'?marcaForm():null,n=mid?prodDaMarca(mid).length:0;
   if(!itensForm.length){box.innerHTML=mid?`<button type="button" class="btn ghost" data-esc-abrir>${n?`Escolher produtos do catálogo (${n})`:'Montar pedido com produtos e fotos'}</button>`:'';return}
-  box.innerHTML=`<span class="f">Itens <small class="opc">${pecas(itensForm)} ${pecas(itensForm)===1?'peça':'peças'}</small></span>
-    <div class="list itens">${itensForm.map((i,k)=>`<div class="ped">${thumb({nome:i.nome,foto:fotoDoItem(i)},'p48')}<div class="grow"><div class="t">${esc(i.nome)}</div><div class="s">${i.ref?'Ref. '+esc(i.ref)+' · ':''}${precoBR(i.preco)} cada</div></div>${passo(i.qtd,`data-it-menos="${k}"`,`data-it-mais="${k}"`)}</div>`).join('')}
+  box.innerHTML=`<span class="f">Itens <small class="opc">${resumoItens(itensForm)}</small></span>
+    <div class="list itens">${itensForm.map((i,k)=>`<div class="ped">${thumb({nome:i.nome,foto:fotoDoItem(i)},'p48')}<div class="grow"><div class="t">${esc(i.nome)}</div><div class="s">${i.ref?'Ref. '+esc(i.ref)+' · ':''}${precoBR(i.preco)} ${unCurta(i.un)?'por '+unNome(i.un,1):'cada'}</div></div>${passo(i.qtd,`data-it-menos="${k}"`,`data-it-mais="${k}"`,`data-it-qtd="${k}"`)}</div>`).join('')}
       <div class="itens-total"><span>Total dos itens</span><b class="num">${precoBR(totalItens(itensForm))}</b></div></div>
     <p class="s" style="margin:var(--s2) 0 0">O valor real do pedido é a soma dos itens. Se der desconto, é só mudar o valor.</p>
     <div class="itens-acoes"><button type="button" class="btn ghost" data-esc-abrir>Mais produtos</button><button type="button" class="btn ghost" data-copia-cliente>Enviar ao cliente</button></div>
     <div id="copiaBox"></div>`;
 }
-const passo=(q,menos,mais)=>`<div class="passo"><button type="button" ${menos} aria-label="Menos uma">−</button><b class="num" aria-label="Quantidade">${q}</b><button type="button" ${mais} aria-label="Mais uma">+</button></div>`;
+const passo=(q,menos,mais,campo)=>`<div class="passo"><button type="button" ${menos} aria-label="Menos uma">−</button>${campo?`<input class="num qtd" type="text" inputmode="decimal" ${campo} value="${qtdBR(q)}" aria-label="Quantidade" maxlength="11" autocomplete="off" enterkeyhint="done">`:`<b class="num" aria-label="Quantidade">${qtdBR(q)}</b>`}<button type="button" ${mais} aria-label="Mais uma">+</button></div>`;
 function itensMudaram(){
   const t=totalItens(itensForm);if(t>0){$('#pValor').value=t.toFixed(2).replace('.',',')}
   renderItensForm();preview();
 }
+function definirQtd(pid,q){const i=itensForm.find(x=>x.p===pid);if(i){i.qtd=0;mudarQtd(pid,q)}else if(q>0)mudarQtd(pid,q);else itensMudaram()}
 function mudarQtd(pid,delta){
   let i=itensForm.find(x=>x.p===pid);const x=produto(pid);
-  if(!i){if(delta<=0||!x)return;i={p:x.id,ref:x.ref,nome:x.nome,preco:x.preco,qtd:0,foto:/^https?:/i.test(x.foto||'')?x.foto:''};itensForm.push(i)}
-  i.qtd=Math.max(0,Math.min(99999,(+i.qtd||0)+delta));if(!i.qtd)itensForm=itensForm.filter(y=>y!==i);
+  if(!i){if(delta<=0||!x)return;i={p:x.id,ref:x.ref,nome:x.nome,preco:x.preco,qtd:0,foto:/^https?:/i.test(x.foto||'')?x.foto:'',...(x.un&&x.un!=='un'?{un:x.un}:{})};itensForm.push(i)}
+  i.qtd=Math.max(0,Math.min(9999999,Math.round(((+i.qtd||0)+delta)*1000)/1000));if(!i.qtd)itensForm=itensForm.filter(y=>y!==i);
   itensMudaram();
 }
+// Quantidade digitada (pedidos de milhares de peças): vale ao sair do campo ou tocar em OK
+document.addEventListener('change',e=>{const t=e.target;if(!t||!t.classList||!t.classList.contains('qtd'))return;const q=lerQtd(t.value);
+  if('itQtd' in t.dataset){const i=itensForm[+t.dataset.itQtd];if(!i)return;if(q>0){i.qtd=q;itensMudaram()}else{itensForm.splice(+t.dataset.itQtd,1);itensMudaram()}}
+  else if('escQtd' in t.dataset){definirQtd(t.dataset.escQtd,q);listaEscolha();rodapeEscolha()}});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target&&e.target.classList&&e.target.classList.contains('qtd')){e.preventDefault();e.target.blur()}});
+document.addEventListener('focusin',e=>{const t=e.target;if(t&&t.classList&&t.classList.contains('qtd')){t.select();t.dataset.ini=t.value}});
 // Trocou de marca no pedido: os itens eram da outra marca
 document.addEventListener('change',e=>{if(e.target&&e.target.name==='marca'&&e.target.closest('#pMarca')){if(itensForm.length){itensForm=[];toast('Os itens eram da outra marca e foram tirados')}renderItensForm()}});
 
@@ -235,11 +254,11 @@ function renderEscolha(){
 function listaEscolha(){
   const el=$('#escLista');if(!el)return;const q=norm(escBusca.trim()),qt=new Map(itensForm.map(i=>[i.p,i.qtd]));
   const ls=prodDaMarca(marcaForm()).filter(x=>!q||norm(x.ref+' '+x.nome).includes(q)).sort((a,b)=>a.nome.localeCompare(b.nome));
-  el.innerHTML=ls.length?`<div class="list">${ls.slice(0,escLimite).map(x=>`<div class="ped">${thumb(x)}<div class="grow"><div class="t">${esc(x.nome)}</div><div class="s">${[x.ref&&'Ref. '+esc(x.ref),x.preco?precoBR(x.preco):'sem preço'].filter(Boolean).join(' · ')}</div></div>${qt.get(x.id)?passo(qt.get(x.id),`data-esc-menos="${esc(x.id)}"`,`data-esc-mais="${esc(x.id)}"`):`<button type="button" class="chipbtn" data-esc-mais="${esc(x.id)}" aria-label="Pôr ${esc(x.nome)} no pedido">+ Pôr</button>`}</div>`).join('')}</div>${ls.length>escLimite?`<button class="btn ghost" data-esc-maislista>Mostrar mais (${ls.length-escLimite})</button>`:''}`
+  el.innerHTML=ls.length?`<div class="list">${ls.slice(0,escLimite).map(x=>`<div class="ped">${thumb(x)}<div class="grow"><div class="t">${esc(x.nome)}</div><div class="s">${[x.ref&&'Ref. '+esc(x.ref),x.preco?precoBR(x.preco)+(unCurta(x.un)?' / '+unCurta(x.un):''):'sem preço'].filter(Boolean).join(' · ')}</div></div>${qt.get(x.id)?passo(qt.get(x.id),`data-esc-menos="${esc(x.id)}"`,`data-esc-mais="${esc(x.id)}"`,`data-esc-qtd="${esc(x.id)}"`):`<button type="button" class="chipbtn" data-esc-mais="${esc(x.id)}" aria-label="Pôr ${esc(x.nome)} no pedido">+ Pôr</button>`}</div>`).join('')}</div>${ls.length>escLimite?`<button class="btn ghost" data-esc-maislista>Mostrar mais (${ls.length-escLimite})</button>`:''}`
     :'<p class="empty">Nenhum produto encontrado.</p>';
 }
-function rodapeEscolha(){const r=$('#escRodape');if(!r)return;const n=pecas(itensForm);
-  r.innerHTML=`<div class="grow"><div class="t">${n} ${n===1?'peça':'peças'}</div><div class="s num">${precoBR(totalItens(itensForm))}</div></div><button type="button" class="btn" data-esc-pronto style="width:auto;margin:0;padding:0 var(--s4)">Pronto</button>`}
+function rodapeEscolha(){const r=$('#escRodape');if(!r)return;
+  r.innerHTML=`<div class="grow"><div class="t">${itensForm.length?resumoItens(itensForm):'Nada escolhido'}</div><div class="s num">${precoBR(totalItens(itensForm))}</div></div><button type="button" class="btn" data-esc-pronto style="width:auto;margin:0;padding:0 var(--s4)">Pronto</button>`}
 
 // ---------- cópia do pedido para o cliente (imagens para o WhatsApp) ----------
 const cacheFoto=new Map();
@@ -285,12 +304,12 @@ async function desenharPaginas(d){
       const tx=P+S+32,tw=W-P-tx;
       c.fillStyle='#141833';c.font=`700 34px ${FT}`;const ln=linhasTexto(c,i.nome,tw,2);ln.forEach((l,j)=>c.fillText(l,tx,y+40+j*42));
       let yy=y+40+ln.length*42;c.fillStyle='#646A8A';c.font=`500 28px ${FT}`;if(i.ref){c.fillText(('Ref. '+i.ref).slice(0,40),tx,yy);yy+=40}
-      c.fillStyle='#141833';c.font=`600 30px ${FT}`;c.fillText(`${i.qtd} × ${precoBR(i.preco)}`,tx,y+S-8);
+      c.fillStyle='#141833';c.font=`600 30px ${FT}`;c.fillText(`${qtdBR(i.qtd)}${unCurta(i.un)?' '+unCurta(i.un):''} × ${precoBR(i.preco)}`,tx,y+S-8);
       c.font=`800 32px ${FT}`;c.textAlign='right';c.fillText(precoBR(i.qtd*i.preco),W-P,y+S-8);c.textAlign='left';
       if(k<its.length-1){c.fillStyle='#E2E4EE';c.fillRect(tx,y+LH-16,W-P-tx,2)}});
     const yf=topo+its.length*LH;
     c.fillStyle='#E2E4EE';c.fillRect(P,yf,W-2*P,2);
-    if(ult){c.fillStyle='#646A8A';c.font=`600 30px ${FT}`;c.fillText(`${d.pecas} ${d.pecas===1?'peça':'peças'} · ${d.itens.length} ${d.itens.length===1?'produto':'produtos'}`,P,yf+72);
+    if(ult){c.fillStyle='#646A8A';c.font=`600 30px ${FT}`;c.fillText(`${resumoItens(d.itens)}${new Set(d.itens.map(i=>i.un||'un')).size===1?` · ${d.itens.length} ${d.itens.length===1?'produto':'produtos'}`:''}`,P,yf+72);
       c.fillStyle='#141833';c.font=`800 56px ${FT}`;c.textAlign='right';c.fillText(precoBR(d.total),W-P,yf+80);c.textAlign='left';
       c.fillStyle='#646A8A';c.font=`500 26px ${FT}`;c.fillText('Total do pedido',P,yf+120)}
     else{c.fillStyle='#646A8A';c.font=`500 28px ${FT}`;c.fillText('continua na próxima imagem…',P,yf+64)}
@@ -302,7 +321,7 @@ async function desenharPaginas(d){
 function dadosCopia(){
   const l=loja($('#pLoja').value),m=marca(marcaForm()),ds=$('#pData').value||isoD(HOJE);
   const itens=itensForm.map(i=>({...i})),d={loja:l?l.nome:'Cliente',cidade:l?`${l.cidade}/${l.uf}`:'',marca:m?m.nome:'',cor:m?m.cor:'#3346D3',data:deIso(ds).toLocaleDateString('pt-BR'),rep:NOME||'',itens,pecas:pecas(itens),total:totalItens(itens)};
-  d.texto=`*Pedido ${d.marca}* · ${d.loja}\n${d.data}\n\n`+itens.map(i=>`${i.qtd} × ${i.nome}${i.ref?` (ref. ${i.ref})`:''} · ${precoBR(i.preco)} = ${precoBR(i.qtd*i.preco)}`).join('\n')+`\n\n*Total: ${precoBR(d.total)}* (${d.pecas} ${d.pecas===1?'peça':'peças'})`;
+  d.texto=`*Pedido ${d.marca}* · ${d.loja}\n${d.data}\n\n`+itens.map(i=>`${qtdBR(i.qtd)}${unCurta(i.un)?' '+unCurta(i.un):''} × ${i.nome}${i.ref?` (ref. ${i.ref})`:''} · ${precoBR(i.preco)} = ${precoBR(i.qtd*i.preco)}`).join('\n')+`\n\n*Total: ${precoBR(d.total)}* (${resumoItens(itens)})`;
   return d;
 }
 const nomeArq=t=>norm(t).replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40)||'pedido';
@@ -347,9 +366,9 @@ function conferirProdutos(){
     if(!m){r.semMarca.set(mn||'(sem marca)',(r.semMarca.get(mn||'(sem marca)')||0)+1);continue}
     const ref=String(celula(l,'ref')??'').trim().slice(0,60),p=valorPlan(celula(l,'preco')),f=String(celula(l,'foto')??'').trim().split(/[\s,;|]+/)[0];
     const k=chave(m.id,ref,nome);if(vistos.has(k)){r.ignoradas++;continue}vistos.add(k);
-    const x={marca:m.id,ref,nome:nome.slice(0,160),preco:p>0?Math.round(p*100)/100:0,foto:/^https?:\/\/\S{4,}$/i.test(f)&&f.length<=590?f:''};if(x.foto)r.comFoto++;
+    const un=unOk(celula(l,'unidade')),x={marca:m.id,ref,nome:nome.slice(0,160),preco:p>0?Math.round(p*100)/100:0,foto:/^https?:\/\/\S{4,}$/i.test(f)&&f.length<=590?f:'',...(un&&un!=='un'?{un}:{})};if(x.foto)r.comFoto++;
     const e=exist.get(k);
-    if(e){const mud={};if(x.preco&&x.preco!==e.preco)mud.preco=x.preco;if(x.foto&&x.foto!==e.foto&&!fotoDaConta(e.foto))mud.foto=x.foto;if(x.nome!==e.nome)mud.nome=x.nome;Object.keys(mud).length?r.atual.push([e,mud]):r.iguais++}
+    if(e){const mud={};if(x.preco&&x.preco!==e.preco)mud.preco=x.preco;if(x.foto&&x.foto!==e.foto&&!fotoDaConta(e.foto))mud.foto=x.foto;if(x.nome!==e.nome)mud.nome=x.nome;if(x.un&&x.un!==e.un)mud.un=x.un;Object.keys(mud).length?r.atual.push([e,mud]):r.iguais++}
     else r.novos.push(x);
   }
   plan.prodRes=r;plan.conferida=true;renderAjustes();

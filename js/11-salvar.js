@@ -4,8 +4,10 @@ let nuvem=null,salvarT=null,fila=Promise.resolve(),enviados={};
 function serializar(){return{v:1,atualizado,marcas:MARCAS,lojas,sugestoes,regioes:REGIOES,colecoes:COLECOES,metas:METAS,agenda:AGENDA,produtos:PRODUTOS,nome:NOME,despesas:DESPESAS.map(x=>({...x,data:isoD(x.data)})),pedidos:pedidos.map(o=>({...o,data:isoD(o.data)}))}}
 // Foto: link da internet ou, sem conta, uma imagem pequena guardada no próprio celular
 const fotoOk=x=>{const s=String(x||'');return /^https?:\/\/\S{4,590}$/i.test(s)||(/^data:image\/(jpeg|png|webp|svg\+xml);base64,[\w+/=]+$/.test(s)&&s.length<80000)?s:''};
+// unidade: só letras/números curtos; 'un' é o padrão e não é gravado
+const unOkS=u=>{const s=String(u||'').toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,8);return s&&s!=='un'?s:''};
 function limparItens(a){
-  return(Array.isArray(a)?a:[]).slice(0,500).filter(x=>x&&String(x.nome||'').trim()).map(x=>({p:String(x.p||'').slice(0,40),ref:String(x.ref||'').slice(0,60).trim(),nome:String(x.nome).slice(0,160).trim(),preco:Math.max(0,Math.round((+x.preco||0)*100)/100),qtd:Math.min(99999,Math.max(1,Math.round(+x.qtd||1))),foto:/^https?:/i.test(fotoOk(x.foto))?fotoOk(x.foto):''}));
+  return(Array.isArray(a)?a:[]).slice(0,500).filter(x=>x&&String(x.nome||'').trim()).map(x=>({p:String(x.p||'').slice(0,40),ref:String(x.ref||'').slice(0,60).trim(),nome:String(x.nome).slice(0,160).trim(),preco:Math.max(0,Math.round((+x.preco||0)*100)/100),qtd:Math.min(9999999,Math.max(0.001,Math.round((+x.qtd||1)*1000)/1000)),foto:/^https?:/i.test(fotoOk(x.foto))?fotoOk(x.foto):'',...(unOkS(x.un)?{un:unOkS(x.un)}:{})}));
 }
 // Site da marca: só o endereço (ex.: lojavirtual.marca.com.br), para achar as fotos oficiais dos produtos
 const siteOk=x=>{const s=String(x||'').trim().replace(/^https?:\/\//i,'').replace(/\/.*$/,'').toLowerCase();return /^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(s)&&s.length<=120?s:''};
@@ -20,7 +22,7 @@ function limpar(d){
   const pedidos=arr(d.pedidos).filter(o=>o&&lids.has(String(o.loja))&&mids.has(o.marca)&&dataOk(o.data)).map((o,i)=>{const v=Math.max(0,+o.valor||0),pv=Math.max(0,+o.previsto||0),r={id:idOk(o.id)?o.id:'r'+i,loja:String(o.loja),marca:o.marca,valor:v,data:o.data,pago:!!o.pago&&v>0,taxa:o.taxa!=null&&Number.isFinite(+o.taxa)?+o.taxa:marcas.find(m=>m.id===o.marca).taxa,colecao:txt(o.colecao)};
     if(pv)r.previsto=pv;if(!v&&pv)r.pendente=true;const it=limparItens(o.itens);if(it.length)r.itens=it;return r}).filter(o=>o.valor>0||o.pendente);
   const despesas=arr(d.despesas).filter(x=>x&&dataOk(x.data)&&+x.valor>0).map((x,i)=>({id:idOk(x.id)?String(x.id):'d'+i,data:x.data,valor:+x.valor,categoria:txt(x.categoria),descricao:txt(x.descricao,120)}));
-  const pids=new Set(),produtos=arr(d.produtos).filter(x=>x&&idOk(x.id)&&mids.has(x.marca)&&txt(x.nome,160)&&!pids.has(String(x.id))&&pids.add(String(x.id))).map(x=>({id:String(x.id),marca:x.marca,ref:txt(x.ref,60),nome:txt(x.nome,160),preco:Math.max(0,Math.round((+x.preco||0)*100)/100),foto:fotoOk(x.foto)}));
+  const pids=new Set(),produtos=arr(d.produtos).filter(x=>x&&idOk(x.id)&&mids.has(x.marca)&&txt(x.nome,160)&&!pids.has(String(x.id))&&pids.add(String(x.id))).map(x=>({id:String(x.id),marca:x.marca,ref:txt(x.ref,60),nome:txt(x.nome,160),preco:Math.max(0,Math.round((+x.preco||0)*100)/100),foto:fotoOk(x.foto),...(unOkS(x.un)?{un:unOkS(x.un)}:{})}));
   const metas=arr(d.metas).filter(m=>m&&idOk(m.id)&&mids.has(m.marca)&&+m.valor>0).map(m=>({id:String(m.id),marca:m.marca,colecao:txt(m.colecao),valor:Math.round(+m.valor*100)/100,desde:dataOk(m.desde)?m.desde:''}));
   const agenda=arr(d.agenda).filter(a=>a&&idOk(a.id)&&dataOk(a.data)&&txt(a.titulo,80)).slice(0,3000).map(a=>({id:String(a.id),data:a.data,hora:/^([01]\d|2[0-3]):[0-5]\d$/.test(a.hora)?a.hora:'',loja:lids.has(String(a.loja))?String(a.loja):'',titulo:txt(a.titulo,80),nota:txt(a.nota,300),feito:!!a.feito}));
   const lista=x=>Array.isArray(x)?[...new Set(x.map(y=>txt(y)).filter(Boolean))]:undefined;
