@@ -82,7 +82,7 @@ async function entregarPlanilha(blob,nome,texto){
 // pedido do formulário (novo ou em edição), sem precisar salvar antes
 function pedidoDoForm(){
   const l=loja($('#pLoja').value),mid=marcaForm(),v=num($('#pValor').value)>0?Math.round(num($('#pValor').value)*100)/100:0;
-  return{id:pedEdit?pedEdit.id:'',loja:l?l.id:'',marca:mid,data:deIso($('#pData').value||isoD(HOJE)),valor:v||(itensForm.length?totalItens(itensForm):0),colecao:$('#pColecao').value||'',taxa:taxaForm()||taxaDe(l?l.id:'',mid),itens:itensForm.map(i=>({...i}))};
+  return{id:pedEdit?pedEdit.id:'',loja:l?l.id:'',marca:mid,data:deIso($('#pData').value||isoD(HOJE)),valor:v||(itensForm.length?totalItens(itensForm):0),colecao:$('#pColecao').value||'',taxa:taxaForm()??taxaDe(l?l.id:'',mid),itens:itensForm.map(i=>({...i}))};
 }
 async function planilhaDoPedido(){
   const o=pedidoDoForm();
