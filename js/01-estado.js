@@ -21,4 +21,6 @@ let PRODUTOS=[],itensForm=[];
 // sempre crescente neste aparelho (nunca repete) e com parte aleatória (não colide com outro aparelho)
 let ultimoIdPedido=0;
 const novoIdPedido=()=>(ultimoIdPedido=Math.max(ultimoIdPedido+1,Date.now()*1000+Math.floor(Math.random()*1000)));
-function addPedido(loja,marca,valor,data,pago){const m=MARCAS.find(x=>x.id===marca);const o={id:novoIdPedido(),loja,marca,valor,data,pago:!!pago,taxa:m?m.taxa:0};pedidos.push(o);return o}
+// Comissão padrão de um pedido: a combinada com o cliente para aquela marca, senão a da marca
+function taxaDe(lid,mid){const l=lojas.find(x=>x.id===lid),m=MARCAS.find(x=>x.id===mid);const t=l&&l.taxas&&l.taxas[mid];return t>0?t:m?m.taxa:0}
+function addPedido(loja,marca,valor,data,pago){const o={id:novoIdPedido(),loja,marca,valor,data,pago:!!pago,taxa:taxaDe(loja,marca)};pedidos.push(o);return o}

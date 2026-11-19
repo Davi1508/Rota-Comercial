@@ -61,13 +61,14 @@ const COLS_PEDIDO=[
   {t:'Data',tipo:'data',w:12},{t:'Pedido',tipo:'texto',w:16},{t:'Cliente',tipo:'texto',w:32},{t:'CNPJ',tipo:'texto',w:20},
   {t:'Cidade',tipo:'texto',w:20},{t:'UF',tipo:'texto',w:6},{t:'Marca',tipo:'texto',w:20},{t:'Campanha',tipo:'texto',w:16},
   {t:'Referência',tipo:'texto',w:14},{t:'Produto',tipo:'texto',w:36},{t:'Quantidade',tipo:'num',w:12},{t:'Unidade',tipo:'texto',w:10},{t:'Preço unitário',tipo:'moeda',w:14},
-  {t:'Total do item',tipo:'moeda',w:14},{t:'Valor do pedido',tipo:'moeda',w:16},{t:'Representante',tipo:'texto',w:20}];
+  {t:'Total do item',tipo:'moeda',w:14},{t:'Valor do pedido',tipo:'moeda',w:16},{t:'Comissão (%)',tipo:'num',w:12},{t:'Comissão (R$)',tipo:'moeda',w:14},{t:'Representante',tipo:'texto',w:20}];
 function linhasPedido(o){
   const l=loja(o.loja)||{},m=marca(o.marca)||{},cnpj=l.cnpj?cnpjBR(l.cnpj):'';
   const base=[o.data,String(o.id||''),l.nome||'',cnpj,l.cidade||'',l.uf||'',m.nome||'',o.colecao||''];
   const its=(o.itens||[]).filter(i=>i&&i.qtd>0);
-  if(!its.length)return[[...base,'','',null,'',null,null,o.valor||0,NOME||'']];
-  return its.map(i=>[...base,i.ref||'',i.nome||'',i.qtd,unCurta(i.un)||'un',i.preco||0,(i.preco||0)*i.qtd,o.valor||0,NOME||'']);
+  const tx=o.taxa!=null?o.taxa:taxaDe(o.loja,o.marca),cv=[Math.round(tx*100000)/1000,Math.round((o.valor||0)*tx*100)/100];
+  if(!its.length)return[[...base,'','',null,'',null,null,o.valor||0,...cv,NOME||'']];
+  return its.map(i=>[...base,i.ref||'',i.nome||'',i.qtd,unCurta(i.un)||'un',i.preco||0,(i.preco||0)*i.qtd,o.valor||0,...cv,NOME||'']);
 }
 const nomeArqPlan=t=>norm(t).replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40)||'pedidos';
 async function entregarPlanilha(blob,nome,texto){
@@ -81,7 +82,7 @@ async function entregarPlanilha(blob,nome,texto){
 // pedido do formulário (novo ou em edição), sem precisar salvar antes
 function pedidoDoForm(){
   const l=loja($('#pLoja').value),mid=marcaForm(),v=num($('#pValor').value)>0?Math.round(num($('#pValor').value)*100)/100:0;
-  return{id:pedEdit?pedEdit.id:'',loja:l?l.id:'',marca:mid,data:deIso($('#pData').value||isoD(HOJE)),valor:v||(itensForm.length?totalItens(itensForm):0),colecao:$('#pColecao').value||'',itens:itensForm.map(i=>({...i}))};
+  return{id:pedEdit?pedEdit.id:'',loja:l?l.id:'',marca:mid,data:deIso($('#pData').value||isoD(HOJE)),valor:v||(itensForm.length?totalItens(itensForm):0),colecao:$('#pColecao').value||'',taxa:taxaForm()||taxaDe(l?l.id:'',mid),itens:itensForm.map(i=>({...i}))};
 }
 async function planilhaDoPedido(){
   const o=pedidoDoForm();
