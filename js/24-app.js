@@ -12,15 +12,18 @@ if('serviceWorker' in navigator&&(location.protocol==='https:'||/[?&]sw=1/.test(
 // ---------- instalar na tela de início ----------
 let pedidoInstalar=null;
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();pedidoInstalar=e});
-addEventListener('appinstalled',()=>{pedidoInstalar=null;toast('App instalado na tela de início')});
+addEventListener('appinstalled',()=>{pedidoInstalar=null;toast(ehCelular()?'App instalado na tela de início':'App instalado. O atalho já está no seu computador')});
 const instalado=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+const ehCelular=()=>matchMedia('(pointer: coarse)').matches&&Math.min(screen.width,screen.height)<900;
 const ehIOS=()=>/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 function blocoInstalar(){
   if(instalado())return'';
   const como=pedidoInstalar?'<button class="btn" data-instalar>Instalar app</button>'
     :ehIOS()?'<p class="s" style="margin:var(--s1) 0 0">No Safari, toque em <b>Compartilhar</b> e depois em <b>Adicionar à Tela de Início</b>.</p>'
-    :'<p class="s" style="margin:var(--s1) 0 0">No menu do navegador, toque em <b>Instalar app</b> ou <b>Adicionar à tela inicial</b>.</p>';
-  return `<h2>Instalar no celular</h2><div class="list" style="padding:var(--s3)"><div class="t">Use como um app</div><p class="s" style="margin:var(--s1) 0 0">Fica com ícone na tela de início, abre em tela cheia e funciona sem internet.</p>${pedidoInstalar?'':como}</div>${pedidoInstalar?como:''}`;
+    :ehCelular()?'<p class="s" style="margin:var(--s1) 0 0">No menu do navegador, toque em <b>Instalar app</b> ou <b>Adicionar à tela inicial</b>.</p>'
+    :'<p class="s" style="margin:var(--s1) 0 0">No Chrome ou no Edge, clique no ícone de instalar no fim da barra de endereço, ou abra o menu do navegador e escolha <b>Instalar Rota Comercial</b>.</p>';
+  const cel=ehCelular();
+  return `<h2>${cel?'Instalar no celular':'Instalar no computador'}</h2><div class="list" style="padding:var(--s3)"><div class="t">Use como um app</div><p class="s" style="margin:var(--s1) 0 0">${cel?'Fica com ícone na tela de início, abre em tela cheia e funciona sem internet.':'Abre numa janela própria, com atalho no computador, e funciona sem internet. No celular, instale também: os dados são os mesmos.'}</p>${pedidoInstalar?'':como}</div>${pedidoInstalar?como:''}`;
 }
 async function instalarApp(){if(!pedidoInstalar)return;pedidoInstalar.prompt();try{await pedidoInstalar.userChoice}catch(e){}pedidoInstalar=null;renderAjustes()}
 
