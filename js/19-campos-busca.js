@@ -11,11 +11,13 @@ function combo(sel){
   w.append(inp,ul);
   let aberto=false,foco=-1;
   const rot=()=>{const o=sel.options[sel.selectedIndex];return o?o.textContent:''};
-  const sync=()=>{if(!aberto){inp.value=rot();inp.placeholder=sel.options.length?'Digite para buscar':'Nada cadastrado ainda'}};
+  const ph=()=>{const o=sel.options[sel.selectedIndex];return o&&o.hasAttribute('data-ph')?o.textContent:''};
+  const reais=()=>[...sel.options].filter(o=>!o.hasAttribute('data-ph'));
+  const sync=()=>{if(!aberto){const p=ph();inp.value=p?'':rot();inp.placeholder=p||(reais().length?'Digite para buscar':'Nada cadastrado ainda')}};
   Object.defineProperty(sel,'value',{configurable:true,get(){return valorSel.get.call(this)},set(v){valorSel.set.call(this,v);sync()}});
   new MutationObserver(sync).observe(sel,{childList:true,subtree:true,attributes:true});
   const marcar=(t,q)=>{if(!q)return esc(t);const i=norm(t).indexOf(q);return i<0?esc(t):esc(t.slice(0,i))+'<mark>'+esc(t.slice(i,i+q.length))+'</mark>'+esc(t.slice(i+q.length))};
-  const lista=()=>{const q=norm(inp.value===rot()?'':inp.value),ops=[...sel.options].filter(o=>!q||norm(o.textContent).includes(q));
+  const lista=()=>{const q=norm(inp.value===rot()?'':inp.value),ops=reais().filter(o=>!q||norm(o.textContent).includes(q));
     foco=ops.length?0:-1;
     ul.innerHTML=ops.length?ops.map((o,i)=>`<button type="button" role="option" data-v="${esc(o.value)}" class="${o.value===sel.value?'on':''}${i===foco&&q?' foco':''}">${marcar(o.textContent,q)}</button>`).join(''):'<div class="vazio">Nada encontrado</div>';};
   const abrir=()=>{aberto=true;ul.hidden=false;lista();inp.select();
