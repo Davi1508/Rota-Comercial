@@ -12,17 +12,24 @@
 <link rel="canonical" href="https://rotacomercial.app.br/conheca/">
 <script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "Organization", "@id": "https://rotacomercial.app.br/#org", "name": "Rota Comercial", "url": "https://rotacomercial.app.br/", "logo": "https://rotacomercial.app.br/icons/icon-512.png", "email": "contato@rotacomercial.app.br"}, {"@type": "SoftwareApplication", "name": "Rota Comercial", "alternateName": ["Rota Comercial app", "App Rota Comercial"], "url": "https://rotacomercial.app.br/conheca/", "applicationCategory": "BusinessApplication", "operatingSystem": "Web, Android, iOS", "description": "App para representante comercial: pedidos, comissões, metas por marca, catálogo de produtos com fotos, mapa de clientes e despesas de viagem.", "inLanguage": "pt-BR", "publisher": {"@id": "https://rotacomercial.app.br/#org"}, "offers": {"@type": "Offer", "price": "29.90", "priceCurrency": "BRL", "description": "7 dias grátis, depois R$ 29,90 por mês"}}]}</script>
 <meta property="og:type" content="website">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:site_name" content="Rota Comercial">
+<meta property="og:image:alt" content="Tela do app Rota Comercial no celular">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#3346D3">
 <link rel="icon" type="image/png" sizes="32x32" href="../icons/favicon-32.png">
 <link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 :root{--azul:#3346D3;--azul2:#1E2A96;--ink:#141833;--muted:#646A8A;--line:#E2E4EE;--bg:#F2F3F7;--soft:#DDE2FF;--amarelo:#F2B705;--amarelo-ink:#2E2400;--ok:#1A9E5C;
   --s1:4px;--s2:8px;--s3:16px;--s4:24px;--s5:32px;--s6:40px;--s7:48px;--s8:64px;--r1:8px;--r2:16px;--r3:24px;--pill:999px}
 *{box-sizing:border-box}
-html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+[id]{scroll-margin-top:80px}
+a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid var(--amarelo);outline-offset:2px}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 body{margin:0;font-family:'Schibsted Grotesk',system-ui,-apple-system,sans-serif;font-size:16px;line-height:24px;color:var(--ink);background:var(--bg)}
 a{color:inherit}
 .wrap{max-width:1104px;margin:0 auto;padding:0 var(--s3)}
@@ -32,6 +39,9 @@ a{color:inherit}
 .marca{display:flex;align-items:center;gap:var(--s2);font-weight:900;font-size:20px;line-height:28px;text-decoration:none}
 .marca img{width:32px;height:32px;border-radius:var(--r1)}
 .entrar{display:inline-flex;align-items:center;min-height:48px;padding:0 var(--s3);border-radius:var(--pill);font-weight:700;text-decoration:none;border:1px solid rgba(255,255,255,.4)}
+.acoes{display:flex;gap:var(--s2)}
+.entrar.testar{display:none;background:var(--amarelo);color:var(--amarelo-ink);border-color:var(--amarelo)}
+@media (min-width:560px){.entrar.testar{display:inline-flex}}
 /* hero */
 .hero{background:linear-gradient(180deg,var(--azul),var(--azul2));color:#fff;overflow:hidden}
 .hero .wrap{display:grid;gap:var(--s5);padding-top:var(--s7);padding-bottom:0}
@@ -57,7 +67,7 @@ img{max-width:100%;height:auto}
 /* faixa */
 .faixa{background:#fff;border-bottom:1px solid var(--line)}
 .faixa ul{list-style:none;margin:0;padding:var(--s3) 0;display:flex;flex-wrap:wrap;gap:var(--s2) var(--s4);justify-content:center;font-weight:700;font-size:14px;line-height:20px;color:var(--muted)}
-.faixa li::before{content:"✓ ";color:var(--ok)}
+.faixa li::before{content:"✓ ";content:"✓ "/"";color:var(--ok)}
 /* seções */
 section{padding:var(--s8) 0}
 h2{font-size:32px;line-height:40px;font-weight:900;margin:0 0 var(--s2);letter-spacing:-.3px}
@@ -66,8 +76,9 @@ h2{font-size:32px;line-height:40px;font-weight:900;margin:0 0 var(--s2);letter-s
 .dor div{background:#fff;border:1px solid var(--line);border-radius:var(--r2);padding:var(--s3);font-weight:600}
 .dor s{color:var(--muted)}
 .recurso{display:grid;gap:var(--s4);align-items:center;margin-top:var(--s7)}
-.recurso .foto{justify-self:center;width:240px;border-radius:32px;border:8px solid #0C0F21;overflow:hidden;box-shadow:0 16px 40px rgba(20,24,51,.18);height:400px}
-.recurso .foto img,.recurso .foto video{display:block;width:100%;height:auto}
+.recurso .foto{position:relative;justify-self:center;width:240px;border-radius:32px;border:8px solid #0C0F21;background:#0C0F21;overflow:hidden;box-shadow:0 16px 40px rgba(20,24,51,.18);height:400px}
+.recurso .foto img,.recurso .foto video{display:block;width:100%;height:100%;object-fit:cover;object-position:top}
+.pausa{position:absolute;right:var(--s2);bottom:var(--s2);width:48px;height:48px;border:0;border-radius:var(--pill);background:rgba(12,15,33,.72);color:#fff;font:700 16px/1 system-ui,sans-serif;cursor:pointer}
 .recurso h3{font-size:24px;line-height:32px;font-weight:900;margin:0 0 var(--s2)}
 .recurso p{margin:0 0 var(--s2);color:var(--muted);font-size:18px;line-height:28px}
 .recurso ul{margin:0;padding-left:var(--s4);color:var(--ink)}
@@ -89,7 +100,7 @@ h2{font-size:32px;line-height:40px;font-weight:900;margin:0 0 var(--s2);letter-s
 .valor small{font-size:18px;line-height:24px;font-weight:600;color:var(--muted)}
 .cartao ul{list-style:none;padding:0;margin:var(--s3) 0 var(--s4)}
 .cartao li{padding:var(--s1) 0}
-.cartao li::before{content:"✓  ";color:var(--ok);font-weight:900}
+.cartao li::before{content:"✓  ";content:"✓  "/"";color:var(--ok);font-weight:900}
 .cartao .btn{width:100%}
 /* faq */
 details{background:#fff;border:1px solid var(--line);border-radius:var(--r2);margin-bottom:var(--s2)}
@@ -110,7 +121,7 @@ footer nav a{display:inline-flex;align-items:center;min-height:48px;padding:0 va
 <body>
 <header class="topo"><div class="wrap">
   <a class="marca" href="./"><img src="../icons/icon-192.png" alt="">Rota Comercial</a>
-  <a class="entrar" href="../">Entrar</a>
+  <nav class="acoes" aria-label="Conta"><a class="entrar" href="../">Entrar</a><a class="entrar testar" href="../?criar=1">Testar grátis</a></nav>
 </div></header>
 
 <main>
@@ -125,7 +136,7 @@ footer nav a{display:inline-flex;align-items:center;min-height:48px;padding:0 va
     </div>
     <p class="miuda">Sem cartão de crédito. Depois, R$ 29,90 por mês.</p>
   </div>
-  <div class="celular"><img src="img/mapa.jpg" width="600" height="1154" alt="Tela inicial do app com a comissão a receber e o mapa das lojas"></div>
+  <div class="celular"><img src="img/mapa.jpg" width="600" height="1154" fetchpriority="high" alt="Tela inicial do app com a comissão a receber e o mapa das lojas"></div>
 </div></div>
 
 <div class="faixa"><div class="wrap"><ul>
@@ -136,11 +147,11 @@ footer nav a{display:inline-flex;align-items:center;min-height:48px;padding:0 va
   <h2>Chega de caderno, planilha e print de WhatsApp</h2>
   <p class="sub">Representante vive com a informação espalhada. Na hora de cobrar a comissão ou fechar o mês, ninguém sabe ao certo quanto vendeu.</p>
   <div class="dor">
-    <div><s>Pedido anotado no caderno</s><br>Pedido lançado em segundos</div>
-    <div><s>Comissão na calculadora</s><br>Comissão calculada sozinha</div>
-    <div><s>Meta da marca "de cabeça"</s><br>Quanto falta, todo dia</div>
-    <div><s>Nota de gasolina perdida</s><br>Despesa anotada na hora</div>
-    <div><s>Tudo preso no app antigo</s><br>Importado em 1 minuto</div>
+    <div><s><span class="vh">Antes: </span>Pedido anotado no caderno</s><br><span class="vh">Agora: </span>Pedido lançado em segundos</div>
+    <div><s><span class="vh">Antes: </span>Comissão na calculadora</s><br><span class="vh">Agora: </span>Comissão calculada sozinha</div>
+    <div><s><span class="vh">Antes: </span>Meta da marca "de cabeça"</s><br><span class="vh">Agora: </span>Quanto falta, todo dia</div>
+    <div><s><span class="vh">Antes: </span>Nota de gasolina perdida</s><br><span class="vh">Agora: </span>Despesa anotada na hora</div>
+    <div><s><span class="vh">Antes: </span>Tudo preso no app antigo</s><br><span class="vh">Agora: </span>Importado em 1 minuto</div>
   </div>
 </div></section>
 
@@ -149,35 +160,35 @@ footer nav a{display:inline-flex;align-items:center;min-height:48px;padding:0 va
   <p class="sub">Tudo pensado para o dia a dia de quem visita clientes: representadas, campanhas, região e viagem.</p>
 
   <div class="recurso">
-    <div class="foto"><video src="video/pedido.mp4" poster="img/pedido.jpg" autoplay muted loop playsinline preload="metadata" aria-label="Lançando um pedido com previsão e valor real"></video></div>
+    <div class="foto"><video data-src="video/pedido.mp4" poster="img/pedido.jpg" muted loop playsinline preload="none" aria-label="Lançando um pedido com previsão e valor real"></video></div>
     <div><h3>Pedido lançado em segundos</h3>
       <p>Escolha o cliente, a marca e a campanha. Coloque quanto ele deve comprar e, quando fechar, o valor real. Ou monte o pedido pelos produtos do catálogo.</p>
       <ul><li>Previsto x real por marca e por campanha</li><li>A comissão de cada marca é calculada sozinha</li><li>Marque o que já foi pago e veja o que falta receber</li></ul></div>
   </div>
 
   <div class="recurso inv">
-    <div class="foto"><video src="video/metas.mp4" poster="img/metas.jpg" autoplay muted loop playsinline preload="metadata" aria-label="Barra da meta da marca enchendo até 100%"></video></div>
+    <div class="foto"><video data-src="video/metas.mp4" poster="img/metas.jpg" muted loop playsinline preload="none" aria-label="Barra da meta da marca enchendo até 100%"></video></div>
     <div><h3>Metas por marca e campanha</h3>
       <p>Recebeu a meta da marca? Cadastre e acompanhe quanto já vendeu e quanto falta.</p>
       <ul><li>Barra de progresso de cada meta</li><li>Mostra quanto chega se as previsões fecharem</li><li>Filtre por marca, campanha, região ou período</li></ul></div>
   </div>
 
   <div class="recurso">
-    <div class="foto"><video src="video/mapa-bahia.mp4" poster="img/mapa-bahia.jpg" autoplay muted loop playsinline preload="metadata" aria-label="Tocando na Bahia para ver as lojas no mapa"></video></div>
+    <div class="foto"><video data-src="video/mapa-bahia.mp4" poster="img/mapa-bahia.jpg" muted loop playsinline preload="none" aria-label="Tocando na Bahia para ver as lojas no mapa"></video></div>
     <div><h3>Sua carteira no mapa</h3>
       <p>Veja onde estão seus clientes e quem está na hora de comprar de novo, pelo ritmo de cada um.</p>
       <ul><li>Clientes comprando, esfriando e parados</li><li>Total vendido por cidade e região</li><li>Regiões do seu jeito: Extremo Sul, Oeste…</li></ul></div>
   </div>
 
   <div class="recurso inv">
-    <div class="foto"><video src="video/despesa.mp4" poster="img/despesa.jpg" autoplay muted loop playsinline preload="metadata" aria-label="Escrevendo uma despesa e o app preenchendo sozinho"></video></div>
+    <div class="foto"><video data-src="video/despesa.mp4" poster="img/despesa.jpg" muted loop playsinline preload="none" aria-label="Escrevendo uma despesa e o app preenchendo sozinho"></video></div>
     <div><h3>Despesas de viagem sem planilha</h3>
       <p>Escreva do seu jeito, como "gasolina 180 hoje em Vitória da Conquista", e o app preenche valor, data e categoria.</p>
       <ul><li>Separado por viagem e categoria</li><li>Total gasto no período, lado a lado com a comissão</li></ul></div>
   </div>
 
   <div class="recurso" id="importar">
-    <div class="foto"><video src="video/importar.mp4" poster="img/importar.jpg" autoplay muted loop playsinline preload="metadata" aria-label="Importando uma planilha de pedidos: o app reconhece as colunas e lança tudo"></video></div>
+    <div class="foto"><video data-src="video/importar.mp4" poster="img/importar.jpg" muted loop playsinline preload="none" aria-label="Importando uma planilha de pedidos: o app reconhece as colunas e lança tudo"></video></div>
     <div><h3>Traga tudo do app ou da planilha que você usa</h3>
       <p>Exporte seus pedidos, clientes ou despesas em Excel ou .csv e escolha o arquivo. O app reconhece as colunas sozinho e mostra tudo antes de lançar.</p>
       <ul><li>Funciona com Excel, Google Planilhas e apps como o Mercos</li><li>Clientes e marcas novos são cadastrados na hora</li><li>Pula pedidos cancelados, totais e o que já existe</li></ul></div>
