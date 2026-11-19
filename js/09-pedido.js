@@ -6,8 +6,9 @@ const deIso=s=>{const [y,m,d]=String(s).split('-').map(Number);return new Date(y
 let pedEdit=null,avisoPed='',avisoLoja='',lojaEdit=null;
 function preencherLojas(){const v=$('#pLoja').value,q='';
   const vis=[...lojas].filter(l=>(!l.arquivada||(pedEdit&&pedEdit.loja===l.id))&&(!q||l.id===v||norm(l.nome+' '+l.cidade+' '+(l.regiao||'')).includes(q)));
-  $('#pLoja').innerHTML=vis.sort((a,b)=>a.nome.localeCompare(b.nome)).map(l=>`<option value="${l.id}">${esc(l.nome)}, ${esc(l.cidade)} (${l.uf})</option>`).join('');
-  if(loja(v))$('#pLoja').value=v}
+  // Começa sem loja escolhida (menos com uma loja só), para o valor nunca cair na loja do pedido anterior
+  $('#pLoja').innerHTML='<option value="" data-ph>Escolha a loja</option>'+vis.sort((a,b)=>a.nome.localeCompare(b.nome)).map(l=>`<option value="${l.id}">${esc(l.nome)}, ${esc(l.cidade)} (${l.uf})</option>`).join('');
+  $('#pLoja').value=loja(v)&&vis.some(l=>l.id===v)?v:vis.length===1?vis[0].id:''}
 const marcaForm=()=>{const r=document.querySelector('input[name=marca]:checked');return r?r.value:null};
 function preencherMarcas(){
   const lm=[...document.querySelectorAll('input[name=lmarca]:checked')].map(x=>x.value),pm=marcaForm();
@@ -57,6 +58,7 @@ function editarPedido(id){
 function sairEdicaoPedido(){
   pedEdit=null;$('#pedTit').textContent='Novo pedido';$('#pSalvar').textContent='Salvar pedido';
   const ex=$('#pExcluir');ex.hidden=true;ex.dataset.ok='';ex.textContent='Excluir pedido';$('#pCancelar').hidden=true;
+  $('#pLoja').value=lojas.filter(l=>!l.arquivada).length===1?lojas.find(l=>!l.arquivada).id:'';syncMarcaLoja();
   $('#pValor').value='';$('#pPrev').value='';$('#pColecao').value='';$('#pPago').checked=false;$('#pData').value=isoD(HOJE);itensForm=[];renderItensForm();preview();
 }
 function erroPed(t){const e=$('#pErro');e.textContent=t;e.hidden=false}
@@ -64,7 +66,8 @@ function salvarPedido(e){
   e.preventDefault();
   const v0=num($('#pValor').value),pv0=num($('#pPrev').value),v=v0>0?Math.round(v0*100)/100:0,prev=pv0>0?Math.round(pv0*100)/100:0,l=loja($('#pLoja').value),mid=marcaForm(),ds=$('#pData').value;
   if(!v&&!prev)return erroPed('Digite a previsão, o valor real, ou os dois.');
-  if(!l||!mid)return erroPed('Escolha a loja e a marca.');
+  if(!l){erroPed('Escolha a loja deste pedido.');$('#pLoja-busca')?$('#pLoja-busca').focus():$('#pLoja').focus();return}
+  if(!mid)return erroPed('Escolha a marca.');
   if(!ds)return erroPed('Escolha a data do pedido.');
   const data=deIso(ds);
   if(data>HOJE)return erroPed('A data não pode ser no futuro.');

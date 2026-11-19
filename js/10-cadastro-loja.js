@@ -24,7 +24,7 @@ function salvarLoja(e){
   let l,mudouLugar;
   if(lojaEdit){l=lojaEdit;mudouLugar=l.cidade!==cidade||l.uf!==uf;Object.assign(l,{nome,cidade,uf,marcas:ms,regiao});if(mudouLugar)l.coord=coordCidade(cidade,uf)}
   else{l={id:'N'+Date.now(),nome,cidade,uf,marcas:ms,regiao,coord:coordCidade(cidade,uf)};lojas.push(l);mudouLugar=true}
-  const editado=!!lojaEdit;fecharCadastro();preencherLojas();syncMarcaLoja();salvar();renderTudo();
+  const editado=!!lojaEdit;fecharCadastro();preencherLojas();if(!editado&&!pedEdit)$('#pLoja').value=l.id;syncMarcaLoja();salvar();renderTudo();
   if(!mudouLugar){toast('Loja atualizada');return}
   if(l.coord){toast(editado?'Loja atualizada':`${l.nome} cadastrada ${emUF(uf)}`);irAba('mapa');selecionarCidade(l.cidade+'|'+uf)}
   else{toast(`${l.nome} salva. Agora marque o lugar no mapa`);iniciarColocacao(l.id)}

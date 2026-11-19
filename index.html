@@ -162,11 +162,11 @@
     <div class="form vazio" id="pedVazio" hidden></div>
     <form class="form" id="form" novalidate>
       <h2 class="formtit" id="pedTit">Novo pedido</h2>
+      <label class="f" for="pLoja">Loja</label><select id="pLoja"></select>
       <label class="f" for="pPrev">Previsão <small class="opc">quanto você estima que a loja vai comprar</small></label>
       <div class="valor prevv"><span>R$</span><input id="pPrev" class="num" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off" maxlength="14"></div>
       <label class="f" for="pValor">Valor real <small class="opc">preencha quando o pedido fechar</small></label>
       <div class="valor"><span>R$</span><input id="pValor" class="num" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off" maxlength="14"></div>
-      <label class="f" for="pLoja">Loja</label><select id="pLoja"></select>
       <span class="f">Marca</span><input class="search mini-busca" id="bMarcaP" type="search" placeholder="Buscar marca" autocomplete="off" aria-label="Buscar marca" hidden><div class="mradio" id="pMarca"></div>
       <div id="pItensBox" class="itens-box"></div>
       <label class="f" for="pData">Data</label><input id="pData" type="date" required>
