@@ -1,7 +1,7 @@
 // ---------- salvar no celular (e na conta, quando o link permite) ----------
 const CHAVE='rc-dados-v1';
 let nuvem=null,salvarT=null,fila=Promise.resolve(),enviados={};
-function serializar(){return{v:1,atualizado,marcas:MARCAS,lojas,sugestoes,regioes:REGIOES,colecoes:COLECOES,metas:METAS,produtos:PRODUTOS,nome:NOME,despesas:DESPESAS.map(x=>({...x,data:isoD(x.data)})),pedidos:pedidos.map(o=>({...o,data:isoD(o.data)}))}}
+function serializar(){return{v:1,atualizado,marcas:MARCAS,lojas,sugestoes,regioes:REGIOES,colecoes:COLECOES,metas:METAS,agenda:AGENDA,produtos:PRODUTOS,nome:NOME,despesas:DESPESAS.map(x=>({...x,data:isoD(x.data)})),pedidos:pedidos.map(o=>({...o,data:isoD(o.data)}))}}
 // Foto: link da internet ou, sem conta, uma imagem pequena guardada no próprio celular
 const fotoOk=x=>{const s=String(x||'');return /^https?:\/\/\S{4,590}$/i.test(s)||(/^data:image\/(jpeg|png|webp|svg\+xml);base64,[\w+/=]+$/.test(s)&&s.length<80000)?s:''};
 function limparItens(a){
@@ -22,11 +22,12 @@ function limpar(d){
   const despesas=arr(d.despesas).filter(x=>x&&dataOk(x.data)&&+x.valor>0).map((x,i)=>({id:idOk(x.id)?String(x.id):'d'+i,data:x.data,valor:+x.valor,categoria:txt(x.categoria),descricao:txt(x.descricao,120)}));
   const pids=new Set(),produtos=arr(d.produtos).filter(x=>x&&idOk(x.id)&&mids.has(x.marca)&&txt(x.nome,160)&&!pids.has(String(x.id))&&pids.add(String(x.id))).map(x=>({id:String(x.id),marca:x.marca,ref:txt(x.ref,60),nome:txt(x.nome,160),preco:Math.max(0,Math.round((+x.preco||0)*100)/100),foto:fotoOk(x.foto)}));
   const metas=arr(d.metas).filter(m=>m&&idOk(m.id)&&mids.has(m.marca)&&+m.valor>0).map(m=>({id:String(m.id),marca:m.marca,colecao:txt(m.colecao),valor:Math.round(+m.valor*100)/100,desde:dataOk(m.desde)?m.desde:''}));
+  const agenda=arr(d.agenda).filter(a=>a&&idOk(a.id)&&dataOk(a.data)&&txt(a.titulo,80)).slice(0,3000).map(a=>({id:String(a.id),data:a.data,hora:/^([01]\d|2[0-3]):[0-5]\d$/.test(a.hora)?a.hora:'',loja:lids.has(String(a.loja))?String(a.loja):'',titulo:txt(a.titulo,80),nota:txt(a.nota,300),feito:!!a.feito}));
   const lista=x=>Array.isArray(x)?[...new Set(x.map(y=>txt(y)).filter(Boolean))]:undefined;
-  return{...d,marcas,lojas,pedidos,despesas,metas,produtos,regioes:lista(d.regioes),colecoes:lista(d.colecoes),nome:d.nome!==undefined?txt(d.nome,40):undefined,sugestoes:arr(d.sugestoes)};
+  return{...d,marcas,lojas,pedidos,despesas,metas,agenda,produtos,regioes:lista(d.regioes),colecoes:lista(d.colecoes),nome:d.nome!==undefined?txt(d.nome,40):undefined,sugestoes:arr(d.sugestoes)};
 }
 function aplicar(d){
-  d=limpar(d);ultCache=null;MARCAS=d.marcas||[];lojas=d.lojas||[];sugestoes=d.sugestoes||[];REGIOES=Array.isArray(d.regioes)?d.regioes:[];COLECOES=Array.isArray(d.colecoes)?d.colecoes:[...COLECOES_PADRAO];DESPESAS=(d.despesas||[]).map(x=>({...x,data:deIso(x.data)}));NOME=d.nome||'';METAS=d.metas||[];PRODUTOS=d.produtos||[];
+  d=limpar(d);ultCache=null;MARCAS=d.marcas||[];lojas=d.lojas||[];sugestoes=d.sugestoes||[];REGIOES=Array.isArray(d.regioes)?d.regioes:[];COLECOES=Array.isArray(d.colecoes)?d.colecoes:[...COLECOES_PADRAO];DESPESAS=(d.despesas||[]).map(x=>({...x,data:deIso(x.data)}));NOME=d.nome||'';METAS=d.metas||[];AGENDA=d.agenda||[];PRODUTOS=d.produtos||[];
   pedidos=(d.pedidos||[]).map(o=>({...o,data:deIso(o.data)}));pid=pedidos.reduce((a,o)=>Math.max(a,+o.id||0),0)+1;
   exemplo=!!d.exemplo;atualizado=d.atualizado||0;filtro.marca='todas';filtro.regiao='todas';filtro.colecao='todas';estadoSel=null;cidadeSel=null;
 }
@@ -50,7 +51,7 @@ function enviarNuvem(){
   d.pedidos.forEach(o=>{const y=o.data.slice(0,4);(anos[y]=anos[y]||[]).push(o)});
   Object.keys(enviados).forEach(k=>{if(k.startsWith('ped-')&&!anos[k.slice(4)])anos[k.slice(4)]=[]});
   const docs=Object.entries(anos).map(([y,l])=>['ped-'+y,{lista:l}]);
-  docs.push(['base',{v:1,atualizado:d.atualizado,marcas:d.marcas,lojas:d.lojas,sugestoes:d.sugestoes,regioes:d.regioes,colecoes:d.colecoes,metas:d.metas,nome:d.nome,despesas:d.despesas,anos:Object.keys(anos).filter(y=>anos[y].length)}]);
+  docs.push(['base',{v:1,atualizado:d.atualizado,marcas:d.marcas,lojas:d.lojas,sugestoes:d.sugestoes,regioes:d.regioes,colecoes:d.colecoes,metas:d.metas,agenda:d.agenda,nome:d.nome,despesas:d.despesas,anos:Object.keys(anos).filter(y=>anos[y].length)}]);
   fila=fila.then(async()=>{
     try{for(const [k,b] of docs){const s=JSON.stringify(b);if(enviados[k]===s)continue;await nuvem.doc(k).set(b);enviados[k]=s}marcarStatus('nuvem')}
     catch(e){console.warn('Não salvou na conta',e);if(e&&['invalid_argument','revoked','not_granted','capability_disabled'].includes(e.code))nuvem=null;marcarStatus(e&&e.code==='quota_exceeded'?'cheio':'local')}
