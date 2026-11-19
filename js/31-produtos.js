@@ -32,7 +32,7 @@ function gradeProdutos(vend){
   const pc=x=>(vend.get(x.id)||{pecas:0}).pecas;
   ls.sort(prodOrdem==='az'?(a,b)=>a.nome.localeCompare(b.nome):prodOrdem==='preco'?(a,b)=>b.preco-a.preco:prodOrdem==='menor'?(a,b)=>a.preco-b.preco:prodOrdem==='parados'?(a,b)=>(pc(a)>0)-(pc(b)>0)||a.nome.localeCompare(b.nome):prodOrdem==='semfoto'?(a,b)=>(!!a.foto)-(!!b.foto)||a.nome.localeCompare(b.nome):(a,b)=>pc(b)-pc(a)||a.nome.localeCompare(b.nome));
   if(!ls.length){el.innerHTML='<p class="empty">Nenhum produto encontrado.</p>';return}
-  el.innerHTML=`<div class="pgrid">${ls.slice(0,prodLimite).map(x=>{const n=pc(x),m=marca(x.marca);return `<button class="pcard" data-prod-edit="${esc(x.id)}"><span class="pfoto">${x.foto?`<img src="${esc(x.foto)}" alt="" loading="lazy" referrerpolicy="no-referrer" data-ini="${esc(iniciais(x.nome))}">`:`<span class="ini">${esc(iniciais(x.nome))}</span>`}${n?`<span class="vend num">${n} ${n===1?'vendida':'vendidas'}</span>`:''}</span><span class="pinfo"><span class="t">${esc(x.nome)}</span><span class="s">${[x.ref&&'Ref. '+esc(x.ref),filtro.marca==='todas'&&MARCAS.length>1&&m&&esc(m.nome)].filter(Boolean).join(' · ')||'&nbsp;'}</span><b class="num">${x.preco?precoBR(x.preco):'sem preço'}</b></span></button>`}).join('')}</div>
+  el.innerHTML=`<div class="pgrid">${ls.slice(0,prodLimite).map(x=>{const n=pc(x),m=marca(x.marca);return `<button class="pcard" data-prod-edit="${esc(x.id)}"><span class="pfoto">${x.foto?`<img src="${esc(x.foto)}" alt="" loading="lazy" referrerpolicy="no-referrer" data-ini="${esc(iniciais(x.nome))}">`:`<span class="ini">${esc(iniciais(x.nome))}</span>`}${n?`<span class="vend num">${qtdBR(n)} ${unCurta(x.un)||(n===1?'vendida':'vendidas')}</span>`:''}</span><span class="pinfo"><span class="t">${esc(x.nome)}</span><span class="s">${[x.ref&&'Ref. '+esc(x.ref),filtro.marca==='todas'&&MARCAS.length>1&&m&&esc(m.nome)].filter(Boolean).join(' · ')||'&nbsp;'}</span><b class="num">${x.preco?precoBR(x.preco)+(unCurta(x.un)?`<small class="s"> / ${unCurta(x.un)}</small>`:''):'sem preço'}</b></span></button>`}).join('')}</div>
     ${ls.length>prodLimite?`<button class="btn ghost" data-prod-mais>Mostrar mais (${(ls.length-prodLimite).toLocaleString('pt-BR')})</button>`:''}`;
 }
 // foto do cartão que não abre: vira as iniciais
@@ -40,7 +40,7 @@ document.addEventListener('error',e=>{const t=e.target;if(t&&t.tagName==='IMG'&&
 
 // ---------- ferramenta: importar catálogo de produtos ----------
 let ip=null;
-const CAMPOS_IP=[['produto','Nome do produto',1],['ref','Referência / código'],['preco','Preço'],['foto','Foto (link da imagem)'],['marca','Marca']];
+const CAMPOS_IP=[['produto','Nome do produto',1],['ref','Referência / código'],['preco','Preço'],['unidade','Unidade de venda'],['foto','Foto (link da imagem)'],['marca','Marca']];
 function abrirImportProd(){ip={etapa:'escolher',erro:''};lojaAberta=null;renderImportProd();mostrarSheet()}
 function renderImportProd(){
   const sh=$('#sheet');sh.dataset.tipo='impprod';sh.setAttribute('aria-label','Importar catálogo de produtos');let corpo='';
@@ -127,9 +127,10 @@ function conferirImportProd(){
       if(!m){const k=mn||'(sem marca)';r.semMarca.set(k,(r.semMarca.get(k)||0)+1);continue}}
     const ref=String(cel(l,'ref')??'').trim().slice(0,60),p=valorPlan(cel(l,'preco')),link=fotoLink(l);
     const k=chave(m.id,ref,nome);if(vistos.has(k)){r.ignoradas++;continue}vistos.add(k);
-    const x={marca:m.id,ref,nome:nome.slice(0,160),preco:p>0?Math.round(p*100)/100:0,foto:link,fotoGet:!link&&l._foto?l._foto:null};
+    const un=ip.mapa.unidade!=null?unOk(cel(l,'unidade')):'';
+    const x={marca:m.id,ref,nome:nome.slice(0,160),preco:p>0?Math.round(p*100)/100:0,foto:link,fotoGet:!link&&l._foto?l._foto:null,...(un&&un!=='un'?{un}:{})};
     const e=exist.get(k);
-    if(e){const mud={};if(ip.atualizar){if(x.preco&&x.preco!==e.preco)mud.preco=x.preco;if(x.nome!==e.nome)mud.nome=x.nome}
+    if(e){const mud={};if(ip.atualizar){if(x.preco&&x.preco!==e.preco)mud.preco=x.preco;if(x.nome!==e.nome)mud.nome=x.nome;if(ip.mapa.unidade!=null&&(x.un||'')!==(e.un||''))mud.un=x.un||''}
       if(!e.foto&&(x.foto||x.fotoGet)){if(x.foto)mud.foto=x.foto;else mud.fotoGet=x.fotoGet}
       else if(x.foto&&e.foto!==x.foto&&!fotoDaConta(e.foto)&&!/^data:/.test(e.foto||''))mud.foto=x.foto;
       if(Object.keys(mud).length){r.atual.push([e,mud]);if(mud.fotoGet)r.fotosPlan++;else if(mud.foto)r.fotosLink++}else r.iguais++}
@@ -145,8 +146,8 @@ function cadastrarMarcasIP(){
 }
 async function salvarImportProd(){
   const r=ip.res,fila=[];let novos=0,atual=0;
-  for(const x of r.novos){const p={id:novoIdProd(),marca:x.marca,ref:x.ref,nome:x.nome,preco:x.preco,foto:x.foto||''};PRODUTOS.push(p);novos++;if(x.fotoGet)fila.push([p,x.fotoGet])}
-  for(const [e,m] of r.atual){const{fotoGet,...resto}=m;Object.assign(e,resto);atual++;if(fotoGet)fila.push([e,fotoGet])}
+  for(const x of r.novos){const p={id:novoIdProd(),marca:x.marca,ref:x.ref,nome:x.nome,preco:x.preco,foto:x.foto||'',...(x.un?{un:x.un}:{})};PRODUTOS.push(p);novos++;if(x.fotoGet)fila.push([p,x.fotoGet])}
+  for(const [e,m] of r.atual){const{fotoGet,...resto}=m;Object.assign(e,resto);if(resto.un==='')delete e.un;atual++;if(fotoGet)fila.push([e,fotoGet])}
   salvar();renderItensForm();renderProdutos();
   const lista=naConta()?fila:fila.slice(0,LIMITE_SEM_CONTA);
   ip.fim={novos,atual,fotos:0,falhas:0};

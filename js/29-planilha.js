@@ -137,10 +137,11 @@ const CAMPOS_PLAN=[
   {k:'ref',t:'Referência / código',sin:['referencia','ref','codigo','cod','sku','codigo do produto','cod produto','codigo produto','ref produto','referencia do produto','modelo','artigo','cod ref','codigo referencia']},
   {k:'produto',t:'Nome do produto',sin:['produto','nome do produto','descricao do produto','descricao produto','nome produto','descricao','item','nome','titulo','title']},
   {k:'preco',t:'Preço',sin:['preco','preco unitario','preco de venda','preco venda','valor unitario','vlr unitario','vl unitario','preco tabela','preco de tabela','preco atacado','preco lojista','valor','price']},
+  {k:'unidade',t:'Unidade de venda',sin:['unidade','un','und','unid','unidade de medida','unidade medida','um','u m','unidade de venda','unidade venda','medida']},
   {k:'foto',t:'Foto (link da imagem)',sin:['imagem','foto','url imagem','link imagem','url da imagem','link da imagem','link da foto','url foto','link foto','imagem url','image','image url','image link','picture','url']},
 ];
-const CAMPOS_PROD=['ref','produto','preco','foto','marca'],CAMPOS_GERAIS=CAMPOS_PLAN.map(f=>f.k).filter(k=>!['ref','produto','preco','foto'].includes(k));
-const USADOS_POR_TIPO={produto:['ref','produto','preco','foto','marca'],pedido:['loja','cidade','uf','marca','data','valor','previsto','colecao','pago','status','comissao','regiao'],loja:['loja','cidade','uf','marca','regiao'],despesa:['data','valor','categoria','descricao']};
+const CAMPOS_PROD=['ref','produto','preco','unidade','foto','marca'],CAMPOS_GERAIS=CAMPOS_PLAN.map(f=>f.k).filter(k=>!['ref','produto','preco','unidade','foto'].includes(k));
+const USADOS_POR_TIPO={produto:['ref','produto','preco','unidade','foto','marca'],pedido:['loja','cidade','uf','marca','data','valor','previsto','colecao','pago','status','comissao','regiao'],loja:['loja','cidade','uf','marca','regiao'],despesa:['data','valor','categoria','descricao']};
 const OBRIG={produto:['produto'],pedido:['loja','data','valor'],loja:['loja'],despesa:['data','valor']};
 const normCab=s=>norm(String(s||'')).replace(/[^a-z0-9% ]/g,' ').replace(/\s+/g,' ').trim();
 
