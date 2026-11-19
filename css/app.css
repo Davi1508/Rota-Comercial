@@ -494,3 +494,14 @@ a.btn{display:grid;place-items:center;text-decoration:none;margin-top:var(--s3)}
 /* anti-robô (Turnstile) */
 .ts-box{min-height:66px;margin:var(--s3) 0 0;display:flex;justify-content:center}
 .ts-box:empty{min-height:0;margin:0}
+/* agenda */
+#agBox{margin-bottom:var(--s4)}
+.ag-row{cursor:default;min-height:64px}
+.ag-ok{flex:none;width:32px;height:32px;border-radius:50%;border:2px solid var(--line);background:none;color:#fff;font-weight:900;font-size:16px;line-height:1;display:grid;place-items:center;position:relative}
+.ag-ok::after{content:"";position:absolute;inset:-8px}
+.ag-ok[aria-pressed="true"]{background:var(--ok);border-color:var(--ok)}
+.ag-main{flex:1;min-width:0;text-align:left;background:none;border:0;padding:0;font:inherit;color:inherit;cursor:pointer}
+.ag-main .t{font-weight:700}.ag-main .s{font-size:14px;line-height:20px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ag-dia{flex:none;font-size:12px;line-height:16px;font-weight:700;color:var(--muted);text-align:right}
+.ag-row.feito .ag-main .t{text-decoration:line-through;color:var(--muted)}
+.ag-quando{display:grid;grid-template-columns:1fr 1fr;gap:var(--s2)}

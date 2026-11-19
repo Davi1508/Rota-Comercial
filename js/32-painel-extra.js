@@ -58,4 +58,4 @@ function renderConfRes(){
     :` <b style="color:var(--warn)">O extrato tem ${fmt2.format(ab)} a mais</b> que o calculado. Veja se há pedido sem lançar ou taxa diferente.`);
 }
 function renderExtras(){montarExtras();renderLucro();renderRota();renderConf()}
-(function(){const orig=renderPainel;renderPainel=function(){orig();renderExtras()}})();
+(function(){const orig=renderPainel;renderPainel=function(){orig();renderExtras()};renderExtras()})();

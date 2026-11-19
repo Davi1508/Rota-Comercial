@@ -12,6 +12,8 @@ let REGIOES=[],COLECOES=[...COLECOES_PADRAO];
 // Despesas de viagem (separadas das comissões) e nome de quem usa o app
 let DESPESAS=[],NOME='',desEdit=null;
 let METAS=[];
+// Agenda: compromissos (visitas e outros) com data, hora opcional e loja opcional
+let AGENDA=[];
 // Catálogo de produtos (por marca) e itens do pedido em edição
 let PRODUTOS=[],itensForm=[];
 // Cada pedido guarda a taxa da marca no dia em que foi registrado
