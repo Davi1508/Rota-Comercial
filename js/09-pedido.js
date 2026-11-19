@@ -50,7 +50,7 @@ function estadoPedido(){
     :falta==='lojas'?`<p>Antes do primeiro pedido, cadastre uma loja.</p><button class="btn" data-ir-loja>Cadastrar loja</button>`:'';
 }
 function editarPedido(id){
-  const o=pedidos.find(p=>p.id==id);if(!o)return;fecharLoja();irAba('pedido');pedEdit=o;
+  const o=pedidos.find(p=>p.id==id);if(!o)return;fecharLoja();irAba('pedido');pedEdit=o;preencherLojas();
   $('#pedTit').textContent='Editar pedido';$('#pSalvar').textContent='Salvar alterações';$('#pExcluir').hidden=false;$('#pCancelar').hidden=false;
   $('#pValor').value=o.pendente?'':String(o.valor).replace('.',',');$('#pPrev').value=o.previsto?String(o.previsto).replace('.',','):'';$('#pLoja').value=o.loja;const r=document.querySelector(`input[name=marca][value="${o.marca}"]`);if(r)r.checked=true;
   $('#pData').value=isoD(o.data);$('#pColecao').value=o.colecao||'';$('#pPago').checked=o.pago;itensForm=(o.itens||[]).map(x=>({...x}));renderItensForm();preview();

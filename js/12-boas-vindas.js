@@ -10,4 +10,7 @@ function renderBoas(){
 }
 function entrarExemplo(){gerarExemplo();sairEdicoes();preencherForm();renderTudo();verBrasil();marcarStatus('exemplo');toast('Dados de exemplo carregados')}
 function sairExemplo(){aplicar(lerLocal()||{});sairEdicoes();preencherForm();renderTudo();verBrasil();marcarStatus(atualizado?(nuvem?'nuvem':'local'):'vazio')}
-function sairEdicoes(){if(pedEdit)sairEdicaoPedido();fecharCadastro()}
+// Troca de dados (sair/entrar na conta, exemplo, restaurar): nenhum formulário pela metade passa para os dados novos
+function sairEdicoes(){sairEdicaoPedido();if(typeof sairEdicaoDesp==='function'){sairEdicaoDesp();const t=$('#vTexto');if(t)t.value=''}fecharCadastro();
+  if(typeof metaEdit!=='undefined')metaEdit=null;if(typeof agEdit!=='undefined'){agEdit=null;agVolta=null}if(typeof marcaEdit!=='undefined')marcaEdit=null;
+  if(typeof confValor!=='undefined'){confValor='';confMarca='';rotaBase=''}}
