@@ -33,11 +33,20 @@ function preencherForm(){
   syncMarcaLoja();
 }
 function syncMarcaLoja(){const l=loja($('#pLoja').value);if(!itensForm.length&&l&&l.marcas.length&&!l.marcas.includes(marcaForm())){const r=document.querySelector(`input[name=marca][value="${l.marcas[0]}"]`);if(r)r.checked=true}if(typeof renderItensForm==='function')renderItensForm();preview()}
+// Percentual do pedido: vem do cliente/marca; se a pessoa mudar à mão, fica o dela até trocar de loja ou marca
+const pctTxt=t=>String(Math.round(t*100000)/1000).replace('.',',');
+let taxaChave='';
+function taxaForm(){const t=num($('#pTaxa').value);return t>0&&t<=100?Math.round(t*1000)/100000:0}
+function atualizarTaxa(){const lid=$('#pLoja').value,mid=marcaForm(),m=marca(mid),inp=$('#pTaxa');if(!inp)return;
+  const k=lid+'|'+mid;if(k!==taxaChave){taxaChave=k;inp.dataset.manual=''}
+  if(!inp.dataset.manual){const t=pedEdit&&pedEdit.loja===lid&&pedEdit.marca===mid?pedEdit.taxa:taxaDe(lid,mid);inp.value=t?pctTxt(t):''}
+  const l=loja(lid),cli=l&&l.taxas&&l.taxas[mid]>0,dica=$('#pTaxaDica');
+  if(dica)dica.textContent=!m?'em %':inp.dataset.manual?`só neste pedido · padrão ${pctTxt(taxaDe(lid,mid))}%`:cli?`combinada com este cliente (a marca paga ${pctTxt(m.taxa)}%)`:`padrão da ${m.nome}`}
 function preview(){
-  avisoPed='';$('#pErro').hidden=true;
+  avisoPed='';$('#pErro').hidden=true;atualizarTaxa();
   const v=num($('#pValor').value),pv=num($('#pPrev').value),m=marca(marcaForm());
   if(!m){$('#prev').innerHTML='Cadastre uma marca para ver a comissão.';return}
-  const taxa=pedEdit&&pedEdit.marca===m.id?pedEdit.taxa:m.taxa;
+  const taxa=taxaForm();
   const cmp=v>0&&pv>0?`<br>O real ficou em <b style="display:inline;font-size:inherit">${Math.round(v/pv*100)}%</b> da previsão (${v>=pv?'+':'−'}${fmt2.format(Math.abs(v-pv))})`:'';
   $('#prev').innerHTML=v>0?`Sua comissão neste pedido<b class="num">${fmt2.format(v*taxa)}</b>${pct(taxa)} de ${fmt2.format(v)} pela ${esc(m.nome)}${cmp}`
     :pv>0?`Comissão estimada<b class="num">${fmt2.format(pv*taxa)}</b>${pct(taxa)} da previsão de ${fmt2.format(pv)}. Complete o valor real quando o pedido fechar.`
@@ -53,10 +62,11 @@ function editarPedido(id){
   const o=pedidos.find(p=>p.id==id);if(!o)return;fecharLoja();irAba('pedido');pedEdit=o;preencherLojas();
   $('#pedTit').textContent='Editar pedido';$('#pSalvar').textContent='Salvar alterações';$('#pExcluir').hidden=false;$('#pCancelar').hidden=false;
   $('#pValor').value=o.pendente?'':String(o.valor).replace('.',',');$('#pPrev').value=o.previsto?String(o.previsto).replace('.',','):'';$('#pLoja').value=o.loja;const r=document.querySelector(`input[name=marca][value="${o.marca}"]`);if(r)r.checked=true;
-  $('#pData').value=isoD(o.data);$('#pColecao').value=o.colecao||'';$('#pPago').checked=o.pago;itensForm=(o.itens||[]).map(x=>({...x}));renderItensForm();preview();
+  $('#pData').value=isoD(o.data);$('#pColecao').value=o.colecao||'';$('#pPago').checked=o.pago;itensForm=(o.itens||[]).map(x=>({...x}));
+  taxaChave=o.loja+'|'+o.marca;$('#pTaxa').value=pctTxt(o.taxa!=null?o.taxa:taxaDe(o.loja,o.marca));$('#pTaxa').dataset.manual=Math.abs((o.taxa??0)-taxaDe(o.loja,o.marca))>1e-9?'1':'';renderItensForm();preview();
 }
 function sairEdicaoPedido(){
-  pedEdit=null;$('#pedTit').textContent='Novo pedido';$('#pSalvar').textContent='Salvar pedido';
+  pedEdit=null;taxaChave='';$('#pTaxa').dataset.manual='';$('#pedTit').textContent='Novo pedido';$('#pSalvar').textContent='Salvar pedido';
   const ex=$('#pExcluir');ex.hidden=true;ex.dataset.ok='';ex.textContent='Excluir pedido';$('#pCancelar').hidden=true;
   $('#pLoja').value=lojas.filter(l=>!l.arquivada).length===1?lojas.find(l=>!l.arquivada).id:'';syncMarcaLoja();
   $('#pValor').value='';$('#pPrev').value='';$('#pColecao').value='';$('#pPago').checked=false;$('#pData').value=isoD(HOJE);itensForm=[];renderItensForm();preview();
@@ -69,6 +79,7 @@ function salvarPedido(e){
   if(!l){erroPed('Escolha a loja deste pedido.');$('#pLoja-busca')?$('#pLoja-busca').focus():$('#pLoja').focus();return}
   if(!mid)return erroPed('Escolha a marca.');
   if(!ds)return erroPed('Escolha a data do pedido.');
+  const taxa=taxaForm();if(!taxa){$('#pTaxa').focus();return erroPed('Digite a comissão deste pedido, de 0,01% a 100%.')}
   const data=deIso(ds);
   if(data>HOJE)return erroPed('A data não pode ser no futuro.');
   const avisos=[];
@@ -78,8 +89,8 @@ function salvarPedido(e){
   const chave=avisos.join('|')+v+l.id+mid+ds;
   if(avisos.length&&avisoPed!==chave){erroPed(`Confira: ${avisos.join(', ')}. Se estiver certo, toque em salvar de novo.`);avisoPed=chave;return}
   let o;const col=$('#pColecao').value;
-  if(pedEdit){o=pedEdit;if(o.marca!==mid)o.taxa=marca(mid).taxa;Object.assign(o,{valor:v,loja:l.id,marca:mid,data,pago:$('#pPago').checked,colecao:col})}
-  else{o=addPedido(l.id,mid,v,data,$('#pPago').checked);o.colecao=col}
+  if(pedEdit){o=pedEdit;Object.assign(o,{valor:v,loja:l.id,marca:mid,data,pago:$('#pPago').checked,colecao:col,taxa})}
+  else{o=addPedido(l.id,mid,v,data,$('#pPago').checked);o.colecao=col;o.taxa=taxa}
   if(prev)o.previsto=prev;else delete o.previsto;
   if(itensForm.length)o.itens=limparItens(itensForm);else delete o.itens;
   if(!v){o.pendente=true;o.pago=false}else delete o.pendente;
@@ -92,3 +103,5 @@ function excluirPedido(btn){
   if(!btn.dataset.ok){btn.dataset.ok='1';btn.textContent='Toque de novo para excluir';return}
   pedidos=pedidos.filter(o=>o!==pedEdit);sairEdicaoPedido();salvar();renderTudo();toast('Pedido excluído');
 }
+
+document.addEventListener('input',e=>{if(e.target&&e.target.id==='pTaxa'){e.target.dataset.manual='1';preview()}});
