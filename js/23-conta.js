@@ -318,6 +318,15 @@ const traduzErro=e=>{const m=String(e&&e.message||e||'');
   if(/Password should be|weak/i.test(m))return'Escolha uma senha mais forte: pelo menos 8 caracteres, com letras e números.';
   if(/rate limit|too many/i.test(m))return'Muitas tentativas. Espere alguns minutos e tente de novo.';
   return'Não foi possível agora. Verifique a internet e tente de novo.'};
-async function contaSair(){try{await sb.auth.signOut({scope:'local'})}catch(e){}conta=null;perfil=null;espelho=null;marcarStatus('local');fecharLoja();toast('Você saiu da conta. Os dados continuam neste celular.');mostrarEntrada('entrar')}
+async function contaSair(){
+  // Sobe o que ainda não chegou ao servidor; se não der, avisa antes de apagar do aparelho
+  if(conta&&espelho&&!exemplo){clearTimeout(contaT);try{await enviarConta()}catch(e){}
+    if(lsGet(PENDENTE)===conta.id&&!confirm('Há mudanças que ainda não foram salvas na conta e vão se perder se você sair agora. Sair mesmo assim?'))return}
+  try{await sb.auth.signOut({scope:'local'})}catch(e){}
+  conta=null;perfil=null;espelho=null;
+  // Os dados são da conta: saem do aparelho para não aparecerem no modo sem conta
+  aplicar(limpar({}));try{localStorage.setItem(CHAVE,JSON.stringify(serializar()))}catch(e){}
+  lsSet(DONO,null);lsSet(PENDENTE,null);lsSet(BACKUP_ANTES,null);lsSet(OUTRA_CONTA,null);
+  sairEdicoes();preencherForm();renderTudo();fecharLoja();verBrasil();marcarStatus('vazio');toast('Você saiu da conta. Os dados dela foram removidos deste aparelho.');mostrarEntrada('entrar')}
 
 iniciarConta();
