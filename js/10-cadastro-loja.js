@@ -4,7 +4,7 @@ function abrirCadastro(uf,id){
   irAba('lojas');lojaEdit=id?loja(id):null;avisoLoja='';$('#lErro').hidden=true;
   $('#formLoja').hidden=false;$('#abrirNova').hidden=true;
   $('#lojaTit').textContent=lojaEdit?'Editar loja':'Nova loja';$('#lSalvar').textContent=lojaEdit?'Salvar alterações':'Cadastrar loja';
-  if(lojaEdit){$('#lNome').value=lojaEdit.nome;$('#lCidade').value=lojaEdit.cidade;$('#lUF').value=lojaEdit.uf;$('#lRegiao').value=lojaEdit.regiao||'';document.querySelectorAll('input[name=lmarca]').forEach(x=>x.checked=lojaEdit.marcas.includes(x.value))}
+  if(lojaEdit){$('#lNome').value=lojaEdit.nome;$('#lCidade').value=lojaEdit.cidade;$('#lUF').value=lojaEdit.uf;$('#lRegiao').value=lojaEdit.regiao||'';$('#lCnpj').value=lojaEdit.cnpj?cnpjBR(lojaEdit.cnpj):'';document.querySelectorAll('input[name=lmarca]').forEach(x=>x.checked=lojaEdit.marcas.includes(x.value))}
   else if(uf)$('#lUF').value=uf;
   dicaCidade();$('#lNome').focus();
 }
@@ -19,11 +19,12 @@ function salvarLoja(e){
   const nome=$('#lNome').value.trim(),uf=$('#lUF').value,bruta=$('#lCidade').value.trim(),regiao=$('#lRegiao').value;
   if(!nome||!bruta)return erroLoja('Preencha o nome e a cidade.');
   if(!ms.length)return erroLoja('Escolha pelo menos uma marca.');
+  const cnpj=soDigitos($('#lCnpj').value);if(cnpj&&!cnpjValido(cnpj)){$('#lCnpj').focus();return erroLoja('Esse CNPJ não confere. Revise os números ou deixe em branco.')}
   const cidade=nomeCidade(bruta,uf),chave=norm(nome+cidade+uf);
   if(lojas.some(l=>l!==lojaEdit&&norm(l.nome)===norm(nome)&&norm(l.cidade)===norm(cidade)&&l.uf===uf)&&avisoLoja!==chave){erroLoja(`Já existe "${nome}" em ${cidade}. Se for outra loja, toque em salvar de novo.`);avisoLoja=chave;return}
   let l,mudouLugar;
-  if(lojaEdit){l=lojaEdit;mudouLugar=l.cidade!==cidade||l.uf!==uf;Object.assign(l,{nome,cidade,uf,marcas:ms,regiao});if(mudouLugar)l.coord=coordCidade(cidade,uf)}
-  else{l={id:'N'+Date.now(),nome,cidade,uf,marcas:ms,regiao,coord:coordCidade(cidade,uf)};lojas.push(l);mudouLugar=true}
+  if(lojaEdit){l=lojaEdit;mudouLugar=l.cidade!==cidade||l.uf!==uf;Object.assign(l,{nome,cidade,uf,marcas:ms,regiao});if(cnpj)l.cnpj=cnpj;else delete l.cnpj;if(mudouLugar)l.coord=coordCidade(cidade,uf)}
+  else{l={id:'N'+Date.now(),nome,cidade,uf,marcas:ms,regiao,coord:coordCidade(cidade,uf),...(cnpj?{cnpj}:{})};lojas.push(l);mudouLugar=true}
   const editado=!!lojaEdit;fecharCadastro();preencherLojas();if(!editado&&!pedEdit)$('#pLoja').value=l.id;syncMarcaLoja();salvar();renderTudo();
   if(!mudouLugar){toast('Loja atualizada');return}
   if(l.coord){toast(editado?'Loja atualizada':`${l.nome} cadastrada ${emUF(uf)}`);irAba('mapa');selecionarCidade(l.cidade+'|'+uf)}

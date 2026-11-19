@@ -101,6 +101,7 @@
       <div><h2>Comissão por marca</h2><div class="list" id="tabMarcas"></div></div>
       <div><h2>Lojas que mais compram</h2><div class="list" id="topLojas"></div></div>
     </div>
+    <div id="expBox"></div>
   </section>
 
   <section class="tab" id="t-lojas">
@@ -109,6 +110,7 @@
       <h2 class="formtit" id="lojaTit">Nova loja</h2>
       <label class="f" for="lNome">Nome da loja</label><input id="lNome" type="text" required autocomplete="off" maxlength="80">
       <label class="f" for="lCidade">Cidade</label><input id="lCidade" type="text" required autocomplete="off" maxlength="80"><div class="hint" id="lHint"></div>
+      <label class="f" for="lCnpj">CNPJ <small class="opc">opcional, ajuda o administrativo a achar o cliente no ERP</small></label><input id="lCnpj" type="text" inputmode="numeric" autocomplete="off" maxlength="18" placeholder="00.000.000/0000-00">
       <label class="f" for="lUF">Estado</label><select id="lUF"></select>
       <label class="f" for="lRegiao">Região</label><select id="lRegiao"></select>
       <span class="f">Marcas que a loja compra</span><input class="search mini-busca" id="bMarcaL" type="search" placeholder="Buscar marca" autocomplete="off" aria-label="Buscar marca" hidden><div class="mradio" id="lMarcas"></div>
@@ -175,6 +177,7 @@
       <div class="preview" id="prev"></div>
       <div class="erro" id="pErro" hidden></div>
       <button class="btn acc" type="submit" id="pSalvar">Salvar pedido</button>
+      <button class="btn ghost" type="button" id="pPlanilha">Planilha para o administrativo</button>
       <button class="btn danger" type="button" id="pExcluir" hidden>Excluir pedido</button>
       <button class="btn ghost" type="button" id="pCancelar" hidden>Cancelar edição</button>
     </form>
@@ -221,5 +224,6 @@
 <script src="js/31-produtos.js"></script>
 <script src="js/32-painel-extra.js"></script>
 <script src="js/33-agenda.js"></script>
+<script src="js/34-planilha-pedido.js"></script>
 </body>
 </html>

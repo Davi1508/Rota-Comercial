@@ -18,6 +18,7 @@ function renderGrafico(){
   $('#legMarcas').innerHTML=MARCAS.filter(m=>filtro.marca==='todas'||m.id===filtro.marca).map(m=>`<span><i class="dot" style="background:${m.cor}"></i>${esc(m.nome)}</span>`).join('');
 }
 function renderPainel(){
+  if(typeof blocoExportar==='function'&&$('#expBox'))$('#expBox').innerHTML=blocoExportar();
   const list=filtrados(),fat=sum(list,o=>o.valor),c=sum(list,com),rec=sum(list.filter(o=>o.pago),com);
   $('#kPainel').innerHTML=[['Vendido',fmt.format(fat)],['Comissão total',fmt.format(c)],['Já recebido',fmt.format(rec)],['A receber',fmt.format(c-rec),'acc'],['Pedidos',list.length],['Lojas que compraram',new Set(list.map(o=>o.loja)).size]]
     .map(([l,v,k])=>`<div class="${k||''}"><span>${l}</span><b class="num">${v}</b></div>`).join('');

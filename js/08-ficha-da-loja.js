@@ -4,7 +4,7 @@ function abrirLoja(id){
   lojaAberta=id;const l=loja(id),ps=pedidos.filter(o=>o.loja===id).sort((a,b)=>b.data-a.data);
   const tot=sum(ps,o=>o.valor),c=sum(ps,com),pend=sum(ps.filter(o=>!o.pago),com),[st,lab]=status(l),u=ps[0]&&ps[0].data;
   const ms=[...new Set([...l.marcas,...ps.map(o=>o.marca)])];
-  $('#sheet').innerHTML=`<div class="sh-top"><div class="grab"></div><div class="sh-h">${avatar(l)}<div><h3>${esc(l.nome)}</h3><div class="s">${esc(l.cidade)}, ${UFS[l.uf]||l.uf}</div></div><button class="x" data-close aria-label="Fechar">×</button></div>
+  $('#sheet').innerHTML=`<div class="sh-top"><div class="grab"></div><div class="sh-h">${avatar(l)}<div><h3>${esc(l.nome)}</h3><div class="s">${esc(l.cidade)}, ${UFS[l.uf]||l.uf}${l.cnpj?` · CNPJ ${cnpjBR(l.cnpj)}`:''}</div></div><button class="x" data-close aria-label="Fechar">×</button></div>
     <span class="pill p-${st}" style="margin-top:16px"><i class="dot" style="background:${COR[st]};margin:0"></i>${lab}${u?', última compra '+haDias(u):''}</span>${ritmo(l)?`<div class="s" style="margin-top:var(--s2)">Costuma comprar a cada ${ritmo(l)} dias</div>`:''}</div>
   <div class="sh-body">
     <div class="stats" style="margin-top:16px;grid-template-columns:1fr 1fr">
