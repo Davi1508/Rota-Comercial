@@ -36,7 +36,8 @@ function syncMarcaLoja(){const l=loja($('#pLoja').value);if(!itensForm.length&&l
 // Percentual do pedido: vem do cliente/marca; se a pessoa mudar à mão, fica o dela até trocar de loja ou marca
 const pctTxt=t=>String(Math.round(t*100000)/1000).replace('.',',');
 let taxaChave='';
-function taxaForm(){const t=num($('#pTaxa').value);return t>0&&t<=100?Math.round(t*1000)/100000:0}
+// vazio = comissão padrão do cliente/marca; aceita 0% (marca sem comissão); null = inválido
+function taxaForm(){const s=$('#pTaxa').value.trim();if(!s)return taxaDe($('#pLoja').value,marcaForm());const t=num(s);return t>=0&&t<=100?Math.round(t*1000)/100000:null}
 function atualizarTaxa(){const lid=$('#pLoja').value,mid=marcaForm(),m=marca(mid),inp=$('#pTaxa');if(!inp)return;
   const k=lid+'|'+mid;if(k!==taxaChave){taxaChave=k;inp.dataset.manual=''}
   if(!inp.dataset.manual){const t=pedEdit&&pedEdit.loja===lid&&pedEdit.marca===mid?pedEdit.taxa:taxaDe(lid,mid);inp.value=t?pctTxt(t):''}
@@ -46,7 +47,7 @@ function preview(){
   avisoPed='';$('#pErro').hidden=true;atualizarTaxa();
   const v=num($('#pValor').value),pv=num($('#pPrev').value),m=marca(marcaForm());
   if(!m){$('#prev').innerHTML='Cadastre uma marca para ver a comissão.';return}
-  const taxa=taxaForm();
+  const taxa=taxaForm()||0;
   const cmp=v>0&&pv>0?`<br>O real ficou em <b style="display:inline;font-size:inherit">${Math.round(v/pv*100)}%</b> da previsão (${v>=pv?'+':'−'}${fmt2.format(Math.abs(v-pv))})`:'';
   $('#prev').innerHTML=v>0?`Sua comissão neste pedido<b class="num">${fmt2.format(v*taxa)}</b>${pct(taxa)} de ${fmt2.format(v)} pela ${esc(m.nome)}${cmp}`
     :pv>0?`Comissão estimada<b class="num">${fmt2.format(pv*taxa)}</b>${pct(taxa)} da previsão de ${fmt2.format(pv)}. Complete o valor real quando o pedido fechar.`
@@ -79,7 +80,7 @@ function salvarPedido(e){
   if(!l){erroPed('Escolha a loja deste pedido.');$('#pLoja-busca')?$('#pLoja-busca').focus():$('#pLoja').focus();return}
   if(!mid)return erroPed('Escolha a marca.');
   if(!ds)return erroPed('Escolha a data do pedido.');
-  const taxa=taxaForm();if(!taxa){$('#pTaxa').focus();return erroPed('Digite a comissão deste pedido, de 0,01% a 100%.')}
+  const taxa=taxaForm();if(taxa==null){$('#pTaxa').focus();return erroPed('A comissão deste pedido vai de 0% a 100%.')}
   const data=deIso(ds);
   if(data>HOJE)return erroPed('A data não pode ser no futuro.');
   const avisos=[];
