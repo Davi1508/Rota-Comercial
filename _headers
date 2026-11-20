@@ -1,6 +1,6 @@
 # Cabeçalhos de segurança (Cloudflare Pages)
 /*
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self'; connect-src 'self' data: blob: https://ulafdnjjdiscowijqwdg.supabase.co wss://ulafdnjjdiscowijqwdg.supabase.co https://cdn.jsdelivr.net https://challenges.cloudflare.com; worker-src 'self'; manifest-src 'self'; frame-src https://challenges.cloudflare.com; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://challenges.cloudflare.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self'; connect-src 'self' data: blob: https://ulafdnjjdiscowijqwdg.supabase.co wss://ulafdnjjdiscowijqwdg.supabase.co https://cdn.jsdelivr.net https://challenges.cloudflare.com https://cloudflareinsights.com; worker-src 'self'; manifest-src 'self'; frame-src https://challenges.cloudflare.com; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
