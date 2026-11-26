@@ -48,6 +48,12 @@ function buscasHtml(b){
     <div class="esp-bar"><i class="${pc>=90?'bad':pc>=70?'warn':'ok'}" style="width:${Math.max(1,pc)}%"></i></div>
     <div class="s">${(+b.usuarios||0).toLocaleString('pt-BR')} ${+b.usuarios===1?'pessoa usou':'pessoas usaram'} · as primeiras 1.000 do mês são grátis (US$ 5), depois US$ 5 por mil. Buscas repetidas não contam.</div></div></div>`;
 }
+function emailsHtml(m){
+  if(!m)return'';const t=m.por_tipo||{},nome={teste_acabando:'teste acabando',teste_acabou:'teste acabou',sem_uso:'conta parada'};
+  const partes=Object.keys(nome).map(k=>`${nome[k]}: ${(+t[k]||0).toLocaleString('pt-BR')}`).join(' · ');
+  return `<h2>E-mails automáticos <span class="s">todo dia às 9h17</span></h2><div class="card"><div class="esp"><div class="esp-h"><b>${(+m.enviados||0).toLocaleString('pt-BR')} enviados</b><span class="num">${(+m.semana||0).toLocaleString('pt-BR')} nos últimos 7 dias</span></div>
+    <div class="s">${partes} · ${(+m.sairam||0).toLocaleString('pt-BR')} ${+m.sairam===1?'pessoa pediu':'pessoas pediram'} para não receber</div></div></div>`;
+}
 function desenhar(){
   const r=dados.resumo,us=dados.usuarios,por=dados.por_dia;
   $('#quando').textContent='Atualizado às '+new Date(dados.agora).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
@@ -68,7 +74,7 @@ function desenhar(){
       ${kpi(r.total,'Usuários')}${kpi(r.novos7,'Novos em 7 dias')}${kpi(r.ativos7,'Entraram em 7 dias')}
       ${kpi(conv+'%','Lançaram pedido')}
     </div>
-    ${espacoHtml(dados.espaco)}${buscasHtml(dados.buscas)}
+    ${espacoHtml(dados.espaco)}${buscasHtml(dados.buscas)}${emailsHtml(dados.emails)}
     <h2>Cadastros por dia <span class="s">últimos 30 dias</span></h2>
     <div class="card"><div class="barras" role="img" aria-label="Cadastros por dia nos últimos 30 dias">${por.map(p=>`<i class="${p.n?'':'zero'}" style="height:${p.n?Math.max(8,p.n/max*100):3}%" title="${dia(p.d)}: ${p.n}"></i>`).join('')}</div>
       <div class="eixo s"><span>${dia(por[0]&&por[0].d)}</span><span>${por.reduce((a,p)=>a+p.n,0)} no período</span><span>hoje</span></div></div>
