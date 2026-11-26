@@ -519,3 +519,8 @@ a.btn{display:grid;place-items:center;text-decoration:none;margin-top:var(--s3)}
 .ltaxas summary{cursor:pointer;font-weight:700;min-height:40px;display:flex;align-items:center;gap:var(--s1)}
 .ltaxa{display:flex;align-items:center;gap:var(--s3);padding:var(--s1) 0}
 .ltaxa .valor.taxa{width:160px;flex:none}
+/* produto com quantidade: o nome usa a linha toda e os botões descem para a linha de baixo */
+.ped.com-passo{flex-wrap:wrap;row-gap:var(--s2)}
+.ped.com-passo .grow{flex:1 1 calc(100% - 72px);min-width:0}
+.ped.com-passo .passo{margin-left:auto}
+#escLista .ped .t,#pItensBox .ped .t{overflow-wrap:anywhere}
