@@ -200,6 +200,8 @@ async function iniciarConta(){
     else{if(conta){conta=null;perfil=null;espelho=null;marcarStatus('local')}
       const criar=/[?&]criar=1/.test(location.search);
       if(criar)history.replaceState(null,'',location.pathname+location.hash);
+      // Link de demonstração (?exemplo=1): abre o app com dados de exemplo, sem pedir conta. Nada é salvo.
+      if(ev==='INITIAL_SESSION'&&!criar&&/[?&]exemplo=1/.test(location.search)){if(!exemplo)entrarExemplo();return}
       if(ev==='INITIAL_SESSION'&&(criar||lsGet(SEM_CONTA)!=='1'))mostrarEntrada(criar?'criar':'entrar')}
   });
   addEventListener('online',()=>{if(conta&&espelho)enviarConta()});

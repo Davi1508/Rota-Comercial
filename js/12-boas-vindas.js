@@ -6,7 +6,9 @@ function renderBoas(){
   if(exemplo||!prox){b.hidden=true;b.innerHTML=''}
   else{b.hidden=false;b.innerHTML=`<h2>${MARCAS.length?'Falta pouco':'Bem-vindo ao Rota Comercial'}</h2><p class="s">Comece em três passos:</p><ol class="passos">${passos.map(([ok,t])=>`<li class="${ok?'feito':''}">${t}</li>`).join('')}</ol><button class="btn" ${prox[3]}>${prox[2]}</button>${!MARCAS.length&&!lojas.length?'<button class="btn ghost" data-exemplo>Antes, ver como funciona com dados de exemplo</button>':''}${!pedidos.length?'<button class="btn ghost" data-ajustes="dados">Já tem pedidos anotados? Importar relatório</button>':''}`}
   const eb=$('#exBanner');eb.hidden=!exemplo;
-  eb.innerHTML=exemplo?`<span>Você está vendo <b>dados de exemplo</b>. Nada é salvo.</span><button data-sair-exemplo>Usar meus dados</button>`:'';
+  const demo=exemplo&&!(typeof conta!=='undefined'&&conta);
+  eb.innerHTML=!exemplo?'':demo?`<span>Você está vendo <b>dados de exemplo</b>. Mexa à vontade, nada é salvo.</span><button data-criar-conta>Criar minha conta grátis</button>`
+    :`<span>Você está vendo <b>dados de exemplo</b>. Nada é salvo.</span><button data-sair-exemplo>Usar meus dados</button>`;
 }
 function entrarExemplo(){gerarExemplo();sairEdicoes();preencherForm();renderTudo();verBrasil();marcarStatus('exemplo');toast('Dados de exemplo carregados')}
 function sairExemplo(){aplicar(lerLocal()||{});sairEdicoes();preencherForm();renderTudo();verBrasil();marcarStatus(atualizado?(nuvem?'nuvem':'local'):'vazio')}

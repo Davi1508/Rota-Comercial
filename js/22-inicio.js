@@ -37,7 +37,7 @@ $('#formViagem').onsubmit=salvarDespesa;$('#vInterpretar').onclick=preencherComT
 $('#pExcluir').onclick=e=>excluirPedido(e.currentTarget);$('#pCancelar').onclick=()=>{sairEdicaoPedido();toast('Edição cancelada')};
 document.addEventListener('click',e=>{
   if(colocando&&e.target.closest('#mapa')){colocar(e);return}
-  const t=e.target.closest('[data-cancela-coloca],[data-crumb],[data-cid],[data-area],[data-colocar],[data-tab],[data-pt],[data-uf],[data-l],[data-c],[data-close],[data-pay],[data-st],[data-novo],[data-p],[data-m],[data-retry],[data-nova-uf],[data-remover],[data-desarquivar],[data-ver-lojas],[data-limpar],[data-edit-ped],[data-editar-loja],[data-ajustes],[data-aj],[data-edit-marca],[data-marca-cancel],[data-del-marca],[data-sugerir],[data-copiar-sug],[data-backup],[data-backup-copiar],[data-restaurar],[data-restaurar-nao],[data-colar-backup],[data-zerar],[data-exemplo],[data-sair-exemplo],[data-ir-loja],[data-div-f],[data-add-div],[data-del-div],[data-edit-desp],[data-salvar-nome],[data-copiar-instr],[data-conferir-imp],[data-lancar-imp],[data-forcar-imp],[data-cad-marcas-imp],[data-b-loja],[data-b-cid],[data-b-marca],[data-b-div],[data-b-ped],[data-b-desp],[data-filtros],[data-tirar-f],[data-f-tipo],[data-limpar-f],[data-exemplo-dev],[data-conta-abrir],[data-conta-sair],[data-conta-sync],[data-en-modo],[data-en-olho],[data-en-reenviar],[data-en-pular],[data-assinar],[data-instalar]');if(!t)return;
+  const t=e.target.closest('[data-cancela-coloca],[data-crumb],[data-cid],[data-area],[data-colocar],[data-tab],[data-pt],[data-uf],[data-l],[data-c],[data-close],[data-pay],[data-st],[data-novo],[data-p],[data-m],[data-retry],[data-nova-uf],[data-remover],[data-desarquivar],[data-ver-lojas],[data-limpar],[data-edit-ped],[data-editar-loja],[data-ajustes],[data-aj],[data-edit-marca],[data-marca-cancel],[data-del-marca],[data-sugerir],[data-copiar-sug],[data-backup],[data-backup-copiar],[data-restaurar],[data-restaurar-nao],[data-colar-backup],[data-zerar],[data-exemplo],[data-sair-exemplo],[data-ir-loja],[data-div-f],[data-add-div],[data-del-div],[data-edit-desp],[data-salvar-nome],[data-copiar-instr],[data-conferir-imp],[data-lancar-imp],[data-forcar-imp],[data-cad-marcas-imp],[data-b-loja],[data-b-cid],[data-b-marca],[data-b-div],[data-b-ped],[data-b-desp],[data-filtros],[data-tirar-f],[data-f-tipo],[data-limpar-f],[data-exemplo-dev],[data-conta-abrir],[data-conta-sair],[data-conta-sync],[data-en-modo],[data-en-olho],[data-en-reenviar],[data-en-pular],[data-assinar],[data-instalar],[data-criar-conta]');if(!t)return;
   const ds=t.dataset;
   if('cancelaColoca' in ds)pararColocacao();
   else if(ds.crumb){if(ds.crumb==='brasil')verBrasil();else if(ds.crumb==='uf')selecionarUF(estadoSel,true)}
@@ -78,6 +78,7 @@ document.addEventListener('click',e=>{
   else if('zerar' in ds)zerar(t);
   else if('exemplo' in ds)entrarExemplo();
   else if('sairExemplo' in ds)sairExemplo();
+  else if('criarConta' in ds){sairExemplo();if(/[?&]exemplo=1/.test(location.search))history.replaceState(null,'',location.pathname+location.hash);if(typeof mostrarEntrada==='function')mostrarEntrada('criar')}
   else if(ds.divF){filtro[ds.divF]=ds.val;cidadeSel=null;renderTudo()}
   else if(ds.editDesp)editarDespesa(ds.editDesp);
   else if('copiarInstr' in ds)copiar(instrucoesImport(),'Instruções copiadas. Cole na outra IA.');
