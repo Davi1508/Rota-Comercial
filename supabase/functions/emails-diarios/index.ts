@@ -72,8 +72,36 @@ Deno.serve(async (req) => {
   const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   const { data: ok } = await sb.rpc("cron_emails_ok", { p: req.headers.get("x-cron") || "" });
   if (ok !== true) return json({ erro: "não autorizado" }, 401);
-  let corpo: { simular?: boolean } = {};
+  let corpo: { simular?: boolean; verificar?: boolean; teste?: string } = {};
   try { corpo = await req.json(); } catch { /* sem corpo */ }
+  const chave = Deno.env.get("BREVO_API_KEY");
+  const remetente = Deno.env.get("EMAIL_REMETENTE") || "contato@rotacomercial.app.br";
+  if (corpo.verificar) return json({ chave: !!chave, remetente });
+  const enviar = (para: string, nomePara: string, m: ReturnType<typeof montar>, tag: string) => fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: { "api-key": chave!, "content-type": "application/json", accept: "application/json" },
+    body: JSON.stringify({
+      sender: { name: "Rota Comercial", email: remetente },
+      replyTo: { email: remetente, name: "Rota Comercial" },
+      to: [{ email: para, name: nomePara }],
+      subject: m.assunto, htmlContent: m.html, textContent: m.texto,
+      headers: { "List-Unsubscribe": `<${m.sair}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" },
+      tags: [tag],
+    }),
+  });
+  // Teste: manda os três modelos para um endereço só, sem registrar nada
+  if (corpo.teste) {
+    if (!chave) return json({ erro: "falta o segredo BREVO_API_KEY" }, 503);
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(corpo.teste)) return json({ erro: "e-mail de teste inválido" }, 400);
+    const res: Record<string, unknown> = {};
+    for (const tipo of ["teste_acabando", "teste_acabou", "sem_uso"]) {
+      const m = montar({ user_id: "teste", email: corpo.teste, nome: "Teste", tipo, trial_ate: new Date(Date.now() + 2 * 864e5).toISOString(), token: "00000000-0000-4000-8000-000000000000" });
+      m.assunto = "[Teste] " + m.assunto;
+      const r = await enviar(corpo.teste, "Teste", m, "teste");
+      res[tipo] = r.ok ? "enviado" : `${r.status} ${(await r.text()).slice(0, 200)}`;
+    }
+    return json({ teste: res });
+  }
 
   const { data, error } = await sb.rpc("emails_pendentes");
   if (error) return json({ erro: error.message }, 500);
@@ -82,26 +110,13 @@ Deno.serve(async (req) => {
   lista.forEach((p) => (porTipo[p.tipo] = (porTipo[p.tipo] || 0) + 1));
   if (corpo.simular) return json({ simulado: true, total: lista.length, porTipo });
 
-  const chave = Deno.env.get("BREVO_API_KEY");
   if (!chave) return json({ erro: "falta o segredo BREVO_API_KEY", aguardando: lista.length, porTipo }, 503);
-  const remetente = Deno.env.get("EMAIL_REMETENTE") || "contato@rotacomercial.app.br";
 
   let enviados = 0;
   const falhas: string[] = [];
   for (const p of lista) {
     const m = montar(p);
-    const r = await fetch("https://api.brevo.com/v3/smtp/email", {
-      method: "POST",
-      headers: { "api-key": chave, "content-type": "application/json", accept: "application/json" },
-      body: JSON.stringify({
-        sender: { name: "Rota Comercial", email: remetente },
-        replyTo: { email: remetente, name: "Rota Comercial" },
-        to: [{ email: p.email, name: primeiroNome(p.nome) }],
-        subject: m.assunto, htmlContent: m.html, textContent: m.texto,
-        headers: { "List-Unsubscribe": `<${m.sair}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" },
-        tags: [p.tipo],
-      }),
-    });
+    const r = await enviar(p.email, primeiroNome(p.nome), m, p.tipo);
     if (r.ok) { await sb.rpc("emails_marcar", { p_user: p.user_id, p_tipo: p.tipo }); enviados++; }
     else falhas.push(`${p.tipo}:${r.status}`);
   }
