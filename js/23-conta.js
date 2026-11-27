@@ -76,7 +76,7 @@ function semearCarimbos(srv){
   });
   guardarCarimbos();
 }
-const perfilLocal=()=>({nome:NOME,regioes:REGIOES,colecoes:COLECOES,extras:{sugestoes,metas:METAS,agenda:AGENDA}});
+const perfilLocal=()=>({nome:NOME,regioes:REGIOES,colecoes:COLECOES,extras:{sugestoes,metas:METAS,agenda:AGENDA,importacoes:IMPORTS}});
 // srv: carimbos vindos do servidor, para montar o espelho do que o servidor tem de fato
 const espelhar=srv=>{const l=linhas(),e={perfil:JSON.stringify(perfilLocal())};
   TABELAS.forEach(t=>e[t]=new Map(l[t].map(r=>[r.id,JSON.stringify(srv&&srv[t]&&srv[t][r.id]!==undefined?{...r,editado_em:srv[t][r.id]}:r)])));return e};
@@ -123,7 +123,7 @@ async function lerConta(){
   const{data:p,error}=await sb.from('profiles').select('*').eq('id',conta.id).single();if(error)throw error;perfil=p;
   const [ma,pr,lo,pe,de]=await Promise.all(TABELAS.map(buscarTudo));
   const srvCarimbos=Object.fromEntries(TABELAS.map((t,i)=>[t,Object.fromEntries([ma,pr,lo,pe,de][i].map(x=>[String(x.id),+x.editado_em||0]))]));
-  return{vazio:!ma.length&&!pr.length&&!lo.length&&!pe.length&&!de.length,carimbos:srvCarimbos,dados:{v:1,atualizado:Date.now(),nome:p.nome,regioes:p.regioes,colecoes:p.colecoes,sugestoes:(p.extras||{}).sugestoes||[],metas:(p.extras||{}).metas||[],agenda:(p.extras||{}).agenda||[],
+  return{vazio:!ma.length&&!pr.length&&!lo.length&&!pe.length&&!de.length,carimbos:srvCarimbos,dados:{v:1,atualizado:Date.now(),nome:p.nome,regioes:p.regioes,colecoes:p.colecoes,sugestoes:(p.extras||{}).sugestoes||[],metas:(p.extras||{}).metas||[],agenda:(p.extras||{}).agenda||[],importacoes:(p.extras||{}).importacoes||[],
     marcas:ma.map(m=>({id:m.id,nome:m.nome,taxa:+m.taxa,cor:m.cor,site:m.site||''})),
     produtos:pr.map(x=>({id:x.id,marca:x.marca,ref:x.ref,nome:x.nome,preco:+x.preco,foto:x.foto,...(x.un?{un:x.un}:{}),...(+x.custo>0?{custo:+x.custo}:{})})),
     lojas:lo.map(l=>({id:l.id,nome:l.nome,cidade:l.cidade,uf:l.uf,regiao:l.regiao,marcas:l.marcas||[],coord:l.lng!=null&&l.lat!=null?[l.lng,l.lat]:null,arquivada:l.arquivada,...(l.cnpj?{cnpj:l.cnpj}:{}),...(l.taxas?{taxas:l.taxas}:{})})),
