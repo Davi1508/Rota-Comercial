@@ -17,7 +17,9 @@ function renderLucro(){
   const c=sum(filtrados(),com),g=sum(DESPESAS.filter(x=>noPeriodo(x.data)),x=>x.valor),liq=c-g;
   $('#pxLucro').innerHTML=[['Comissão',fmt2.format(c)],['Despesas de viagem',fmt2.format(g)],['Lucro líquido',fmt2.format(liq),'acc']]
     .map(([l,v,k])=>`<div class="${k||''}"${k?' style="grid-column:1/-1"':''}><span>${l}</span><b class="num"${k&&liq<0?' style="color:var(--bad)"':''}>${v}</b></div>`).join('')
-    +(filtro.marca!=='todas'?'<div style="grid-column:1/-1"><span>As despesas de viagem não são separadas por marca: aqui entram todas do período.</span></div>':'');
+    +(filtro.marca!=='todas'?'<div style="grid-column:1/-1"><span>As despesas de viagem não são separadas por marca: aqui entram todas do período.</span></div>':'')
+    +(()=>{if(typeof lucroItens!=='function')return'';const l=lucroItens(filtrados().flatMap(o=>o.itens||[]));if(!l)return'';
+      return`<div><span>Venda dos produtos com custo</span><b class="num">${fmt2.format(l.venda)}</b></div><div><span>Custo desses produtos</span><b class="num">${fmt2.format(l.custo)}</b></div><div class="acc" style="grid-column:1/-1"><span>Lucro dos produtos vendidos${l.venda?` · margem ${Math.round(l.lucro/l.venda*100)}%`:''}</span><b class="num">${fmt2.format(l.lucro)}</b></div>`})();
 }
 function renderRota(){
   const box=$('#pxRota');if(!box)return;

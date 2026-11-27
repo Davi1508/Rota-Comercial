@@ -49,6 +49,8 @@ function renderImportProd(){
     <ul class="dicas"><li><b>Fotos dentro do Excel</b> entram junto: cada foto vai para o produto da linha onde ela está.</li><li>Ou uma coluna com o <b>link da foto</b> de cada produto.</li><li>Importar de novo atualiza preços sem repetir produtos.</li></ul>
     ${ip.erro?`<div class="erro">${esc(ip.erro)}</div>`:''}
     <label class="btn" style="cursor:pointer">Escolher planilha<input type="file" id="ipArq" accept=".xlsx,.xlsm,.csv,.tsv,.txt,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" hidden></label>
+    <label class="btn ghost" style="cursor:pointer">Importar nota fiscal (XML)<input type="file" id="ipXml" accept=".xml,text/xml,application/xml" multiple hidden></label>
+    <p class="s" style="margin:0 0 var(--s2)">Pelo XML da NF-e que a fábrica manda, os produtos entram com código, nome e custo. Dá para escolher várias notas de uma vez. A nota fica no seu aparelho.</p>
     <button class="btn ghost" data-ip-modelo>Baixar planilha modelo</button>
     <details class="colar"><summary>Ou colar do Excel ou do Google Planilhas</summary><textarea id="ipTexto" rows="5" placeholder="Selecione as linhas na planilha (com o cabeçalho), copie e cole aqui" maxlength="2000000"></textarea><button class="btn ghost" data-ip-colar>Usar o que colei</button></details>`;
   else if(ip.etapa==='colunas'){
@@ -76,10 +78,11 @@ function renderImportProd(){
       <button class="btn ghost" data-ip-colunas>Voltar e mudar as colunas</button>`}
   else if(ip.etapa==='salvando'){const p=ip.prog;
     corpo=`<p style="margin:0"><b>Produtos salvos.</b> Agora enviando as fotos…</p><div class="progresso"><i id="ipBarra" style="width:${p.total?p.feito/p.total*100:0}%"></i></div><p class="s num" id="ipProg">${p.feito} de ${p.total} fotos</p><p class="s">Deixe o app aberto até terminar.</p>`}
+  else if(ip.etapa==='nota')corpo=corpoNota();
   else if(ip.etapa==='pronto'){const f=ip.fim;
     corpo=`<div class="ok-box"><b>${f.novos.toLocaleString('pt-BR')} ${f.novos===1?'produto novo':'produtos novos'}${f.atual?` e ${f.atual.toLocaleString('pt-BR')} ${f.atual===1?'atualizado':'atualizados'}`:''}</b>${f.fotos?`<p class="s" style="margin:var(--s1) 0 0">${f.fotos.toLocaleString('pt-BR')} fotos guardadas${f.falhas?`, ${f.falhas} não deram certo`:''}.</p>`:''}</div>
       <button class="btn" data-ip-ver>Ver produtos</button><button class="btn ghost" data-ip-outra>Importar outra planilha</button>`}
-  sh.innerHTML=topoSheet('Importar catálogo de produtos',ip.etapa==='colunas'?'Passo 2 de 3 · colunas':ip.etapa==='conferido'?'Passo 3 de 3 · conferir':ip.etapa==='escolher'?'Passo 1 de 3 · planilha':'Catálogo')+`<div class="sh-body" style="padding-top:var(--s3)">${corpo}</div>`;
+  sh.innerHTML=topoSheet('Importar catálogo de produtos',ip.etapa==='colunas'?'Passo 2 de 3 · colunas':ip.etapa==='conferido'?'Passo 3 de 3 · conferir':ip.etapa==='escolher'?'Passo 1 de 3 · planilha':ip.etapa==='nota'?'Nota fiscal':'Catálogo')+`<div class="sh-body" style="padding-top:var(--s3)">${corpo}</div>`;
   const arq=$('#ipArq');if(arq)arq.onchange=e=>{const f=e.target.files[0];e.target.value='';if(f)lerPlanilhaProd(f)};
   if(ip.etapa==='colunas')carregarFotosPrevia();
   if(ip.etapa==='conferido')ip.res.novos.slice(0,8).forEach(async(x,i)=>{if(!x.fotoGet)return;try{const b=await x.fotoGet(),el=document.querySelector(`[data-ip-nf="${i}"]`);if(b&&el){const im=document.createElement('img');im.className='thumb';im.alt='';im.src=URL.createObjectURL(b);el.replaceWith(im)}}catch(e){}});

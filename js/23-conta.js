@@ -31,7 +31,7 @@ Object.assign(STATUS,{conta:['ok','Salvo na sua conta'],pendente:['warn','Sem co
 function linhasBase(){
   return{
     marcas:MARCAS.map(m=>({id:String(m.id),nome:m.nome,taxa:m.taxa,cor:m.cor,site:m.site||''})),
-    produtos:PRODUTOS.map(x=>({id:String(x.id),marca:x.marca,ref:x.ref||'',nome:x.nome,preco:x.preco||0,foto:/^https?:/i.test(x.foto||'')?x.foto:'',un:x.un||null})),
+    produtos:PRODUTOS.map(x=>({id:String(x.id),marca:x.marca,ref:x.ref||'',nome:x.nome,preco:x.preco||0,foto:/^https?:/i.test(x.foto||'')?x.foto:'',un:x.un||null,custo:x.custo>0?x.custo:null})),
     lojas:lojas.map(l=>({id:String(l.id),nome:l.nome,cidade:l.cidade||'',uf:l.uf,regiao:l.regiao||'',marcas:l.marcas||[],lng:l.coord?l.coord[0]:null,lat:l.coord?l.coord[1]:null,arquivada:!!l.arquivada,cnpj:l.cnpj||null,taxas:l.taxas&&Object.keys(l.taxas).length?l.taxas:null})),
     pedidos:pedidos.map(o=>({id:String(o.id),loja:String(o.loja),marca:o.marca,data:isoD(o.data),valor:o.valor||0,previsto:o.previsto||null,pendente:!!o.pendente,pago:!!o.pago,taxa:o.taxa,colecao:o.colecao||'',itens:o.itens&&o.itens.length?o.itens:null})),
     despesas:DESPESAS.map(x=>({id:String(x.id),data:isoD(x.data),valor:x.valor,categoria:x.categoria||'',descricao:x.descricao||''}))
@@ -125,7 +125,7 @@ async function lerConta(){
   const srvCarimbos=Object.fromEntries(TABELAS.map((t,i)=>[t,Object.fromEntries([ma,pr,lo,pe,de][i].map(x=>[String(x.id),+x.editado_em||0]))]));
   return{vazio:!ma.length&&!pr.length&&!lo.length&&!pe.length&&!de.length,carimbos:srvCarimbos,dados:{v:1,atualizado:Date.now(),nome:p.nome,regioes:p.regioes,colecoes:p.colecoes,sugestoes:(p.extras||{}).sugestoes||[],metas:(p.extras||{}).metas||[],agenda:(p.extras||{}).agenda||[],
     marcas:ma.map(m=>({id:m.id,nome:m.nome,taxa:+m.taxa,cor:m.cor,site:m.site||''})),
-    produtos:pr.map(x=>({id:x.id,marca:x.marca,ref:x.ref,nome:x.nome,preco:+x.preco,foto:x.foto,...(x.un?{un:x.un}:{})})),
+    produtos:pr.map(x=>({id:x.id,marca:x.marca,ref:x.ref,nome:x.nome,preco:+x.preco,foto:x.foto,...(x.un?{un:x.un}:{}),...(+x.custo>0?{custo:+x.custo}:{})})),
     lojas:lo.map(l=>({id:l.id,nome:l.nome,cidade:l.cidade,uf:l.uf,regiao:l.regiao,marcas:l.marcas||[],coord:l.lng!=null&&l.lat!=null?[l.lng,l.lat]:null,arquivada:l.arquivada,...(l.cnpj?{cnpj:l.cnpj}:{}),...(l.taxas?{taxas:l.taxas}:{})})),
     pedidos:pe.map(o=>({id:/^\d+$/.test(o.id)?+o.id:o.id,loja:o.loja,marca:o.marca,data:o.data,valor:+o.valor,previsto:o.previsto!=null?+o.previsto:0,pendente:o.pendente,pago:o.pago,taxa:+o.taxa,colecao:o.colecao,...(o.itens?{itens:o.itens}:{})})),
     despesas:de.map(x=>({id:x.id,data:x.data,valor:+x.valor,categoria:x.categoria,descricao:x.descricao}))}};
