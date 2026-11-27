@@ -57,6 +57,24 @@ input[type=search]{width:100%;min-height:48px;border:1px solid var(--line);borde
 .aviso{background:var(--surface);border:1px solid var(--line);border-radius:var(--r2);padding:var(--s4);text-align:center}
 .vazio{color:var(--muted);text-align:center;padding:var(--s4)}
 #toast{position:fixed;left:50%;bottom:var(--s4);transform:translateX(-50%);background:var(--ink);color:var(--surface);border-radius:var(--pill);padding:var(--s2) var(--s4);font-weight:700;display:none;max-width:calc(100% - 32px)}
+.prox .u-h{margin-top:var(--s1)}.prox .t{font-size:20px;line-height:28px}
+.nota{margin-top:var(--s1)}
+.msg{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line);border-radius:var(--r1);padding:var(--s2) var(--s3);margin:var(--s2) 0;font-size:14px;line-height:20px;max-height:160px;overflow:auto}
+.u-h[data-abrir-lead]{cursor:pointer}
+.fone{display:flex;gap:var(--s2);flex:1 1 280px}
+.fone input,.novo-lead input,textarea,select{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:var(--r1);padding:0 var(--s2)}
+.fone input{flex:1;min-width:0;min-height:40px}
+.prox .fone input{min-height:48px}
+select{min-height:40px}
+textarea{width:100%;padding:var(--s2);margin:var(--s2) 0;resize:vertical;line-height:24px}
+summary{cursor:pointer;min-height:24px}
+.novo-lead{display:grid;gap:var(--s2);margin-top:var(--s2)}
+.novo-lead label{display:grid;gap:var(--s1);font-size:14px;line-height:20px;font-weight:700}
+.novo-lead input{min-height:48px;font-weight:400}
+.tag.pri-alta{background:#DDF5E8;color:var(--ok)}.tag.pri-media{background:#FFF3D1;color:#7A5600}.tag.pri-baixa{background:var(--bg);color:var(--muted)}
+.tag.st-novo{background:var(--bg);color:var(--muted)}.tag.st-contatado{background:var(--soft);color:var(--primary)}.tag.st-respondeu{background:#FFF3D1;color:#7A5600}.tag.st-cliente{background:#DDF5E8;color:var(--ok)}.tag.st-sem_interesse{background:#FDE7E7;color:var(--bad)}
+@media (prefers-color-scheme:dark){.tag.pri-alta,.tag.st-cliente{background:#12352A}.tag.pri-media,.tag.st-respondeu{background:#3A3010;color:#F2D07A}.tag.st-sem_interesse{background:#3A1820}}
+#leads h2:first-child{margin-top:0}#leads:not(:empty){margin-bottom:var(--s5)}
 </style>
 </head>
 <body>
@@ -66,10 +84,12 @@ input[type=search]{width:100%;min-height:48px;border:1px solid var(--line);borde
     <button class="btn mini" id="atualizar" type="button">Atualizar</button>
     <a class="btn mini" href="../">Abrir app</a>
   </header>
+  <section id="leads" aria-label="Leads"></section>
   <div id="conteudo"></div>
 </main>
 <div id="toast" role="status"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" integrity="sha384-0w2KAL2YHP6wKOkUDzkCDGgVvfmHnj02DHeQ6XcHOgTfFsGyonKOpShMH1x6nk9o" crossorigin="anonymous"></script>
 <script src="dono.js"></script>
+<script src="leads.js"></script>
 </body>
 </html>
