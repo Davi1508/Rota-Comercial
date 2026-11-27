@@ -26,3 +26,7 @@ alter table public.leads alter column telefone set not null;
 alter table public.leads add column if not exists whatsapp_fonte text check (char_length(whatsapp_fonte) <= 500);
 alter table public.leads add column if not exists origem text not null default 'manual' check (origem in ('manual','automatico'));
 create unique index if not exists leads_telefone_unico on public.leads (telefone);
+
+-- Para quem é o número: só para representantes, comercial da empresa ou atendimento geral (SAC/loja, fora da fila).
+alter table public.leads add column if not exists contato_tipo text not null default 'representantes' check (contato_tipo in ('representantes','comercial','atendimento'));
+alter table public.leads add column if not exists vaga text check (char_length(vaga) <= 300);
