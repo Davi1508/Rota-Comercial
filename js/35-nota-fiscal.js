@@ -93,10 +93,12 @@ function salvarNota(){
     if(!nome)return err('Digite o nome da marca.');if(!(tx>0&&tx<=100))return err('Digite a comissão da marca, de 0,01% a 100%.');
     const ja=MARCAS.find(m=>norm(m.nome)===norm(nome));
     if(ja)mid=ja.id;else{const m={id:'M'+Date.now(),nome:nome.slice(0,40),taxa:Math.round(tx*1000)/100000,cor:PALETA[MARCAS.length%PALETA.length]};MARCAS.push(m);mid=m.id}}
+  const reg=novoRegistroImport('nota',`Nota ${n.notas.map(x=>x.numero).filter(Boolean).slice(0,3).join(', ')}${n.notas.length>3?'…':''} · ${n.notas[0].emitente}`,mid);
   const ps=produtosDaNota(),chave=p=>p.ref?'r:'+norm(p.ref):'n:'+norm(p.nome),porRef=new Map(PRODUTOS.filter(p=>p.marca===mid).map(p=>[chave(p),p]));let novos=0,atual=0;
   for(const x of ps){const pv=precoDeVenda(x.custo),e=porRef.get(chave(x));
-    if(e){e.custo=x.custo;if(n.atualizarPreco&&pv)e.preco=pv;if(x.un&&x.un!=='un')e.un=x.un;atual++}
-    else{const p={id:novoIdProd(),marca:mid,ref:x.ref,nome:x.nome.slice(0,160),preco:pv,foto:'',...(n.valorE==='custo'?{custo:x.custo}:{}),...(x.un&&x.un!=='un'?{un:x.un}:{})};PRODUTOS.push(p);porRef.set(chave(p),p);novos++}}
+    if(e){guardarAntes(reg,e);e.custo=x.custo;if(n.atualizarPreco&&pv)e.preco=pv;if(x.un&&x.un!=='un')e.un=x.un;atual++}
+    else{const p={id:novoIdProd(),marca:mid,ref:x.ref,nome:x.nome.slice(0,160),preco:pv,foto:'',...(n.valorE==='custo'?{custo:x.custo}:{}),...(x.un&&x.un!=='un'?{un:x.un}:{})};PRODUTOS.push(p);porRef.set(chave(p),p);reg.novos.push(p.id);novos++}}
+  fecharRegistroImport(reg);
   salvar();if(typeof preencherForm==='function')preencherForm();renderItensForm();renderProdutos();
   ip.fim={novos,atual,fotos:0,falhas:0};ip.etapa='pronto';renderImportProd();
   toast(`${(novos+atual).toLocaleString('pt-BR')} produtos salvos no catálogo`);
@@ -114,3 +116,32 @@ document.addEventListener('change',e=>{
   else if(t.id==='nfNovaTaxa'){ip.nf.taxaNova=t.value}
 });
 document.addEventListener('click',e=>{if(e.target.closest('[data-nf-salvar]'))salvarNota()});
+
+// ---------- desfazer importação e excluir todos da marca ----------
+function novoRegistroImport(tipo,titulo,marcaId){return{id:'I'+Date.now().toString(36),tipo,titulo:titulo.slice(0,120),marca:marcaId,data:Date.now(),novos:[],antes:{}}}
+function guardarAntes(reg,p){if(reg.antes[p.id]||reg.novos.includes(p.id))return;reg.antes[p.id]={preco:p.preco||0,...(p.custo>0?{custo:p.custo}:{}),nome:p.nome,...(p.un?{un:p.un}:{})}}
+// tira do histórico as importações que não têm mais produto nenhum
+function podarImports(){IMPORTS=IMPORTS.filter(r=>{const x=resumoImport(r);return x.vivos||x.mud})}
+function fecharRegistroImport(reg){podarImports();if(!reg.novos.length&&!Object.keys(reg.antes).length)return;IMPORTS=[...IMPORTS,reg].slice(-10)}
+function resumoImport(r){const vivos=r.novos.filter(id=>produto(id)).length,mud=Object.keys(r.antes).filter(id=>produto(id)).length;return{vivos,mud}}
+function blocoImports(){
+  const rs=IMPORTS.filter(r=>catMarca==='todas'||r.marca===catMarca).map(r=>({r,...resumoImport(r)})).filter(x=>x.vivos||x.mud).reverse();
+  if(!rs.length)return'';
+  return`<details class="imports"><summary>Importações recentes <small class="opc">${rs.length}</small></summary>${rs.map(({r,vivos,mud})=>`<div class="imp-row"><div class="grow"><div class="t">${esc(r.titulo||'Importação')}</div><div class="s">${new Date(r.data).toLocaleDateString('pt-BR')} · ${[vivos&&`${vivos} ${vivos===1?'novo':'novos'}`,mud&&`${mud} ${mud===1?'atualizado':'atualizados'}`].filter(Boolean).join(' · ')}</div></div><button type="button" class="chipbtn" data-imp-desfazer="${esc(r.id)}">Desfazer</button></div>`).join('')}
+    <p class="s">Desfazer apaga os produtos que entraram por ela e volta o preço e o custo dos que ela mudou. Pedidos já feitos não mudam.</p></details>`}
+function desfazerImport(id,btn){
+  const r=IMPORTS.find(x=>x.id===id);if(!r)return;const{vivos,mud}=resumoImport(r);
+  if(!btn.dataset.ok){btn.dataset.ok='1';btn.textContent=vivos?`Apagar ${vivos} e desfazer`:'Toque de novo';setTimeout(()=>{if(btn.isConnected){delete btn.dataset.ok;btn.textContent='Desfazer'}},5000);return}
+  const fora=new Set(r.novos);PRODUTOS.filter(p=>fora.has(p.id)).forEach(p=>apagarFotoSemUso(p.foto));PRODUTOS=PRODUTOS.filter(p=>!fora.has(p.id));
+  for(const[pid,v]of Object.entries(r.antes)){const p=produto(pid);if(!p)continue;p.preco=v.preco;p.nome=v.nome||p.nome;if(v.custo>0)p.custo=v.custo;else delete p.custo;if(v.un)p.un=v.un;else delete p.un}
+  IMPORTS=IMPORTS.filter(x=>x.id!==id);salvar();renderItensForm();renderProdutos();renderCatalogo();
+  toast(`Importação desfeita: ${vivos} ${vivos===1?'produto apagado':'produtos apagados'}${mud?`, ${mud} ${mud===1?'voltou':'voltaram'} ao preço de antes`:''}`);
+}
+function blocoExcluirMarca(){if(catMarca==='todas')return'';const n=prodDaMarca(catMarca).length,m=marca(catMarca);if(!n||!m)return'';
+  return`<button type="button" class="btn danger" data-cat-excluir-marca style="margin-top:var(--s4)">Excluir os ${n} produtos da ${esc(m.nome)}</button>`}
+function excluirProdutosMarca(btn){const n=prodDaMarca(catMarca).length,m=marca(catMarca);if(!n||!m)return;
+  if(!btn.dataset.ok){btn.dataset.ok='1';btn.textContent=`Toque de novo para excluir os ${n} produtos`;setTimeout(()=>{if(btn.isConnected){delete btn.dataset.ok;btn.textContent=`Excluir os ${n} produtos da ${m.nome}`}},5000);return}
+  PRODUTOS.filter(p=>p.marca===catMarca).forEach(p=>apagarFotoSemUso(p.foto));PRODUTOS=PRODUTOS.filter(p=>p.marca!==catMarca);podarImports();
+  salvar();renderItensForm();renderProdutos();renderCatalogo();toast(`${n} produtos da ${m.nome} excluídos. Pedidos antigos continuam iguais.`)}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-imp-desfazer],[data-cat-excluir-marca]');if(!b)return;
+  if(b.dataset.impDesfazer)desfazerImport(b.dataset.impDesfazer,b);else excluirProdutosMarca(b)});

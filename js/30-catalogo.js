@@ -90,7 +90,8 @@ function renderCatalogo(){
   sh.innerHTML=topoSheet('Catálogo de produtos',PRODUTOS.length?`${PRODUTOS.length} ${PRODUTOS.length===1?'produto':'produtos'}${nm>1?` em ${nm} marcas`:''}`:'Fotos e preços para montar pedidos',chips)+`<div class="sh-body" style="padding-top:var(--s3)">
     ${MARCAS.length?`<input class="search" id="catBusca" type="search" placeholder="Buscar por nome ou referência" autocomplete="off" aria-label="Buscar produto" value="${esc(catBusca)}">
     <div class="cat-acoes"><button class="btn" data-cat-novo>Adicionar produto</button><button class="btn ghost" data-cat-importar>Importar planilha</button></div>
-    <div id="catLista"></div>`:`<p class="empty">Cadastre uma marca primeiro. Cada produto pertence a uma marca.</p><button class="btn" data-ajustes="marcas">Cadastrar marcas</button>`}</div>`;
+    ${typeof blocoImports==='function'?blocoImports():''}
+    <div id="catLista"></div>${typeof blocoExcluirMarca==='function'?blocoExcluirMarca():''}`:`<p class="empty">Cadastre uma marca primeiro. Cada produto pertence a uma marca.</p><button class="btn" data-ajustes="marcas">Cadastrar marcas</button>`}</div>`;
   listaCatalogo();
 }
 function listaCatalogo(){

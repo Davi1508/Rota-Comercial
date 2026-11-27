@@ -535,3 +535,9 @@ fieldset.radios legend{padding:0}
 .cat-row .cat-ref{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cat-row .cat-preco{display:block;font-size:16px;line-height:24px;margin-top:var(--s1)}
 .cat-row .cat-margem{color:var(--ok);font-weight:600}
+/* importações recentes no catálogo */
+.imports{margin:var(--s3) 0;border:1px solid var(--line);border-radius:var(--r2);padding:var(--s2) var(--s3);background:var(--surface)}
+.imports summary{cursor:pointer;font-weight:700;min-height:40px;display:flex;align-items:center;gap:var(--s1)}
+.imp-row{display:flex;align-items:center;gap:var(--s2);padding:var(--s2) 0;border-top:1px solid var(--line)}
+.imp-row .grow{min-width:0}.imp-row .t{font-weight:700;white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere}
+.btn.danger-txt{color:var(--bad)}

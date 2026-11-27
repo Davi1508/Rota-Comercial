@@ -149,9 +149,10 @@ function cadastrarMarcasIP(){
 }
 async function salvarImportProd(){
   const r=ip.res,fila=[];let novos=0,atual=0;
-  for(const x of r.novos){const p={id:novoIdProd(),marca:x.marca,ref:x.ref,nome:x.nome,preco:x.preco,foto:x.foto||'',...(x.un?{un:x.un}:{})};PRODUTOS.push(p);novos++;if(x.fotoGet)fila.push([p,x.fotoGet])}
-  for(const [e,m] of r.atual){const{fotoGet,...resto}=m;Object.assign(e,resto);if(resto.un==='')delete e.un;atual++;if(fotoGet)fila.push([e,fotoGet])}
-  salvar();renderItensForm();renderProdutos();
+  const reg=novoRegistroImport('planilha',`Planilha ${ip.nomeArq||''}`.trim(),(r.novos[0]||{}).marca||((r.atual[0]||[])[0]||{}).marca||'');
+  for(const x of r.novos){const p={id:novoIdProd(),marca:x.marca,ref:x.ref,nome:x.nome,preco:x.preco,foto:x.foto||'',...(x.un?{un:x.un}:{})};PRODUTOS.push(p);reg.novos.push(p.id);novos++;if(x.fotoGet)fila.push([p,x.fotoGet])}
+  for(const [e,m] of r.atual){guardarAntes(reg,e);const{fotoGet,...resto}=m;Object.assign(e,resto);if(resto.un==='')delete e.un;atual++;if(fotoGet)fila.push([e,fotoGet])}
+  fecharRegistroImport(reg);salvar();renderItensForm();renderProdutos();
   const lista=naConta()?fila:fila.slice(0,LIMITE_SEM_CONTA);
   ip.fim={novos,atual,fotos:0,falhas:0};
   if(lista.length){

@@ -14,6 +14,8 @@ let DESPESAS=[],NOME='',desEdit=null;
 let METAS=[];
 // Agenda: compromissos (visitas e outros) com data, hora opcional e loja opcional
 let AGENDA=[];
+// últimas importações de produtos (nota ou planilha), para poder desfazer
+let IMPORTS=[];
 // Catálogo de produtos (por marca) e itens do pedido em edição
 let PRODUTOS=[],itensForm=[];
 // Cada pedido guarda a taxa da marca no dia em que foi registrado
