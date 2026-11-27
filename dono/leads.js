@@ -5,7 +5,9 @@ const PRI_LEAD={alta:0,media:1,baixa:2};
 let leads=[],filtroLead='novo',pulados=new Set(),abertoLead=null,novoLeadAberto=false;
 
 function msgLead(l){let m=MSG_PADRAO;try{m=localStorage.getItem('rc_dono_msg')||MSG_PADRAO}catch(_){}
-  return m.replace(/\{empresa\}/g,l.empresa)}
+  m=m.replace(/\{empresa\}/g,l.empresa);
+  return l.contato_tipo&&l.contato_tipo!=='representantes'?m+'\n\nSe não for com você, pode passar para quem cuida dos representantes? Obrigado!':m}
+const TIPO_LEAD={representantes:'Número para representantes',comercial:'WhatsApp comercial da empresa',atendimento:'Atendimento geral (SAC/loja)'};
 // Aceita (11) 99999-9999, 11999999999, +55 11 99999-9999 e 0xx11…; devolve 55DDDNÚMERO ou null
 function foneLead(v){let d=String(v||'').replace(/\D/g,'');if(d.startsWith('0800')||d.startsWith('0300'))return null;
   d=d.replace(/^0+/,'');if((d.length===12||d.length===13)&&!d.startsWith('55'))d=d.slice(2); // tira código de operadora (0 21 …)
@@ -26,12 +28,16 @@ function acoesLead(l,grande){
     ${l.whatsapp_fonte||l.fonte?`<a class="${cls}" href="${esc(l.whatsapp_fonte||l.fonte)}" target="_blank" rel="noopener">Onde achei o número</a>`:''}
     <button class="${cls}" data-copiar-msg="${l.id}">Copiar mensagem</button>`;
 }
+function infoLead(l){return `<dl class="info">
+    ${l.vaga?`<div><dt>Procura</dt><dd>${esc(l.vaga)}</dd></div>`:''}
+    <div><dt>Este número é</dt><dd class="${l.contato_tipo==='atendimento'?'ruim':''}">${TIPO_LEAD[l.contato_tipo]||''}</dd></div>
+    ${l.notas?`<div><dt>Anotação</dt><dd>${esc(l.notas)}</dd></div>`:''}</dl>`}
 const novoHoje=l=>l.origem==='automatico'&&Date.now()-new Date(l.criado_em)<864e5;
 
 function desenharLeads(){
   const el=$('#leads');if(!el)return;
-  const conta=s=>leads.filter(l=>l.status===s).length;
-  const fila=leads.filter(l=>l.status==='novo'&&!pulados.has(l.id)).sort(ordemLead);
+  const conta=s=>leads.filter(l=>l.status===s&&(s!=='novo'||l.contato_tipo!=='atendimento')).length;
+  const fila=leads.filter(l=>l.status==='novo'&&l.contato_tipo!=='atendimento'&&!pulados.has(l.id)).sort(ordemLead);
   const prox=fila[0];
   const chips=[['novo','A contatar'],['contatado','Contatados'],['respondeu','Responderam'],['cliente','Clientes'],['sem_interesse','Sem interesse'],['todos','Todos']];
   const lista=leads.filter(l=>filtroLead==='todos'||l.status===filtroLead).sort(ordemLead);
@@ -40,16 +46,16 @@ function desenharLeads(){
     ${prox?`<div class="card prox">
       <div class="s">Próximo lead</div>
       <div class="u-h"><div class="grow"><div class="t">${esc(prox.empresa)}</div><div class="s">${esc([prox.ramo,prox.regiao].filter(Boolean).join(' · '))}</div></div>${novoHoje(prox)?'<span class="tag novo-hoje">novo</span> ':''}<span class="tag pri-${prox.prioridade}">${{alta:'alta',media:'média',baixa:'baixa'}[prox.prioridade]}</span></div>
-      ${prox.notas?`<div class="s nota">${esc(prox.notas)}</div>`:''}
+      ${infoLead(prox)}
       <div class="msg">${esc(msgLead(prox))}</div>
       <div class="acoes">${acoesLead(prox,true)}<button class="btn" data-pular="${prox.id}">Pular</button></div>
     </div>`:`<div class="card vazio">${pulados.size?'Você pulou os que faltam. <button class="btn mini" data-despular>Mostrar de novo</button>':'Nenhum lead para contatar agora. Chegam leads novos todo dia de manhã.'}</div>`}
-    <div class="filtros" style="margin-top:var(--s3)">${chips.map(([k,t])=>`<button class="chip${filtroLead===k?' on':''}" data-filtro-lead="${k}">${t} · ${k==='todos'?leads.length:conta(k)}</button>`).join('')}</div>
+    <div class="filtros" style="margin-top:var(--s3)">${chips.map(([k,t])=>`<button class="chip${filtroLead===k?' on':''}" data-filtro-lead="${k}">${t} · ${k==='todos'?leads.length:leads.filter(l=>l.status===k).length}</button>`).join('')}</div>
     <div class="lista">${lista.map(l=>`
       <div class="u"><div class="u-h" data-abrir-lead="${l.id}" role="button" tabindex="0" aria-expanded="${abertoLead===l.id}"><div class="grow"><div class="t">${esc(l.empresa)}</div>
         <div class="s">${esc([l.ramo,l.regiao,foneBonito(l.telefone),l.contatado_em?'contatado '+relativo(l.contatado_em):''].filter(Boolean).join(' · '))}</div></div>
-        ${novoHoje(l)?'<span class="tag novo-hoje">novo</span> ':''}<span class="tag st-${l.status}">${ST_LEAD[l.status]}</span></div>
-        ${abertoLead===l.id?`${l.notas?`<div class="s nota">${esc(l.notas)}</div>`:''}
+        ${novoHoje(l)?'<span class="tag novo-hoje">novo</span> ':''}${l.contato_tipo==='atendimento'?'<span class="tag pri-baixa">SAC</span> ':''}<span class="tag st-${l.status}">${ST_LEAD[l.status]}</span></div>
+        ${abertoLead===l.id?`${infoLead(l)}
           <div class="acoes">${acoesLead(l,false)}</div>
           <div class="acoes" style="margin-top:var(--s2)">
             <select data-status-lead="${l.id}" aria-label="Situação">${Object.entries(ST_LEAD).map(([k,t])=>`<option value="${k}"${k===l.status?' selected':''}>${t}</option>`).join('')}</select>
@@ -61,6 +67,8 @@ function desenharLeads(){
     ${novoLeadAberto?`<form class="card novo-lead" id="formLead">
       <label>Empresa<input name="empresa" required maxlength="120"></label>
       <label>WhatsApp<input name="telefone" required type="tel" inputmode="tel" placeholder="(71) 99999-9999"></label>
+      <label>Esse WhatsApp é<select name="contato_tipo"><option value="representantes">Só para representantes</option><option value="comercial">Comercial da empresa</option><option value="atendimento">Atendimento geral (SAC/loja)</option></select></label>
+      <label>O que procuram<input name="vaga" maxlength="300" placeholder="Ex.: representante no interior da Bahia"></label>
       <label>Ramo<input name="ramo" maxlength="120"></label>
       <label>Cidade ou região<input name="regiao" maxlength="120"></label>
       <label>Anotação<input name="notas" maxlength="500"></label>
@@ -100,7 +108,7 @@ document.addEventListener('submit',async e=>{
   if(e.target.id==='formLead'){e.preventDefault();const d=Object.fromEntries(new FormData(e.target));
     const tel=foneLead(d.telefone);if(!tel){toast(/^\s*0[38]00/.test(d.telefone.replace(/\D/g,''))?'0800 não tem WhatsApp':'WhatsApp inválido: use DDD + número');return}
     if(leads.some(l=>l.telefone===tel)){toast('Esse número já está na lista');return}
-    const novo={empresa:d.empresa.trim(),telefone:tel,ramo:d.ramo.trim()||null,regiao:d.regiao.trim()||null,notas:d.notas.trim()||null,prioridade:'media'};
+    const novo={empresa:d.empresa.trim(),telefone:tel,ramo:d.ramo.trim()||null,regiao:d.regiao.trim()||null,notas:d.notas.trim()||null,vaga:d.vaga.trim()||null,contato_tipo:d.contato_tipo,prioridade:d.contato_tipo==='atendimento'?'baixa':'media'};
     const {data,error}=await sb.from('leads').insert(novo).select().single();
     if(error){toast('Não deu: '+error.message);return}
     leads.push(data);novoLeadAberto=false;filtroLead='novo';desenharLeads();toast('Lead salvo')}
