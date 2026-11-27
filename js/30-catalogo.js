@@ -9,6 +9,8 @@ const novoIdProd=()=>'p'+Date.now().toString(36)+(++seqProd).toString(36)+Math.r
 const iniciais=t=>String(t||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase()||'?';
 const precoBR=v=>fmt2.format(+v||0);
 const pecas=it=>it.reduce((a,i)=>a+(+i.qtd||0),0);
+// lucro dos itens que têm custo: {venda, custo, lucro}; null se nenhum tem custo
+const lucroItens=it=>{const c=(it||[]).filter(i=>i.custo>0);if(!c.length)return null;const venda=c.reduce((a,i)=>a+(i.preco||0)*i.qtd,0),custo=c.reduce((a,i)=>a+i.custo*i.qtd,0);return{venda,custo,lucro:venda-custo}};
 // Unidade de venda do produto (embalagem industrial vende por caixa, milheiro, kg...). 'un' é o padrão e não é gravado.
 const UNIDADES={un:['unidade','unidades','un'],cx:['caixa','caixas','cx'],pct:['pacote','pacotes','pct'],fd:['fardo','fardos','fd'],cto:['cento','centos','cento'],mil:['milheiro','milheiros','milheiro'],kg:['kg','kg','kg'],m:['metro','metros','m'],m2:['m²','m²','m²'],rl:['rolo','rolos','rolo'],l:['litro','litros','L'],par:['par','pares','par'],dz:['dúzia','dúzias','dz']};
 const SIN_UN={un:'un',und:'un',unid:'un',unidade:'un',unidades:'un',pc:'un',pca:'un',peca:'un',pecas:'un',cx:'cx',caixa:'cx',caixas:'cx',pct:'pct',pac:'pct',pacote:'pct',pacotes:'pct',fd:'fd',fardo:'fd',fardos:'fd',cto:'cto',cento:'cto',mil:'mil',milheiro:'mil',milh:'mil',mi:'mil',kg:'kg',quilo:'kg',kilo:'kg',m:'m',mt:'m',metro:'m',metros:'m',m2:'m2',rl:'rl',rolo:'rl',rolos:'rl',l:'l',lt:'l',litro:'l',litros:'l',par:'par',pares:'par',dz:'dz',duzia:'dz'};
@@ -114,6 +116,8 @@ function formProduto(){
     <label class="f" for="prNome">Nome</label><input id="prNome" type="text" maxlength="160" autocomplete="off" placeholder="Ex.: Café torrado 500 g" value="${x?esc(x.nome):''}">
     <label class="f" for="prUn">Vendido por <small class="opc">unidade do preço</small></label><select id="prUn" data-sem-combo>${Object.entries(UNIDADES).map(([k,v])=>`<option value="${k}"${(x&&x.un||'un')===k?' selected':''}>${v[0][0].toUpperCase()+v[0].slice(1)}</option>`).join('')}${x&&x.un&&!UNIDADES[x.un]?`<option value="${esc(x.un)}" selected>${esc(x.un)}</option>`:''}</select>
     <label class="f" for="prPreco">Preço</label><div class="valor"><span>R$</span><input id="prPreco" class="num" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off" value="${x&&x.preco?String(x.preco.toFixed(2)).replace('.',','):''}" maxlength="14"></div>
+    <label class="f" for="prCusto">Custo <small class="opc">opcional, quanto você paga · não aparece para o cliente</small></label><div class="valor"><span>R$</span><input id="prCusto" class="num" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off" value="${x&&x.custo?String(x.custo.toFixed(2)).replace('.',','):''}" maxlength="14"></div>
+    ${x&&x.custo&&x.preco?`<p class="s">Margem: ${Math.round((x.preco-x.custo)/x.preco*100)}% · lucro de ${precoBR(x.preco-x.custo)} por ${unNome(x.un,1)}</p>`:''}
     <div class="erro" id="prErro" hidden></div>
     <button class="btn" type="submit" id="prSalvar">${x?'Salvar produto':'Adicionar ao catálogo'}</button>
     ${x?`<button class="btn danger" type="button" data-pr-excluir>Excluir produto</button>`:''}
@@ -192,8 +196,8 @@ async function salvarProduto(e){
       // traz uma cópia para a conta: o link original pode sumir do site da marca
       if(naConta())try{foto=await guardarFoto(await baixarImagem(catFoto.url),id)}catch(err){foto=catFoto.url;aviso=' (a foto ficou como link do site)'}}
   }catch(err){foto=antiga;aviso=' (a foto não foi salva)'}
-  const un=unOk(($('#prUn')||{}).value),novo={id,marca:mid,ref:ref.slice(0,60),nome:nome.slice(0,160),preco:Math.round((preco||0)*100)/100,foto:fotoOk(foto),...(un&&un!=='un'?{un}:{})};
-  if(x){Object.assign(x,novo);if(!novo.un)delete x.un}else PRODUTOS.push(novo);
+  const un=unOk(($('#prUn')||{}).value),cv=num(($('#prCusto')||{}).value||''),custo=cv>0?Math.round(cv*100)/100:0,novo={id,marca:mid,ref:ref.slice(0,60),nome:nome.slice(0,160),preco:Math.round((preco||0)*100)/100,foto:fotoOk(foto),...(un&&un!=='un'?{un}:{}),...(custo?{custo}:{})};
+  if(x){Object.assign(x,novo);if(!novo.un)delete x.un;if(!novo.custo)delete x.custo}else PRODUTOS.push(novo);
   if(antiga&&antiga!==novo.foto)apagarFotoSemUso(antiga);
   catSalvando=false;catEdit=null;catFoto=null;catMarca=mid;salvar();const naEscolha=catOrigem==='escolha';depoisDeEditar(x?null:novo);renderItensForm();
   if(!naEscolha||x||aviso)toast((x?'Produto atualizado':'Produto adicionado ao catálogo')+aviso);
@@ -215,7 +219,7 @@ function renderItensForm(){
   if(!itensForm.length){box.innerHTML=mid?`<button type="button" class="btn ghost" data-esc-abrir>${n?`Escolher produtos do catálogo (${n})`:'Montar pedido com produtos e fotos'}</button>`:'';return}
   box.innerHTML=`<span class="f">Itens <small class="opc">${resumoItens(itensForm)}</small></span>
     <div class="list itens">${itensForm.map((i,k)=>`<div class="ped com-passo">${thumb({nome:i.nome,foto:fotoDoItem(i)},'p48')}<div class="grow"><div class="t">${esc(i.nome)}</div><div class="s">${i.ref?'Ref. '+esc(i.ref)+' · ':''}${precoBR(i.preco)} ${unCurta(i.un)?'por '+unNome(i.un,1):'cada'}</div></div>${passo(i.qtd,`data-it-menos="${k}"`,`data-it-mais="${k}"`,`data-it-qtd="${k}"`)}</div>`).join('')}
-      <div class="itens-total"><span>Total dos itens</span><b class="num">${precoBR(totalItens(itensForm))}</b></div></div>
+      <div class="itens-total"><span>Total dos itens</span><b class="num">${precoBR(totalItens(itensForm))}</b></div>${lucroItens(itensForm)?`<div class="itens-total lucro"><span>Lucro dos produtos <small class="opc">venda menos custo · só você vê</small></span><b class="num">${precoBR(lucroItens(itensForm).lucro)}</b></div>`:''}</div>
     <p class="s" style="margin:var(--s2) 0 0">O valor real do pedido é a soma dos itens. Se der desconto, é só mudar o valor.</p>
     <div class="itens-acoes"><button type="button" class="btn ghost" data-esc-abrir>Mais produtos</button><button type="button" class="btn ghost" data-copia-cliente>Enviar ao cliente</button></div>
     <div id="copiaBox"></div>`;
@@ -228,7 +232,7 @@ function itensMudaram(){
 function definirQtd(pid,q){const i=itensForm.find(x=>x.p===pid);if(i){i.qtd=0;mudarQtd(pid,q)}else if(q>0)mudarQtd(pid,q);else itensMudaram()}
 function mudarQtd(pid,delta){
   let i=itensForm.find(x=>x.p===pid);const x=produto(pid);
-  if(!i){if(delta<=0||!x)return;i={p:x.id,ref:x.ref,nome:x.nome,preco:x.preco,qtd:0,foto:/^https?:/i.test(x.foto||'')?x.foto:'',...(x.un&&x.un!=='un'?{un:x.un}:{})};itensForm.push(i)}
+  if(!i){if(delta<=0||!x)return;i={p:x.id,ref:x.ref,nome:x.nome,preco:x.preco,qtd:0,foto:/^https?:/i.test(x.foto||'')?x.foto:'',...(x.un&&x.un!=='un'?{un:x.un}:{}),...(x.custo>0?{custo:x.custo}:{})};itensForm.push(i)}
   i.qtd=Math.max(0,Math.min(9999999,Math.round(((+i.qtd||0)+delta)*1000)/1000));if(!i.qtd)itensForm=itensForm.filter(y=>y!==i);
   itensMudaram();
 }

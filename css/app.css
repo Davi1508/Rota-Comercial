@@ -524,3 +524,7 @@ a.btn{display:grid;place-items:center;text-decoration:none;margin-top:var(--s3)}
 .ped.com-passo .grow{flex:1 1 calc(100% - 72px);min-width:0}
 .ped.com-passo .passo{margin-left:auto}
 #escLista .ped .t,#pItensBox .ped .t{overflow-wrap:anywhere}
+.itens-total.lucro{border-top:0;padding-top:0;color:var(--ok)}
+.itens-total.lucro small{display:block;font-weight:500;color:var(--muted)}
+fieldset.radios{border:0;padding:0;margin:var(--s3) 0 0;min-width:0}
+fieldset.radios legend{padding:0}
