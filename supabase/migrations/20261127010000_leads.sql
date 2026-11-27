@@ -20,3 +20,9 @@ grant select, insert, update, delete on public.leads to authenticated;
 drop policy if exists "leads só do dono" on public.leads;
 create policy "leads só do dono" on public.leads for all to authenticated
   using ((select public.eh_dono())) with check ((select public.eh_dono()));
+
+-- Só leads com WhatsApp confirmado (publicado pela própria empresa), com o link de onde ele foi achado.
+alter table public.leads alter column telefone set not null;
+alter table public.leads add column if not exists whatsapp_fonte text check (char_length(whatsapp_fonte) <= 500);
+alter table public.leads add column if not exists origem text not null default 'manual' check (origem in ('manual','automatico'));
+create unique index if not exists leads_telefone_unico on public.leads (telefone);
