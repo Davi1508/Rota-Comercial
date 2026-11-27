@@ -16,7 +16,7 @@ async function carregar(){
     if(!session){aviso('<p><b>Entre no app com a conta do dono</b> e volte aqui.</p><a class="btn pri" href="../">Abrir o app</a>');return}
     const {data,error}=await sb.rpc('painel_dono');
     if(error){aviso(error.code==='42501'||/acesso negado/.test(error.message)?'<p><b>Este painel é só para o dono.</b></p><p class="s">Você entrou com '+esc(session.user.email)+'.</p>':'<p>Não consegui carregar agora.</p><p class="s">'+esc(error.message)+'</p>');return}
-    dados=data;desenhar();
+    dados=data;desenhar();if(window.carregarLeads)carregarLeads();
   }catch(e){aviso('<p>Sem conexão com o servidor.</p>')}
   finally{$('#atualizar').disabled=false}
 }
